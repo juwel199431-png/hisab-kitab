@@ -111,6 +111,26 @@ export function loadStoredData(): AppData {
         );
         needsSave = true;
       }
+
+      // Auto-remove demo boss salary transactions (tx-boss-*)
+      const hadDemoBossTx = parsed.transactions.some(
+        (t: any) => typeof t.id === 'string' && t.id.startsWith('tx-boss-')
+      );
+      if (hadDemoBossTx) {
+        parsed.transactions = parsed.transactions.filter(
+          (t: any) => !(typeof t.id === 'string' && t.id.startsWith('tx-boss-'))
+        );
+        needsSave = true;
+      }
+    }
+
+    // Auto-remove demo boss deposits (bd-dep-1)
+    if (Array.isArray(parsed.bossDeposits)) {
+      const hadDemoBossDep = parsed.bossDeposits.some((d: any) => d.id === 'bd-dep-1');
+      if (hadDemoBossDep) {
+        parsed.bossDeposits = parsed.bossDeposits.filter((d: any) => d.id !== 'bd-dep-1');
+        needsSave = true;
+      }
     }
 
     // Auto-remove demo Personal Receivable Loans (kwt-loan-1, kwt-loan-2)
