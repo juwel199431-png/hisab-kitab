@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#047857" />
+      <stop offset="50%" stop-color="#059669" />
+      <stop offset="100%" stop-color="#065f46" />
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34d399" />
+      <stop offset="100%" stop-color="#10b981" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.3" />
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)" />
+  <!-- Inner Ring / Subtle Border -->
+  <rect x="16" y="16" width="480" height="480" rx="96" fill="none" stroke="#6ee7b7" stroke-width="4" stroke-opacity="0.25" />
+  <!-- Bank / Finance Landmark Glyph -->
+  <g transform="translate(106, 116)" filter="url(#shadow)">
+    <!-- Pediment Roof -->
+    <path d="M150 20 L280 85 L20 85 Z" fill="#ffffff" />
+    <!-- Entablature -->
+    <rect x="25" y="95" width="250" height="18" rx="4" fill="#ecfdf5" />
+    <!-- Columns -->
+    <rect x="42" y="123" width="30" height="110" rx="4" fill="#ffffff" />
+    <rect x="102" y="123" width="30" height="110" rx="4" fill="#ffffff" />
+    <rect x="168" y="123" width="30" height="110" rx="4" fill="#ffffff" />
+    <rect x="228" y="123" width="30" height="110" rx="4" fill="#ffffff" />
+    <!-- Plinth / Base -->
+    <rect x="15" y="243" width="270" height="24" rx="6" fill="#ecfdf5" />
+  </g>
+  <!-- Currency Coin Symbol at bottom-right badge -->
+  <circle cx="370" cy="370" r="68" fill="#10b981" stroke="#ffffff" stroke-width="6" filter="url(#shadow)" />
+  <text x="370" y="394" font-family="'Hind Siliguri', sans-serif" font-weight="900" font-size="70" fill="#ffffff" text-anchor="middle">৳</text>
+</svg>
