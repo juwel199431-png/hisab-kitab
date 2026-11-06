@@ -215,6 +215,48 @@ export function loadStoredData(): AppData {
   }
 }
 
+const SNAPSHOTS_KEY = 'hisab_kitab_snapshots_history';
+
+export interface StorageSnapshot {
+  timestamp: string;
+  dateStr: string;
+  data: AppData;
+  txCount: number;
+}
+
+export function getAutoSnapshots(): StorageSnapshot[] {
+  try {
+    const raw = localStorage.getItem(SNAPSHOTS_KEY);
+    if (!raw) return [];
+    return JSON.parse(raw);
+  } catch {
+    return [];
+  }
+}
+
+export function saveAutoSnapshot(data: AppData): void {
+  try {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const existing = getAutoSnapshots();
+    const last = existing[0];
+    const now = Date.now();
+    const shouldSave = !last || now - new Date(last.timestamp).getTime() > 2 * 60 * 60 * 1000;
+
+    if (shouldSave) {
+      const newSnap: StorageSnapshot = {
+        timestamp: new Date().toISOString(),
+        dateStr: todayStr,
+        data,
+        txCount: data.transactions?.length || 0,
+      };
+      const updated = [newSnap, ...existing.filter((s) => s.dateStr !== todayStr || s.txCount !== newSnap.txCount)].slice(0, 10);
+      localStorage.setItem(SNAPSHOTS_KEY, JSON.stringify(updated));
+    }
+  } catch (err) {
+    console.warn('Auto snapshot save error:', err);
+  }
+}
+
 export function saveData(data: AppData): void {
   try {
     const updated = {
@@ -222,6 +264,7 @@ export function saveData(data: AppData): void {
       lastUpdated: new Date().toISOString(),
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    saveAutoSnapshot(updated);
   } catch (err) {
     console.error('Failed to save finance data to localStorage:', err);
   }

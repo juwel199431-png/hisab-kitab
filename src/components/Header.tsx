@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useFinance } from '../context/FinanceContext';
 import {
   CloudUpload,
@@ -46,6 +46,14 @@ export const Header: React.FC = () => {
     isCloudSynced,
     forcePushToCloud,
   } = useFinance();
+
+  const [justSynced, setJustSynced] = useState(false);
+
+  const handleSyncClick = () => {
+    forcePushToCloud();
+    setJustSynced(true);
+    setTimeout(() => setJustSynced(false), 2000);
+  };
 
   const navItems: {
     id: AccountSection;
@@ -284,15 +292,21 @@ export const Header: React.FC = () => {
 
           {/* Live Cross-Device Cloud Sync Indicator */}
           <button
-            onClick={forcePushToCloud}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 rounded-lg transition-colors border border-emerald-300 dark:border-emerald-700 shadow-2xs whitespace-nowrap cursor-pointer"
-            title={lang === 'bn' ? 'রিয়েল-টাইম ক্লাউড সিঙ্ক সক্রিয় (মোবাইল ও কম্পিউটার সবসময় সিঙ্কড)' : 'Real-time Cloud Sync Active'}
+            onClick={handleSyncClick}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-colors border shadow-2xs whitespace-nowrap cursor-pointer ${
+              justSynced
+                ? 'bg-emerald-600 text-white border-emerald-700 shadow-emerald-500/30'
+                : 'text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border-emerald-300 dark:border-emerald-700'
+            }`}
+            title={lang === 'bn' ? 'রিয়েল-টাইম ক্লাউড সিঙ্ক সক্রিয় (ক্লিক করে এখনই ফোর্স সিঙ্ক করুন)' : 'Real-time Cloud Sync Active (Click to sync now)'}
           >
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
             </span>
-            <span className="hidden sm:inline">{lang === 'bn' ? 'সিঙ্কড' : 'Synced'}</span>
+            <span className="hidden sm:inline">
+              {justSynced ? (lang === 'bn' ? 'সিঙ্ক হয়েছে!' : 'Synced!') : (lang === 'bn' ? 'সিঙ্কড' : 'Synced')}
+            </span>
           </button>
 
           {/* Cloud & Drive Backup Button */}

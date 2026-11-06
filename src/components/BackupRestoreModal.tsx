@@ -13,13 +13,14 @@ import {
   Smartphone,
   Shield,
 } from 'lucide-react';
-import { exportBackupFile, parseBackupFile } from '../utils/storage';
+import { exportBackupFile, parseBackupFile, getAutoSnapshots } from '../utils/storage';
 
 export const BackupRestoreModal: React.FC = () => {
   const { data, lang, t, isBackupModalOpen, setIsBackupModalOpen, restoreAllData, resetToDemoData } = useFinance();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  const snapshots = getAutoSnapshots();
 
   if (!isBackupModalOpen) return null;
 
@@ -211,6 +212,55 @@ export const BackupRestoreModal: React.FC = () => {
               </li>
             </ul>
           </div>
+
+          {/* Auto Snapshots Recovery */}
+          {snapshots.length > 0 && (
+            <div className="pt-2 border-t border-slate-100">
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-bold text-slate-800 text-xs">
+                  {lang === 'bn' ? 'স্বয়ংক্রিয় ব্যাকআপ হিস্ট্রি' : 'Automatic Snapshots'}
+                </span>
+                <span className="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-semibold border border-emerald-200">
+                  {lang === 'bn' ? 'লোকাল মেমরি' : 'Local Storage'}
+                </span>
+              </div>
+              <div className="space-y-1.5 max-h-32 overflow-y-auto pr-1">
+                {snapshots.map((s, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-200 text-xs"
+                  >
+                    <div>
+                      <span className="font-semibold text-slate-800">{s.dateStr}</span>
+                      <span className="text-[10px] text-slate-500 ml-2">
+                        ({s.txCount} {lang === 'bn' ? 'টি লেনদেন' : 'txs'})
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        if (
+                          confirm(
+                            lang === 'bn'
+                              ? `আপনি কি ${s.dateStr} তারিখের ব্যাকআপ রিস্টোর করতে চান?`
+                              : `Restore snapshot from ${s.dateStr}?`
+                          )
+                        ) {
+                          restoreAllData(s.data);
+                          setSuccessMsg(
+                            lang === 'bn' ? 'সফলভাবে রিস্টোর হয়েছে!' : 'Restored successfully!'
+                          );
+                          setTimeout(() => setSuccessMsg(''), 3000);
+                        }
+                      }}
+                      className="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded text-[11px] font-bold cursor-pointer transition-colors shadow-2xs"
+                    >
+                      {lang === 'bn' ? 'রিস্টোর' : 'Restore'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Reset Demo Data Button */}
           <div className="pt-2 border-t border-slate-100 flex justify-between items-center text-[11px]">
