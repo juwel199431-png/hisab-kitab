@@ -67,11 +67,8 @@ export const KuwaitPersonalView: React.FC<KuwaitPersonalViewProps> = ({ initialT
 
   const [editingTxId, setEditingTxId] = useState<string | null>(null);
 
-  // Current Month default for Daily Expenses
-  const [selectedMonth, setSelectedMonth] = useState<string>(() => {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-  });
+  // Month filter for Daily Expenses (defaults to 'all' so all transactions are always visible)
+  const [selectedMonth, setSelectedMonth] = useState<string>('all');
 
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -100,6 +97,14 @@ export const KuwaitPersonalView: React.FC<KuwaitPersonalViewProps> = ({ initialT
       .filter((tx) => tx.section === 'kuwait-personal')
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [data.transactions]);
+
+  // Available unique months from all Kuwait personal transactions
+  const availableMonths = useMemo(() => {
+    return Array.from(new Set(kwtTransactions.map((t) => t.date.slice(0, 7))))
+      .filter(Boolean)
+      .sort()
+      .reverse();
+  }, [kwtTransactions]);
 
   // Month filtered transactions for Daily Expense
   const monthTransactions = useMemo(() => {
@@ -412,7 +417,7 @@ export const KuwaitPersonalView: React.FC<KuwaitPersonalViewProps> = ({ initialT
             <div className="text-center">
               <h2 className="text-xl font-bold uppercase tracking-wide">Kuwait Personal Expense Statement</h2>
               <p className="text-xs text-slate-600 mt-1">
-                {lang === 'bn' ? 'কুয়েত এর পার্সোনাল হিসাব — দৈনিক খরচ বিবরণী' : 'Daily Living Expenses Report'} — {formatMonth(selectedMonth, lang)}
+                {lang === 'bn' ? 'কুয়েত এর পার্সোনাল হিসাব — দৈনিক খরচ বিবরণী' : 'Daily Living Expenses Report'} — {selectedMonth === 'all' ? (lang === 'bn' ? 'সর্বমোট (সকল মাস)' : 'All Time') : formatMonth(selectedMonth, lang)}
               </p>
               <div className="flex justify-between text-xs text-slate-500 mt-3 pt-2 border-t border-slate-200">
                 <span>Prepared for: Juwel / Boss Review</span>
@@ -438,15 +443,21 @@ export const KuwaitPersonalView: React.FC<KuwaitPersonalViewProps> = ({ initialT
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
-                {/* Month Filter Picker */}
-                <div className="flex items-center gap-1.5 bg-slate-100 px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs">
+                {/* Smart Month Filter Picker */}
+                <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs">
                   <Calendar className="w-3.5 h-3.5 text-slate-500" />
-                  <input
-                    type="month"
+                  <select
                     value={selectedMonth}
                     onChange={(e) => setSelectedMonth(e.target.value)}
-                    className="bg-transparent font-medium text-slate-700 focus:outline-hidden text-xs"
-                  />
+                    className="bg-transparent font-medium text-slate-700 dark:text-slate-200 focus:outline-hidden text-xs cursor-pointer"
+                  >
+                    <option value="all">{lang === 'bn' ? 'সকল মাসের খরচ (সর্বমোট)' : 'All Months'}</option>
+                    {availableMonths.map((m) => (
+                      <option key={m} value={m}>
+                        {formatMonth(m, lang)}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <button
@@ -459,7 +470,7 @@ export const KuwaitPersonalView: React.FC<KuwaitPersonalViewProps> = ({ initialT
 
                 <button
                   onClick={() => openQuickAddWithSection('kuwait-personal')}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-lg transition-colors shadow-2xs"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-lg transition-colors shadow-2xs cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
                   <span>{lang === 'bn' ? 'নতুন খরচ এন্ট্রি' : 'Add Expense'}</span>
@@ -471,13 +482,15 @@ export const KuwaitPersonalView: React.FC<KuwaitPersonalViewProps> = ({ initialT
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
               <div className="bg-amber-50/60 rounded-lg p-3.5 border border-amber-200/80">
                 <p className="text-[11px] font-semibold text-amber-900 uppercase tracking-wider">
-                  {lang === 'bn' ? `${formatMonth(selectedMonth, lang)} - মোট খরচ` : `Total Expense (${selectedMonth})`}
+                  {selectedMonth === 'all'
+                    ? lang === 'bn' ? 'সর্বমোট খরচ (সকল মাস)' : 'Total Expense (All Time)'
+                    : lang === 'bn' ? `${formatMonth(selectedMonth, lang)} - মোট খরচ` : `Total Expense (${selectedMonth})`}
                 </p>
                 <p className="text-2xl font-bold text-amber-900 font-mono tabular-nums mt-1">
                   {formatCurrency(totalMonthlyExpense, 'KWD', lang)}
                 </p>
                 <p className="text-[11px] text-amber-700 mt-0.5">
-                  {lang === 'bn' ? `মোট ${monthTransactions.length}টি খরচ লিপিবদ্ধ` : `${monthTransactions.length} items logged`}
+                  {lang === 'bn' ? `মোট ${monthTransactions.length}টি খরচ প্রদর্শিত হচ্ছে` : `${monthTransactions.length} items logged`}
                 </p>
               </div>
 

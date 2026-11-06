@@ -38,11 +38,22 @@ export const BossSalaryView: React.FC = () => {
     openQuickAddWithSection,
   } = useFinance();
 
-  // Selected Month default
-  const [selectedMonth, setSelectedMonth] = useState<string>(() => {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-  });
+  // Selected Month default (defaults to 'all' so entries are never hidden)
+  const [selectedMonth, setSelectedMonth] = useState<string>('all');
+
+  // Available unique months from all Boss Salary deposits and transactions
+  const availableBossMonths = useMemo(() => {
+    const months = new Set<string>();
+    data.bossDeposits.forEach((d) => {
+      if (d.month) months.add(d.month);
+    });
+    data.transactions
+      .filter((t) => t.section === 'boss-salary')
+      .forEach((t) => {
+        if (t.date) months.add(t.date.slice(0, 7));
+      });
+    return Array.from(months).sort().reverse();
+  }, [data.bossDeposits, data.transactions]);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddDepositModal, setShowAddDepositModal] = useState(false);
@@ -306,15 +317,21 @@ export const BossSalaryView: React.FC = () => {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {/* Month Filter Picker */}
-            <div className="flex items-center gap-1.5 bg-slate-100 px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs">
+            {/* Smart Month Filter Picker */}
+            <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs">
               <Calendar className="w-3.5 h-3.5 text-slate-500" />
-              <input
-                type="month"
+              <select
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
-                className="bg-transparent font-medium text-slate-700 focus:outline-hidden text-xs"
-              />
+                className="bg-transparent font-medium text-slate-700 dark:text-slate-200 focus:outline-hidden text-xs cursor-pointer"
+              >
+                <option value="all">{lang === 'bn' ? 'সকল মাসের হিসাব (সর্বমোট)' : 'All Months'}</option>
+                {availableBossMonths.map((m) => (
+                  <option key={m} value={m}>
+                    {formatMonth(m, lang)}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <button

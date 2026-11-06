@@ -11,6 +11,12 @@ import {
   CreditCard,
   Calendar,
   CheckCircle2,
+  History,
+  Coins,
+  TrendingUp,
+  TrendingDown,
+  ArrowRight,
+  Plus,
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 
@@ -25,7 +31,15 @@ export const DashboardView: React.FC = () => {
     getTotalDpsSavings,
     getTotalInsuranceSavings,
     setActiveSection,
+    setIsQuickAddOpen,
   } = useFinance();
+
+  // Recent transactions across all sections
+  const recentTransactions = React.useMemo(() => {
+    return [...data.transactions]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 10);
+  }, [data.transactions]);
 
   // BD Banks Data
   const totalBdBanks = getTotalBdBanksBalance();
@@ -528,6 +542,190 @@ export const DashboardView: React.FC = () => {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* SECTION 4: RECENT TRANSACTIONS LEDGER (সর্বশেষ লেনদেনসমূহ) */}
+      <section className="space-y-3 pt-2">
+        <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800 pb-2">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 flex items-center justify-center font-bold shadow-2xs">
+              <History className="w-4 h-4" />
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-slate-900 dark:text-white">
+                {lang === 'bn' ? 'সর্বশেষ লেনদেনসমূহ (সাম্প্রতিক খতিয়ান)' : 'Recent Transactions'}
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                {lang === 'bn'
+                  ? `সকল ক্যাটাগরি থেকে সর্বশেষ ${recentTransactions.length}টি লেনদেন এক নজরে`
+                  : `Latest ${recentTransactions.length} entries across all categories`}
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => setIsQuickAddOpen(true)}
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-800 dark:text-emerald-300 hover:text-emerald-900 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 border border-emerald-300 dark:border-emerald-700 px-3 py-1.5 rounded-lg transition-colors cursor-pointer shadow-2xs"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>{lang === 'bn' ? 'নতুন এন্ট্রি' : 'New Entry'}</span>
+          </button>
+        </div>
+
+        {/* Transactions Table / Card */}
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
+          {recentTransactions.length === 0 ? (
+            <div className="py-12 px-4 text-center">
+              <History className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
+              <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                {lang === 'bn' ? 'এখনো কোনো লেনদেন যুক্ত করা হয়নি' : 'No transactions recorded yet'}
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
+                {lang === 'bn'
+                  ? 'উপরে "+ নতুন এন্ট্রি" বাটনে ক্লিক করে খরচ বা জমার হিসাব যুক্ত করুন।'
+                  : 'Click "+ New Entry" button to record expenses or deposits.'}
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs text-left">
+                <thead className="bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 uppercase text-[10px] font-bold border-b border-slate-200 dark:border-slate-800">
+                  <tr>
+                    <th className="py-3 px-4">{lang === 'bn' ? 'তারিখ' : 'Date'}</th>
+                    <th className="py-3 px-3">{lang === 'bn' ? 'হিসাব খাত' : 'Section'}</th>
+                    <th className="py-3 px-4">{lang === 'bn' ? 'ক্যাটাগরি ও বিবরণ' : 'Category & Note'}</th>
+                    <th className="py-3 px-3 text-center">{lang === 'bn' ? 'ধরন' : 'Type'}</th>
+                    <th className="py-3 px-4 text-right">{lang === 'bn' ? 'পরিমাণ' : 'Amount'}</th>
+                    <th className="py-3 px-3 text-center">{lang === 'bn' ? 'বিভাগ' : 'Go'}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">
+                  {recentTransactions.map((tx) => {
+                    const isIncome = tx.type === 'income';
+                    const isExpense = tx.type === 'expense';
+
+                    const sectionBadge = (() => {
+                      switch (tx.section) {
+                        case 'kuwait-personal':
+                          return {
+                            labelBn: 'কুয়েত পার্সোনাল',
+                            labelEn: 'Kuwait Personal',
+                            color: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-800',
+                          };
+                        case 'bd-bank':
+                          return {
+                            labelBn: 'বাংলাদেশ ব্যাংক',
+                            labelEn: 'BD Bank',
+                            color: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800',
+                          };
+                        case 'boss-salary':
+                          return {
+                            labelBn: 'শাকের ভাই বেতন',
+                            labelEn: 'Boss Salary',
+                            color: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800',
+                          };
+                        case 'emdad-expense':
+                          return {
+                            labelBn: 'ইমদাদ ভাই হিসাব',
+                            labelEn: 'Emdad Bhai',
+                            color: 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950/50 dark:text-orange-300 dark:border-orange-800',
+                          };
+                        case 'kuwait-extra-income':
+                          return {
+                            labelBn: 'কুয়েত অতিরিক্ত আয়',
+                            labelEn: 'Extra Income',
+                            color: 'bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-950/50 dark:text-cyan-300 dark:border-cyan-800',
+                          };
+                        default:
+                          return {
+                            labelBn: 'সঞ্চয় হিসাব',
+                            labelEn: 'Savings',
+                            color: 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/50 dark:text-purple-300 dark:border-purple-800',
+                          };
+                      }
+                    })();
+
+                    return (
+                      <tr
+                        key={tx.id}
+                        className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
+                      >
+                        <td className="py-3 px-4 font-mono text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                          {formatDate(tx.date, lang)}
+                        </td>
+                        <td className="py-3 px-3 whitespace-nowrap">
+                          <span
+                            className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold border ${sectionBadge.color}`}
+                          >
+                            {lang === 'bn' ? sectionBadge.labelBn : sectionBadge.labelEn}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="font-semibold text-slate-900 dark:text-white">
+                            {lang === 'bn' ? tx.categoryNameBn || tx.note || 'সাধারণ' : tx.categoryNameEn || tx.note || 'General'}
+                          </div>
+                          {tx.note && (
+                            <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-xs">
+                              {tx.note}
+                            </div>
+                          )}
+                        </td>
+                        <td className="py-3 px-3 text-center whitespace-nowrap">
+                          <span
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                              isIncome
+                                ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
+                                : isExpense
+                                ? 'bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300'
+                                : 'bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300'
+                            }`}
+                          >
+                            {isIncome ? (
+                              <TrendingUp className="w-2.5 h-2.5" />
+                            ) : isExpense ? (
+                              <TrendingDown className="w-2.5 h-2.5" />
+                            ) : null}
+                            <span>
+                              {isIncome
+                                ? lang === 'bn' ? 'জমা' : 'Income'
+                                : isExpense
+                                ? lang === 'bn' ? 'খরচ' : 'Expense'
+                                : lang === 'bn' ? 'ট্রান্সফার' : 'Transfer'}
+                            </span>
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-right font-mono font-bold whitespace-nowrap">
+                          <span
+                            className={
+                              isIncome
+                                ? 'text-emerald-600 dark:text-emerald-400'
+                                : isExpense
+                                ? 'text-rose-600 dark:text-rose-400'
+                                : 'text-blue-600 dark:text-blue-400'
+                            }
+                          >
+                            {isIncome ? '+' : isExpense ? '-' : ''}
+                            {formatCurrency(Number(tx.amount || 0), tx.currency, lang, isPrivacyMode)}
+                          </span>
+                        </td>
+                        <td className="py-3 px-3 text-center whitespace-nowrap">
+                          <button
+                            onClick={() => setActiveSection(tx.section as any)}
+                            className="inline-flex items-center gap-1 p-1 px-2 rounded-md text-xs font-semibold text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                            title={lang === 'bn' ? 'এই বিভাগে যান' : 'Go to Section'}
+                          >
+                            <span className="hidden sm:inline">{lang === 'bn' ? 'দেখুন' : 'View'}</span>
+                            <ArrowRight className="w-3.5 h-3.5" />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </section>
     </div>
