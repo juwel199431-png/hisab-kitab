@@ -148,131 +148,124 @@ export const Header: React.FC = () => {
   const hasOverdueAlerts = smartAlerts.some((a) => a.isOverdue);
 
   return (
-    <header className="sticky top-0 z-40 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 no-print shadow-xs transition-colors duration-200">
-      {/* Primary Top Bar */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between gap-3 h-16">
-        {/* Zone 1: Single Brand Wordmark */}
+    <header className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 no-print shadow-xs transition-colors duration-200">
+      {/* Tier 1: Modern Brand Identity & Control Center */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between gap-4">
+        {/* Modern Brand Identity */}
         <div className="flex items-center gap-3 shrink-0">
-          <div className="w-9 h-9 rounded-lg bg-emerald-700 flex items-center justify-center text-white shadow-xs">
-            <Landmark className="w-5 h-5" />
+          <div className="relative w-10 h-10 rounded-xl bg-linear-to-br from-emerald-600 via-teal-700 to-cyan-900 flex items-center justify-center text-white shadow-md shadow-emerald-900/20 border border-emerald-400/30 overflow-hidden shrink-0">
+            {/* Custom Modern Fintech Monogram SVG */}
+            <svg className="w-6 h-6 text-white drop-shadow-xs" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="4" width="18" height="16" rx="4" stroke="currentColor" strokeWidth="1.8" />
+              <path d="M7 8.5H14" stroke="#34D399" strokeWidth="2" strokeLinecap="round" />
+              <path d="M7 12H12" stroke="#FBBF24" strokeWidth="2" strokeLinecap="round" />
+              <path d="M7 15.5H10" stroke="#38BDF8" strokeWidth="2" strokeLinecap="round" />
+              <circle cx="16.5" cy="13.5" r="2.5" fill="#10B981" stroke="#FFFFFF" strokeWidth="1.2" />
+            </svg>
           </div>
           <div>
-            <h1 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white whitespace-nowrap">
-              {lang === 'bn' ? 'হিসাব কিতাব' : 'Hisab Kitab'}
-            </h1>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium hidden sm:block">
-              {lang === 'bn' ? 'বাংলাদেশ ও কুয়েত ফাইনান্স ম্যানেজার' : 'Personal & Work Ledger'}
+            <div className="flex items-center gap-1.5">
+              <h1 className="text-lg md:text-xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-none">
+                {lang === 'bn' ? 'হিসাব কিতাব' : 'Hisab Kitab'}
+              </h1>
+              <span className="text-[9px] font-black px-1.5 py-0.5 rounded-sm bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/80 tracking-wider uppercase">
+                PRO
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold flex items-center gap-1.5 mt-0.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse shrink-0" />
+              <span className="truncate">{lang === 'bn' ? 'বাংলাদেশ ও কুয়েত ফাইনান্স ম্যানেজার' : 'Personal & Work Finance'}</span>
             </p>
           </div>
         </div>
 
-        {/* Zone 2: Navigation Links (Desktop) */}
-        <nav className="hidden xl:flex items-center gap-1.5 overflow-x-auto py-1">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeSection === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => setActiveSection(item.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl transition-all whitespace-nowrap shrink-0 border cursor-pointer ${
-                  isActive
-                    ? `bg-linear-to-r ${item.activeGradient} scale-[1.03]`
-                    : `${item.idleBg} ${item.idleText} ${item.idleBorder} shadow-2xs hover:scale-[1.01]`
-                }`}
-              >
-                <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : item.iconIdle}`} />
-                <span>{lang === 'bn' ? item.labelBn : item.labelEn}</span>
-              </button>
-            );
-          })}
-        </nav>
-
-        {/* Zone 3: Primary Actions */}
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          {/* Privacy Masking Toggle */}
+        {/* Right Side: Clean, Structured & De-cluttered Control Center */}
+        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+          {/* 1. Live Real-time Cloud Sync Indicator */}
           <button
-            onClick={togglePrivacyMode}
-            className={`p-2 rounded-lg transition-all border cursor-pointer ${
-              isPrivacyMode
-                ? 'bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-950/70 dark:text-amber-300 dark:border-amber-700 shadow-inner'
-                : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700'
+            onClick={handleSyncClick}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl transition-all border shadow-2xs whitespace-nowrap cursor-pointer ${
+              justSynced
+                ? 'bg-emerald-600 text-white border-emerald-700 shadow-emerald-500/30 scale-105'
+                : 'text-emerald-800 dark:text-emerald-300 bg-emerald-50/90 dark:bg-emerald-950/70 hover:bg-emerald-100 dark:hover:bg-emerald-900/80 border-emerald-300 dark:border-emerald-700 hover:scale-[1.02]'
             }`}
-            title={
-              lang === 'bn'
-                ? isPrivacyMode
-                  ? 'টাকার ব্যালেন্স প্রকাশ করুন (প্রাইভেসি বন্ধ)'
-                  : 'টাকার ব্যালেন্স লুকান (প্রাইভেসি মোড চালু)'
-                : isPrivacyMode
-                ? 'Show monetary amounts'
-                : 'Hide monetary amounts (Privacy Mode)'
-            }
+            title={lang === 'bn' ? 'রিয়েল-টাইম ক্লাউড সিঙ্ক সক্রিয় (ক্লিক করে এখনই ম্যানুয়াল সিঙ্ক করুন)' : 'Real-time Cloud Sync Active (Click to sync now)'}
           >
-            {isPrivacyMode ? (
-              <EyeOff className="w-4 h-4 text-amber-700 dark:text-amber-400" />
-            ) : (
-              <Eye className="w-4 h-4" />
-            )}
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span className="font-bold">{justSynced ? (lang === 'bn' ? 'সিঙ্ক হয়েছে!' : 'Synced!') : (lang === 'bn' ? 'সিঙ্কড' : 'Synced')}</span>
           </button>
 
-          {/* Security PIN Lock & Setup Button */}
-          <button
-            onClick={() => setIsPinModalOpen(true)}
-            className={`p-2 rounded-lg transition-all border cursor-pointer relative ${
-              isPinEnabled
-                ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 shadow-2xs'
-                : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700'
-            }`}
-            title={
-              isPinEnabled
-                ? lang === 'bn'
-                  ? 'নিরাপত্তা পিন লক সক্রিয় (ক্লিক করে অ্যাপ লক করুন বা পিন পরিবর্তন করুন)'
-                  : 'PIN Lock Active (Click to lock or manage PIN)'
-                : lang === 'bn'
-                ? 'নিরাপত্তা পিন কোড সেট করুন'
-                : 'Setup Security PIN'
-            }
-          >
-            {isPinEnabled ? (
-              <Lock className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
-            ) : (
-              <ShieldCheck className="w-4 h-4" />
-            )}
-            {!isPinEnabled && (
-              <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-            )}
-          </button>
+          {/* 2. Unified Preferences Control Pill (Privacy, PIN, Dark Mode) */}
+          <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-2xs">
+            {/* Privacy Mask Toggle */}
+            <button
+              onClick={togglePrivacyMode}
+              className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                isPrivacyMode
+                  ? 'bg-amber-500 text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700'
+              }`}
+              title={
+                isPrivacyMode
+                  ? lang === 'bn' ? 'টাকার ব্যালেন্স প্রকাশ করুন (প্রাইভেসি বন্ধ)' : 'Show balances'
+                  : lang === 'bn' ? 'টাকার ব্যালেন্স লুকান (প্রাইভেসি চালু)' : 'Hide balances'
+              }
+            >
+              {isPrivacyMode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
 
-          {/* OLED Dark / Light Mode Switcher */}
-          <button
-            onClick={toggleTheme}
-            className="p-2 rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-amber-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
-            title={
-              lang === 'bn'
-                ? theme === 'dark'
-                  ? 'লাইট মোড চালু করুন'
-                  : 'ডার্ক মোড চালু করুন'
-                : theme === 'dark'
-                ? 'Switch to Light Mode'
-                : 'Switch to Dark Mode'
-            }
-          >
-            {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-          </button>
+            <div className="w-[1px] h-3.5 bg-slate-200 dark:bg-slate-700 mx-0.5" />
 
-          {/* Smart Alerts Bell Badge */}
+            {/* Security PIN Lock */}
+            <button
+              onClick={() => setIsPinModalOpen(true)}
+              className={`p-1.5 rounded-lg transition-all cursor-pointer relative ${
+                isPinEnabled
+                  ? 'text-emerald-600 dark:text-emerald-400'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700'
+              }`}
+              title={
+                isPinEnabled
+                  ? lang === 'bn' ? 'নিরাপত্তা পিন সক্রিয় (ক্লিক করে অ্যাপ লক করুন)' : 'PIN Lock Active'
+                  : lang === 'bn' ? 'নিরাপত্তা পিন কোড সেট করুন' : 'Setup PIN Lock'
+              }
+            >
+              {isPinEnabled ? <Lock className="w-4 h-4" /> : <ShieldCheck className="w-4 h-4" />}
+              {!isPinEnabled && (
+                <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+              )}
+            </button>
+
+            <div className="w-[1px] h-3.5 bg-slate-200 dark:bg-slate-700 mx-0.5" />
+
+            {/* Dark / Light Mode */}
+            <button
+              onClick={toggleTheme}
+              className="p-1.5 rounded-lg text-slate-600 dark:text-amber-300 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700 transition-all cursor-pointer"
+              title={
+                theme === 'dark'
+                  ? lang === 'bn' ? 'লাইট মোড চালু করুন' : 'Switch to Light Mode'
+                  : lang === 'bn' ? 'ডার্ক মোড চালু করুন' : 'Switch to Dark Mode'
+              }
+            >
+              {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
+          </div>
+
+          {/* 3. Smart Alerts Bell */}
           <button
             onClick={() => setIsAlertsOpen(true)}
-            className="relative p-2 rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
-            title={lang === 'bn' ? 'স্মার্ট তাগাদা ও অ্যালার্ট' : 'Smart Reminders & Due Dates'}
+            className="relative p-2 rounded-xl bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+            title={lang === 'bn' ? 'স্মার্ট তাগাদা ও অ্যালার্ট' : 'Smart Alerts'}
           >
             <Bell className="w-4 h-4" />
             {totalAlertsCount > 0 && (
               <span
                 className={`absolute -top-1 -right-1 px-1.5 py-0.2 text-[10px] font-black rounded-full text-white shadow-xs ${
-                  hasOverdueAlerts
-                    ? 'bg-rose-600 animate-pulse'
-                    : 'bg-amber-500'
+                  hasOverdueAlerts ? 'bg-rose-600 animate-pulse' : 'bg-amber-500'
                 }`}
               >
                 {totalAlertsCount}
@@ -280,67 +273,52 @@ export const Header: React.FC = () => {
             )}
           </button>
 
-          {/* Language Toggle */}
+          {/* 4. Language Switcher */}
           <button
             onClick={() => setLang(lang === 'bn' ? 'en' : 'bn')}
-            className="flex items-center gap-1.5 px-2 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors border border-slate-200 dark:border-slate-700 whitespace-nowrap"
-            title="ভাষা পরিবর্তন / Switch Language"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors border border-slate-200 dark:border-slate-700 cursor-pointer"
+            title="Switch Language"
           >
             <Globe2 className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
             <span>{lang === 'bn' ? 'ENG' : 'বাংলা'}</span>
           </button>
 
-          {/* Live Cross-Device Cloud Sync Indicator */}
-          <button
-            onClick={handleSyncClick}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-colors border shadow-2xs whitespace-nowrap cursor-pointer ${
-              justSynced
-                ? 'bg-emerald-600 text-white border-emerald-700 shadow-emerald-500/30'
-                : 'text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border-emerald-300 dark:border-emerald-700'
-            }`}
-            title={lang === 'bn' ? 'রিয়েল-টাইম ক্লাউড সিঙ্ক সক্রিয় (ক্লিক করে এখনই ফোর্স সিঙ্ক করুন)' : 'Real-time Cloud Sync Active (Click to sync now)'}
-          >
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-            <span className="hidden sm:inline">
-              {justSynced ? (lang === 'bn' ? 'সিঙ্ক হয়েছে!' : 'Synced!') : (lang === 'bn' ? 'সিঙ্কড' : 'Synced')}
-            </span>
-          </button>
-
-          {/* Cloud & Drive Backup Button */}
+          {/* 5. Cloud Backup Button */}
           <button
             onClick={() => setIsBackupModalOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg transition-colors border border-slate-300 dark:border-slate-700 shadow-2xs whitespace-nowrap cursor-pointer"
-            title="গুগল ড্রাইভ ও ব্যাকআপ"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/70 hover:bg-emerald-100 dark:hover:bg-emerald-900/80 rounded-xl transition-colors border border-emerald-300 dark:border-emerald-700 shadow-2xs whitespace-nowrap cursor-pointer"
+            title={lang === 'bn' ? 'গুগল ড্রাইভ ও ব্যাকআপ' : 'Backup & Restore'}
           >
             <CloudUpload className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-            <span className="hidden sm:inline">{lang === 'bn' ? 'ব্যাকআপ' : 'Backup'}</span>
+            <span className="hidden md:inline">{lang === 'bn' ? 'ব্যাকআপ' : 'Backup'}</span>
           </button>
         </div>
       </div>
 
-      {/* Mobile & Tablet Horizontal Navigation Strip */}
-      <div className="xl:hidden border-t border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/90 px-2.5 py-2 overflow-x-auto flex items-center gap-1.5 scrollbar-none">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = activeSection === item.id;
-          return (
-            <button
-              key={item.id}
-              onClick={() => setActiveSection(item.id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl whitespace-nowrap shrink-0 transition-all border cursor-pointer ${
-                isActive
-                  ? `bg-linear-to-r ${item.activeGradient} scale-[1.03]`
-                  : `${item.idleBg} ${item.idleText} ${item.idleBorder} shadow-2xs hover:scale-[1.01]`
-              }`}
-            >
-              <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : item.iconIdle}`} />
-              <span>{lang === 'bn' ? item.labelBn : item.labelEn}</span>
-            </button>
-          );
-        })}
+      {/* Tier 2: Dedicated Full-Width Account Heads Navigation Strip */}
+      <div className="border-t border-slate-200/80 dark:border-slate-800/80 bg-slate-50/80 dark:bg-slate-900/90 py-2 shadow-inner">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <nav className="flex items-center gap-2 overflow-x-auto scroll-smooth [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] py-0.5">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = activeSection === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveSection(item.id)}
+                  className={`flex items-center gap-2 px-4 py-2 text-xs md:text-sm font-bold rounded-xl whitespace-nowrap shrink-0 transition-all border cursor-pointer select-none ${
+                    isActive
+                      ? `bg-linear-to-r ${item.activeGradient} shadow-md scale-[1.02]`
+                      : `${item.idleBg} ${item.idleText} ${item.idleBorder} shadow-2xs hover:scale-[1.01]`
+                  }`}
+                >
+                  <Icon className={`w-4 h-4 ${isActive ? 'text-white' : item.iconIdle}`} />
+                  <span className="tracking-tight">{lang === 'bn' ? item.labelBn : item.labelEn}</span>
+                </button>
+              );
+            })}
+          </nav>
+        </div>
       </div>
     </header>
   );
