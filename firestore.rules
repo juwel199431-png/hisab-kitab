@@ -1,0 +1,22 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 64 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidLedger(data) {
+      return data.keys().hasAll(['ledgerId', 'payload', 'updatedAt']) &&
+             data.keys().hasOnly(['ledgerId', 'payload', 'updatedAt']) &&
+             data.ledgerId is string && data.ledgerId.size() > 0 && data.ledgerId.size() <= 64 &&
+             data.payload is string && data.payload.size() > 0 && data.payload.size() <= 1048576 &&
+             data.updatedAt is string && data.updatedAt.size() > 0 && data.updatedAt.size() <= 64;
+    }
+
+    match /financialLedgers/{ledgerId} {
+      allow read: if isValidId(ledgerId);
+      allow create, update: if isValidId(ledgerId) && isValidLedger(request.resource.data);
+      allow delete: if false;
+    }
+  }
+}

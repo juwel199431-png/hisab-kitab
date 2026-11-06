@@ -43,6 +43,8 @@ export const Header: React.FC = () => {
     isPinEnabled,
     setIsPinModalOpen,
     lockApp,
+    isCloudSynced,
+    forcePushToCloud,
   } = useFinance();
 
   const navItems: {
@@ -278,6 +280,19 @@ export const Header: React.FC = () => {
           >
             <Globe2 className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
             <span>{lang === 'bn' ? 'ENG' : 'বাংলা'}</span>
+          </button>
+
+          {/* Live Cross-Device Cloud Sync Indicator */}
+          <button
+            onClick={forcePushToCloud}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 rounded-lg transition-colors border border-emerald-300 dark:border-emerald-700 shadow-2xs whitespace-nowrap cursor-pointer"
+            title={lang === 'bn' ? 'রিয়েল-টাইম ক্লাউড সিঙ্ক সক্রিয় (মোবাইল ও কম্পিউটার সবসময় সিঙ্কড)' : 'Real-time Cloud Sync Active'}
+          >
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span className="hidden sm:inline">{lang === 'bn' ? 'সিঙ্কড' : 'Synced'}</span>
           </button>
 
           {/* Cloud & Drive Backup Button */}

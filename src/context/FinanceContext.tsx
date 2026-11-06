@@ -25,6 +25,7 @@ import {
   saveData,
 } from '../utils/storage';
 import { formatCurrency, TRANSLATIONS } from '../utils/formatters';
+import { subscribeToCloudLedger, pushToCloudLedger } from '../firebase';
 
 interface FinanceContextType {
   data: AppData;
@@ -221,6 +222,11 @@ interface FinanceContextType {
   disableSecurityPin: () => void;
   verifySecurityPin: (enteredPin: string) => boolean;
   lockApp: () => void;
+
+  // Real-time Cloud Synchronization (Mobile <-> Computer)
+  isCloudSynced: boolean;
+  lastCloudSyncTime: Date | null;
+  forcePushToCloud: () => void;
 }
 
 const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
@@ -335,9 +341,41 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return formatCurrency(amount, currency, lang, isPrivacyMode);
   };
 
+  // Real-time Cloud Synchronization (Mobile <-> Computer)
+  const [isCloudSynced, setIsCloudSynced] = useState(false);
+  const [lastCloudSyncTime, setLastCloudSyncTime] = useState<Date | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToCloudLedger(
+      (cloudData) => {
+        setData(cloudData);
+        saveData(cloudData);
+        setIsCloudSynced(true);
+        setLastCloudSyncTime(new Date());
+      },
+      () => {
+        // Cloud document doesn't exist yet: push current local state to initialize cloud
+        pushToCloudLedger(data, true);
+        setIsCloudSynced(true);
+        setLastCloudSyncTime(new Date());
+      }
+    );
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
   useEffect(() => {
     saveData(data);
+    pushToCloudLedger(data);
   }, [data]);
+
+  const forcePushToCloud = () => {
+    pushToCloudLedger(data, true);
+    setIsCloudSynced(true);
+    setLastCloudSyncTime(new Date());
+  };
 
   const setLang = (newLang: 'bn' | 'en') => {
     setLangState(newLang);
@@ -1345,6 +1383,9 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         disableSecurityPin,
         verifySecurityPin,
         lockApp,
+        isCloudSynced,
+        lastCloudSyncTime,
+        forcePushToCloud,
       }}
     >
       {children}

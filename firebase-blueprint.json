@@ -1,0 +1,30 @@
+{
+  "entities": {
+    "FinancialLedger": {
+      "title": "FinancialLedger",
+      "description": "Master cloud synced financial ledger for personal accounts, banks, loans, and transactions.",
+      "type": "object",
+      "properties": {
+        "ledgerId": {
+          "type": "string",
+          "description": "The unique identifier of the financial ledger document."
+        },
+        "payload": {
+          "type": "string",
+          "description": "JSON serialized snapshot of all banks, transactions, savings, and loan accounts."
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "ISO timestamp of the most recent sync update."
+        }
+      },
+      "required": ["ledgerId", "payload", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/financialLedgers/{ledgerId}": {
+      "schema": "FinancialLedger",
+      "description": "Cross-device synced ledger document connecting mobile and computer instances."
+    }
+  }
+}
