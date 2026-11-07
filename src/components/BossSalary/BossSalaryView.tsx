@@ -30,6 +30,7 @@ export const BossSalaryView: React.FC = () => {
     data,
     lang,
     t,
+    getNextVoucherNo,
     deleteTransaction,
     deleteBossDeposit,
     addBossDeposit,
@@ -77,6 +78,16 @@ export const BossSalaryView: React.FC = () => {
   const [expCatId, setExpCatId] = useState('');
   const [expVoucher, setExpVoucher] = useState('');
   const [expNote, setExpNote] = useState('');
+
+  const handleOpenAddExpense = () => {
+    setExpVoucher(getNextVoucherNo());
+    setShowAddExpenseModal(true);
+  };
+
+  const handleOpenAddDeposit = () => {
+    setDepVoucher(getNextVoucherNo());
+    setShowAddDepositModal(true);
+  };
 
   // Add custom category state inside Add Daily Expense
   const [showNewCategoryBox, setShowNewCategoryBox] = useState(false);
@@ -353,16 +364,16 @@ export const BossSalaryView: React.FC = () => {
             </button>
 
             <button
-              onClick={() => setShowAddDepositModal(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-lg transition-colors"
+              onClick={handleOpenAddDeposit}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-lg transition-colors cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>{lang === 'bn' ? '+ বেতন জমা রেকর্ড' : '+ Add Salary Deposit'}</span>
             </button>
 
             <button
-              onClick={() => setShowAddExpenseModal(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-indigo-700 hover:bg-indigo-800 rounded-lg transition-colors shadow-2xs"
+              onClick={handleOpenAddExpense}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-indigo-700 hover:bg-indigo-800 rounded-lg transition-colors shadow-2xs cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>{lang === 'bn' ? '+ দৈনিক খরচ যোগ' : '+ Add Daily Expense'}</span>
@@ -755,15 +766,20 @@ export const BossSalaryView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
-                  {lang === 'bn' ? 'রসিদ বা রেফারেন্স নম্বর' : 'Receipt / Voucher #'}
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block font-semibold text-slate-700">
+                    {lang === 'bn' ? 'রসিদ বা ভাউচার নম্বর' : 'Receipt / Voucher #'}
+                  </label>
+                  <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                    ⚡ {lang === 'bn' ? 'অটো জেনারেটেড' : 'Auto Generated'}
+                  </span>
+                </div>
                 <input
                   type="text"
-                  placeholder="SLR-2026-10"
+                  placeholder="e.g. 1001"
                   value={depVoucher}
                   onChange={(e) => setDepVoucher(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md font-mono"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md font-mono font-bold text-slate-800"
                 />
               </div>
 
@@ -919,15 +935,20 @@ export const BossSalaryView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
-                  {lang === 'bn' ? 'ভাউচার / মেমো / ক্যাশ রসিদ নং' : 'Voucher / Bill #'}
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block font-semibold text-slate-700">
+                    {lang === 'bn' ? 'ভাউচার / মেমো / ক্যাশ রসিদ নং' : 'Voucher / Bill #'}
+                  </label>
+                  <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                    ⚡ {lang === 'bn' ? 'অটো জেনারেটেড' : 'Auto Generated'}
+                  </span>
+                </div>
                 <input
                   type="text"
-                  placeholder="যেমন: VCH-105"
+                  placeholder="e.g. 1001"
                   value={expVoucher}
                   onChange={(e) => setExpVoucher(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md font-mono"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md font-mono font-bold text-slate-800"
                 />
               </div>
 

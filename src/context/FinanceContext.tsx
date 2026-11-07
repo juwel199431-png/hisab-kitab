@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState, useCallback } from 'react';
 import {
   AccountSection,
   AppData,
@@ -24,7 +24,7 @@ import {
   loadStoredData,
   saveData,
 } from '../utils/storage';
-import { formatCurrency, TRANSLATIONS } from '../utils/formatters';
+import { formatCurrency, TRANSLATIONS, getNextVoucherNumber } from '../utils/formatters';
 import { subscribeToCloudLedger, pushToCloudLedger } from '../firebase';
 
 interface FinanceContextType {
@@ -34,6 +34,9 @@ interface FinanceContextType {
   t: (key: keyof typeof TRANSLATIONS.bn) => string;
   activeSection: AccountSection;
   setActiveSection: (section: AccountSection) => void;
+
+  // Auto-generated Sequential Voucher / Invoice Number
+  getNextVoucherNo: () => string;
   
   // Privacy & Dark Theme
   isPrivacyMode: boolean;
@@ -49,11 +52,16 @@ interface FinanceContextType {
   setIsConverterOpen: (open: boolean) => void;
   getTotalNetWorthBdt: () => number;
 
-  // Smart Due Dates & Alerts
+  // Smart Due Dates & Alerts with Seen/Unread Tracking
   isAlertsOpen: boolean;
   setIsAlertsOpen: (open: boolean) => void;
   smartAlerts: SmartAlert[];
   totalAlertsCount: number;
+  unreadAlertsCount: number;
+  markAlertsAsSeen: () => void;
+  markSingleAlertAsSeen: (id: string, isOverdue?: boolean) => void;
+  isAlertSeen: (id: string, isOverdue?: boolean) => boolean;
+  resetAllSeenAlerts: () => void;
 
   // Modals
   isQuickAddOpen: boolean;
@@ -288,6 +296,16 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const [isConverterOpen, setIsConverterOpen] = useState(false);
   const [isAlertsOpen, setIsAlertsOpen] = useState(false);
+
+  // Seen / Read Tracking for Smart Alerts
+  const [seenAlertKeys, setSeenAlertKeys] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('hisab_kitab_seen_alerts_v2');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
   // Security PIN Lock
   const PIN_CODE_KEY = 'hisab_kitab_pin_code';
@@ -529,10 +547,22 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   };
 
+  // Auto-generated Sequential Voucher / Invoice Number
+  const getNextVoucherNo = () => {
+    return getNextVoucherNumber(
+      data.transactions,
+      data.bossDeposits,
+      data.kuwaitReceivableTransactions,
+      data.kuwaitPayableTransactions
+    );
+  };
+
   // Transaction Handlers
   const addTransaction = (tx: Omit<Transaction, 'id' | 'createdAt'>) => {
+    const autoVoucher = tx.voucherNo && tx.voucherNo.trim() ? tx.voucherNo.trim() : getNextVoucherNo();
     const newTx: Transaction = {
       ...tx,
+      voucherNo: autoVoucher,
       id: `tx-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       createdAt: new Date().toISOString(),
     };
@@ -572,8 +602,10 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // Boss Deposits Handlers
   const addBossDeposit = (deposit: Omit<BossSalaryDeposit, 'id' | 'createdAt'>) => {
+    const autoReceipt = deposit.receiptNumber && deposit.receiptNumber.trim() ? deposit.receiptNumber.trim() : getNextVoucherNo();
     const newDep: BossSalaryDeposit = {
       ...deposit,
+      receiptNumber: autoReceipt,
       id: `bdep-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       createdAt: new Date().toISOString(),
     };
@@ -706,7 +738,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }): Transaction => {
     const loan = data.loans.find((l) => l.id === loanId);
     const bank = data.banks.find((b) => b.id === fromBankId);
-    const invNo = invoiceNo?.trim() || `INV-LN-${Date.now().toString().slice(-6)}`;
+    const invNo = invoiceNo?.trim() || getNextVoucherNo();
 
     const newTx: Transaction = {
       id: `tx-loan-rep-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
@@ -896,8 +928,10 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const addKuwaitReceivableTransaction = (tx: Omit<KuwaitReceivableTransaction, 'id' | 'createdAt'>): KuwaitReceivableTransaction => {
+    const autoVoucher = tx.voucherNo && tx.voucherNo.trim() ? tx.voucherNo.trim() : getNextVoucherNo();
     const newTx: KuwaitReceivableTransaction = {
       ...tx,
+      voucherNo: autoVoucher,
       id: `krt-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       currency: 'KWD',
       createdAt: new Date().toISOString(),
@@ -1017,8 +1051,10 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const addKuwaitPayableTransaction = (tx: Omit<KuwaitPayableTransaction, 'id' | 'createdAt'>): KuwaitPayableTransaction => {
+    const autoVoucher = tx.voucherNo && tx.voucherNo.trim() ? tx.voucherNo.trim() : getNextVoucherNo();
     const newTx: KuwaitPayableTransaction = {
       ...tx,
+      voucherNo: autoVoucher,
       id: `kpt-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       currency: 'KWD',
       createdAt: new Date().toISOString(),
@@ -1083,6 +1119,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }): Transaction => {
     const savings = data.savingsAccounts.find((s) => s.id === params.savingsId);
     const bank = data.banks.find((b) => b.id === params.bankId);
+    const autoVoucher = params.voucherNo?.trim() || getNextVoucherNo();
 
     const newTx: Transaction = {
       id: `tx-inst-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
@@ -1094,7 +1131,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       amount: params.amount,
       currency: 'BDT',
       date: params.date,
-      voucherNo: params.voucherNo?.trim() || undefined,
+      voucherNo: autoVoucher,
       note: params.note?.trim() || `${savings?.name || 'DPS'} এর কিস্তি জমা (${bank?.name || 'Bank'} থেকে কর্তন)`,
       createdAt: new Date().toISOString(),
     };
@@ -1118,6 +1155,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }): Transaction => {
     const fromBank = data.banks.find((b) => b.id === params.fromBankId);
     const toBank = data.banks.find((b) => b.id === params.toBankId);
+    const autoVoucher = params.voucherNo?.trim() || getNextVoucherNo();
 
     const newTx: Transaction = {
       id: `tx-xfer-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
@@ -1129,7 +1167,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       amount: params.amount,
       currency: 'BDT',
       date: params.date,
-      voucherNo: params.voucherNo?.trim() || undefined,
+      voucherNo: autoVoucher,
       note: params.note?.trim() || `${fromBank?.name || 'Bank'} থেকে ${toBank?.name || 'Bank'} এ ফান্ড ট্রান্সফার`,
       createdAt: new Date().toISOString(),
     };
@@ -1283,6 +1321,72 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     });
   }, [data]);
 
+  // Clear any existing backlogged alerts on first load so user starts with 0 badge (as requested)
+  useEffect(() => {
+    const alreadyCleared = localStorage.getItem('hisab_kitab_initial_alerts_cleared_v1');
+    if (!alreadyCleared && smartAlerts.length > 0) {
+      const initialKeys = smartAlerts.map((a) => `${a.id}${a.isOverdue ? '-od' : ''}`);
+      setSeenAlertKeys((prev) => {
+        const merged = Array.from(new Set([...prev, ...initialKeys]));
+        try {
+          localStorage.setItem('hisab_kitab_seen_alerts_v2', JSON.stringify(merged));
+        } catch (e) {
+          console.error('Failed to save initial cleared alerts', e);
+        }
+        return merged;
+      });
+      localStorage.setItem('hisab_kitab_initial_alerts_cleared_v1', 'true');
+    }
+  }, [smartAlerts]);
+
+  const isAlertSeen = useCallback(
+    (id: string, isOverdue?: boolean): boolean => {
+      const key = `${id}${isOverdue ? '-od' : ''}`;
+      return seenAlertKeys.includes(key);
+    },
+    [seenAlertKeys]
+  );
+
+  const unreadAlertsCount = useMemo(() => {
+    return smartAlerts.filter((a) => !seenAlertKeys.includes(`${a.id}${a.isOverdue ? '-od' : ''}`)).length;
+  }, [smartAlerts, seenAlertKeys]);
+
+  const markAlertsAsSeen = useCallback(() => {
+    const currentKeys = smartAlerts.map((a) => `${a.id}${a.isOverdue ? '-od' : ''}`);
+    setSeenAlertKeys((prev) => {
+      const updated = Array.from(new Set([...prev, ...currentKeys]));
+      try {
+        localStorage.setItem('hisab_kitab_seen_alerts_v2', JSON.stringify(updated));
+      } catch (e) {
+        console.error('Failed to save seen alerts', e);
+      }
+      return updated;
+    });
+  }, [smartAlerts]);
+
+  const markSingleAlertAsSeen = useCallback((id: string, isOverdue?: boolean) => {
+    const key = `${id}${isOverdue ? '-od' : ''}`;
+    setSeenAlertKeys((prev) => {
+      if (prev.includes(key)) return prev;
+      const updated = [...prev, key];
+      try {
+        localStorage.setItem('hisab_kitab_seen_alerts_v2', JSON.stringify(updated));
+      } catch (e) {
+        console.error('Failed to save seen alerts', e);
+      }
+      return updated;
+    });
+  }, []);
+
+  const resetAllSeenAlerts = useCallback(() => {
+    setSeenAlertKeys([]);
+    try {
+      localStorage.removeItem('hisab_kitab_seen_alerts_v2');
+    } catch (e) {
+      console.error('Failed to reset seen alerts', e);
+    }
+  }, []);
+
   const totalAlertsCount = smartAlerts.length;
 
   return (
@@ -1294,6 +1398,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         t,
         activeSection,
         setActiveSection,
+        getNextVoucherNo,
         isPrivacyMode,
         togglePrivacyMode,
         theme,
@@ -1308,6 +1413,11 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setIsAlertsOpen,
         smartAlerts,
         totalAlertsCount,
+        unreadAlertsCount,
+        markAlertsAsSeen,
+        markSingleAlertAsSeen,
+        isAlertSeen,
+        resetAllSeenAlerts,
         isQuickAddOpen,
         setIsQuickAddOpen,
         quickAddDefaultSection,

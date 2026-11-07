@@ -28,6 +28,7 @@ export const BangladeshBankingView: React.FC = () => {
     data,
     lang,
     t,
+    getNextVoucherNo,
     getBankBalance,
     getTotalBdBanksBalance,
     deleteTransaction,
@@ -180,6 +181,7 @@ export const BangladeshBankingView: React.FC = () => {
     }
     setTransferFromBankId(data.banks[0]?.id || '');
     setTransferToBankId(data.banks[1]?.id || data.banks[0]?.id || '');
+    setTransferVoucher(getNextVoucherNo());
     setIsTransferModalOpen(true);
   };
 
@@ -940,15 +942,20 @@ export const BangladeshBankingView: React.FC = () => {
 
               {/* Cheque / Txn Ref */}
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
-                  {lang === 'bn' ? 'চেক নং / ট্রানজেকশন রেফারেন্স ID (ঐচ্ছিক)' : 'Cheque No / Txn Ref ID (Optional)'}
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block font-semibold text-slate-700">
+                    {lang === 'bn' ? 'ভাউচার / রেফারেন্স / চেক নং' : 'Voucher / Ref / Cheque #'}
+                  </label>
+                  <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                    ⚡ {lang === 'bn' ? 'অটো জেনারেটেড' : 'Auto Generated'}
+                  </span>
+                </div>
                 <input
                   type="text"
-                  placeholder="যেমন: CHQ-882194 বা TXN-9902"
+                  placeholder="e.g. 1001"
                   value={transferVoucher}
                   onChange={(e) => setTransferVoucher(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg font-mono"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg font-mono font-bold text-slate-800"
                 />
               </div>
 

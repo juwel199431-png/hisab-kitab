@@ -30,6 +30,7 @@ export const SavingsPortfolioView: React.FC = () => {
     data,
     lang,
     t,
+    getNextVoucherNo,
     getSavingsBalance,
     getTotalDpsSavings,
     getTotalInsuranceSavings,
@@ -254,7 +255,7 @@ export const SavingsPortfolioView: React.FC = () => {
     setInstBankId(data.banks[0]?.id || '');
     setInstAmount(String(targetAcc.monthlyAmount || ''));
     setInstDate(new Date().toISOString().split('T')[0]);
-    setInstVoucher('');
+    setInstVoucher(getNextVoucherNo());
     setInstNote(lang === 'bn' ? `${targetAcc.name} কিস্তি পরিশোধ` : `Monthly installment for ${targetAcc.name}`);
     setIsInstallmentModalOpen(true);
   };
@@ -1818,15 +1819,20 @@ export const SavingsPortfolioView: React.FC = () => {
 
               {/* Voucher / Txn Ref */}
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
-                  {lang === 'bn' ? 'ভাউচার নং / রেফারেন্স ID (ঐচ্ছিক)' : 'Voucher No / Txn Ref ID (Optional)'}
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block font-semibold text-slate-700">
+                    {lang === 'bn' ? 'ভাউচার / রেফারেন্স নং' : 'Voucher / Ref #'}
+                  </label>
+                  <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                    ⚡ {lang === 'bn' ? 'অটো জেনারেটেড' : 'Auto Generated'}
+                  </span>
+                </div>
                 <input
                   type="text"
-                  placeholder="যেমন: DPS-PAY-04 বা TXN-7721"
+                  placeholder="e.g. 1001"
                   value={instVoucher}
                   onChange={(e) => setInstVoucher(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg font-mono"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg font-mono font-bold text-slate-800"
                 />
               </div>
 

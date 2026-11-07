@@ -27,7 +27,7 @@ export const LoanRepaymentModal: React.FC<LoanRepaymentModalProps> = ({
   selectedLoan,
   onPaymentSuccess,
 }) => {
-  const { data, lang, t, getBankBalance, getLoanBalance, addLoanRepayment } = useFinance();
+  const { data, lang, t, getBankBalance, getLoanBalance, addLoanRepayment, getNextVoucherNo } = useFinance();
 
   const [fromBankId, setFromBankId] = useState('');
   const [amount, setAmount] = useState('');
@@ -46,11 +46,8 @@ export const LoanRepaymentModal: React.FC<LoanRepaymentModalProps> = ({
       // Auto-populate default installment amount
       setAmount(String(selectedLoan.installmentAmount || ''));
       setDate(new Date().toISOString().split('T')[0]);
-      // Auto-generate invoice number: INV-LN-YYYYMM-XXXX
-      const d = new Date();
-      const yrMo = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}`;
-      const randomPart = Math.floor(1000 + Math.random() * 9000);
-      setInvoiceNo(`INV-LN-${yrMo}-${randomPart}`);
+      // Auto-generate invoice/voucher serial number
+      setInvoiceNo(getNextVoucherNo());
       setNote(`${selectedLoan.name} কিস্তি পরিশোধ`);
       setErrorMsg('');
     }
@@ -213,16 +210,21 @@ export const LoanRepaymentModal: React.FC<LoanRepaymentModalProps> = ({
 
           {/* 3. Invoice Number */}
           <div>
-            <label className="block font-bold text-slate-800 mb-1 flex items-center gap-1">
-              <Receipt className="w-3 h-3 text-indigo-600" />
-              <span>{lang === 'bn' ? 'ইনভয়েস / ভাউচার নম্বর' : 'Invoice / Voucher Number'}</span>
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="font-bold text-slate-800 flex items-center gap-1">
+                <Receipt className="w-3 h-3 text-indigo-600" />
+                <span>{lang === 'bn' ? 'ইনভয়েস / ভাউচার নম্বর' : 'Invoice / Voucher Number'}</span>
+              </label>
+              <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                ⚡ {lang === 'bn' ? 'অটো জেনারেটেড' : 'Auto Generated'}
+              </span>
+            </div>
             <input
               type="text"
               value={invoiceNo}
               onChange={(e) => setInvoiceNo(e.target.value)}
-              placeholder="INV-LN-..."
-              className="w-full px-3 py-2 text-xs font-mono font-bold border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+              placeholder="e.g. 1001"
+              className="w-full px-3 py-2 text-xs font-mono font-bold border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 text-slate-800"
             />
           </div>
 

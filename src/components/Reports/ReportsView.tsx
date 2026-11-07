@@ -87,11 +87,18 @@ export const ReportsView: React.FC = () => {
 
   // Filter States
   const [accountFilter, setAccountFilter] = useState<AccountFilter>('all');
+  const [selectedBankId, setSelectedBankId] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+
+  // Sub Ledger View Mode ('sub-ledger' vs 'list')
+  const [viewMode, setViewMode] = useState<'sub-ledger' | 'list'>('sub-ledger');
+
+  // Sub Ledger is strictly enabled for heads with BOTH Income/Inflow and Expense/Outflow
+  const isSubLedgerEligible = accountFilter === 'boss-salary' || accountFilter === 'bd-bank';
 
   // Sorting States
   const [sortField, setSortField] = useState<SortField>('date');
@@ -153,12 +160,27 @@ export const ReportsView: React.FC = () => {
   // Reset all filters
   const handleResetFilters = () => {
     setAccountFilter('all');
+    setSelectedBankId('all');
     setCategoryFilter('all');
     setTypeFilter('all');
     setStatusFilter('all');
     setSearchQuery('');
     handlePresetChange('all');
+    setViewMode('list');
     setCurrentPage(1);
+  };
+
+  // Select account filter and automatically enable Sub Ledger for dual-direction heads
+  const handleSelectAccountFilter = (accId: AccountFilter) => {
+    setAccountFilter(accId);
+    setSelectedBankId('all');
+    setCategoryFilter('all');
+    setCurrentPage(1);
+    if (accId === 'boss-salary' || accId === 'bd-bank') {
+      setViewMode('sub-ledger');
+    } else {
+      setViewMode('list');
+    }
   };
 
   // Build Unified Row Dataset
@@ -483,13 +505,396 @@ export const ReportsView: React.FC = () => {
   const activeFiltersCount = useMemo(() => {
     let count = 0;
     if (accountFilter !== 'all') count++;
+    if (selectedBankId !== 'all') count++;
     if (categoryFilter !== 'all') count++;
     if (typeFilter !== 'all') count++;
     if (statusFilter !== 'all') count++;
     if (searchQuery.trim()) count++;
     if (datePreset !== 'all') count++;
     return count;
-  }, [accountFilter, categoryFilter, typeFilter, statusFilter, searchQuery, datePreset]);
+  }, [accountFilter, selectedBankId, categoryFilter, typeFilter, statusFilter, searchQuery, datePreset]);
+
+  // Format numbers specifically for the accounting Sub Ledger style
+  const formatSubLedgerNumber = (num: number, curr: 'BDT' | 'KWD', isCredit: boolean = false): string => {
+    const decimals = curr === 'KWD' ? 3 : 2;
+    if (num === 0) return decimals === 3 ? '0.000' : '0.00';
+    const absVal = Math.abs(num);
+    const formatted = absVal.toLocaleString('en-US', {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    });
+    if (isCredit) {
+      return `(${formatted})`;
+    }
+    return formatted;
+  };
+
+  // Sub Ledger Dataset (Specifically for boss-salary and bd-bank)
+  const subLedgerData = useMemo(() => {
+    if (!isSubLedgerEligible) return null;
+
+    const curr: 'BDT' | 'KWD' = accountFilter === 'boss-salary' ? 'KWD' : 'BDT';
+
+    // 1. Account Banner Title (Clean Account Head name without CASH prefix or CASH IN HAND)
+    let accountBannerTitle = '';
+    if (accountFilter === 'boss-salary') {
+      accountBannerTitle =
+        lang === 'bn'
+          ? 'শাকের ভাই এর বেতন হিসাব'
+          : 'Shaker Bhai Salary & Expense';
+    } else if (accountFilter === 'bd-bank') {
+      if (selectedBankId !== 'all') {
+        const b = data.banks.find((x) => x.id === selectedBankId);
+        const accNo = b?.accountNumber ? ` (${b.accountNumber})` : '';
+        accountBannerTitle = `${b?.name || 'Bank'}${accNo}`;
+      } else {
+        accountBannerTitle =
+          lang === 'bn'
+            ? 'বাংলাদেশের ব্যাংকের হিসাব বিবরনী'
+            : 'Bangladesh Bank Accounts';
+      }
+    }
+
+    // 2. Opening Balance (transactions prior to startDate)
+    let openingBal = 0;
+
+    if (accountFilter === 'boss-salary') {
+      const priorDeposits = data.bossDeposits
+        .filter((d) => (startDate ? d.depositDate < startDate : false))
+        .reduce((sum, d) => sum + Number(d.amount || 0), 0);
+
+      const priorExpenses = data.transactions
+        .filter((t) => t.section === 'boss-salary' && (startDate ? t.date < startDate : false))
+        .reduce((sum, t) => sum + Number(t.amount || 0), 0);
+
+      openingBal = priorDeposits - priorExpenses;
+    } else if (accountFilter === 'bd-bank') {
+      let baseOpening = 0;
+      if (selectedBankId !== 'all') {
+        const b = data.banks.find((x) => x.id === selectedBankId);
+        baseOpening = Number(b?.openingBalance || 0);
+      } else {
+        baseOpening = data.banks.reduce((sum, b) => sum + Number(b.openingBalance || 0), 0);
+      }
+
+      let priorInflows = 0;
+      let priorOutflows = 0;
+
+      data.transactions.forEach((tx) => {
+        if (tx.section !== 'bd-bank') return;
+        if (startDate && tx.date >= startDate) return;
+
+        const amt = Number(tx.amount || 0);
+
+        if (selectedBankId !== 'all') {
+          if (tx.type === 'income' && tx.bankId === selectedBankId) {
+            priorInflows += amt;
+          } else if (tx.type === 'expense' && tx.bankId === selectedBankId) {
+            priorOutflows += amt;
+          } else if (tx.type === 'transfer') {
+            if (tx.toBankId === selectedBankId) priorInflows += amt;
+            if (tx.fromBankId === selectedBankId) priorOutflows += amt;
+          }
+        } else {
+          if (tx.type === 'income') {
+            priorInflows += amt;
+          } else if (tx.type === 'expense') {
+            priorOutflows += amt;
+          } else if (tx.type === 'transfer') {
+            const isFromBd = data.banks.some((b) => b.id === tx.fromBankId);
+            const isToBd = data.banks.some((b) => b.id === tx.toBankId);
+            if (isFromBd && !isToBd) {
+              priorOutflows += amt;
+            } else if (!isFromBd && isToBd) {
+              priorInflows += amt;
+            }
+          }
+        }
+      });
+
+      openingBal = baseOpening + priorInflows - priorOutflows;
+    }
+
+    // 3. Period Items (within date range)
+    interface RawSubItem {
+      id: string;
+      sourceType: 'transaction' | 'boss-deposit';
+      date: string;
+      voucher: string;
+      account: string;
+      debit: number;
+      credit: number;
+      remarks: string;
+      originalRow?: AuditReportRow;
+    }
+
+    const rawItems: RawSubItem[] = [];
+
+    if (accountFilter === 'boss-salary') {
+      // Inflow: Salary deposits
+      data.bossDeposits.forEach((dep) => {
+        if (startDate && dep.depositDate < startDate) return;
+        if (endDate && dep.depositDate > endDate) return;
+
+        const amt = Number(dep.amount || 0);
+        const vch = dep.receiptNumber
+          ? `Rct : ${dep.receiptNumber}`
+          : `Rct : ${dep.id.slice(-4)}`;
+        const acc = lang === 'bn' ? 'মাসিক বেতন প্রাপ্তি' : 'Monthly Salary Deposit';
+        const origRow = unifiedData.find((u) => u.id === dep.id);
+
+        rawItems.push({
+          id: dep.id,
+          sourceType: 'boss-deposit',
+          date: dep.depositDate,
+          voucher: vch,
+          account: acc,
+          debit: amt,
+          credit: 0,
+          remarks: dep.note || (lang === 'bn' ? 'বেতন জমা' : 'Monthly Salary Deposit'),
+          originalRow: origRow,
+        });
+      });
+
+      // Outflow: Expenses
+      data.transactions.forEach((tx) => {
+        if (tx.section !== 'boss-salary') return;
+        if (startDate && tx.date < startDate) return;
+        if (endDate && tx.date > endDate) return;
+
+        if (categoryFilter !== 'all') {
+          const cat = data.categories.find((c) => c.id === categoryFilter);
+          if (cat && tx.categoryNameBn !== cat.nameBn && tx.categoryNameEn !== cat.nameEn) {
+            return;
+          }
+        }
+
+        if (typeFilter !== 'all' && tx.type !== typeFilter) return;
+        if (statusFilter !== 'all' && tx.paymentStatus !== statusFilter) return;
+
+        const amt = Number(tx.amount || 0);
+        const vch = tx.voucherNo ? `Pmt : ${tx.voucherNo}` : `Pmt : ${tx.id.slice(-4)}`;
+        const acc =
+          (lang === 'bn' ? tx.categoryNameBn : (tx.categoryNameEn || tx.categoryNameBn)) ||
+          'Expense';
+        const origRow = unifiedData.find((u) => u.id === tx.id);
+
+        rawItems.push({
+          id: tx.id,
+          sourceType: 'transaction',
+          date: tx.date,
+          voucher: vch,
+          account: acc,
+          debit: 0,
+          credit: amt,
+          remarks: tx.note || '',
+          originalRow: origRow,
+        });
+      });
+    } else if (accountFilter === 'bd-bank') {
+      data.transactions.forEach((tx) => {
+        if (tx.section !== 'bd-bank') return;
+        if (startDate && tx.date < startDate) return;
+        if (endDate && tx.date > endDate) return;
+
+        if (selectedBankId !== 'all') {
+          const matchBank =
+            tx.bankId === selectedBankId ||
+            tx.fromBankId === selectedBankId ||
+            tx.toBankId === selectedBankId;
+          if (!matchBank) return;
+        }
+
+        if (categoryFilter !== 'all') {
+          const cat = data.categories.find((c) => c.id === categoryFilter);
+          if (cat && tx.categoryNameBn !== cat.nameBn && tx.categoryNameEn !== cat.nameEn) {
+            return;
+          }
+        }
+
+        if (typeFilter !== 'all' && tx.type !== typeFilter) return;
+        if (statusFilter !== 'all' && tx.paymentStatus !== statusFilter) return;
+
+        const amt = Number(tx.amount || 0);
+        const origRow = unifiedData.find((u) => u.id === tx.id);
+        const acc =
+          (lang === 'bn' ? tx.categoryNameBn : (tx.categoryNameEn || tx.categoryNameBn)) ||
+          'Bank Transaction';
+
+        if (selectedBankId !== 'all') {
+          if (tx.type === 'income' && tx.bankId === selectedBankId) {
+            rawItems.push({
+              id: tx.id,
+              sourceType: 'transaction',
+              date: tx.date,
+              voucher: tx.voucherNo ? `Rct : ${tx.voucherNo}` : `Rct : ${tx.id.slice(-4)}`,
+              account: acc,
+              debit: amt,
+              credit: 0,
+              remarks: tx.note || '',
+              originalRow: origRow,
+            });
+          } else if (tx.type === 'expense' && tx.bankId === selectedBankId) {
+            rawItems.push({
+              id: tx.id,
+              sourceType: 'transaction',
+              date: tx.date,
+              voucher: tx.voucherNo ? `Pmt : ${tx.voucherNo}` : `Pmt : ${tx.id.slice(-4)}`,
+              account: acc,
+              debit: 0,
+              credit: amt,
+              remarks: tx.note || '',
+              originalRow: origRow,
+            });
+          } else if (tx.type === 'transfer') {
+            if (tx.toBankId === selectedBankId) {
+              rawItems.push({
+                id: `${tx.id}-in`,
+                sourceType: 'transaction',
+                date: tx.date,
+                voucher: tx.voucherNo ? `Rct : ${tx.voucherNo}` : `Rct : ${tx.id.slice(-4)}`,
+                account: `${acc} (Transfer In)`,
+                debit: amt,
+                credit: 0,
+                remarks: tx.note || '',
+                originalRow: origRow,
+              });
+            }
+            if (tx.fromBankId === selectedBankId) {
+              rawItems.push({
+                id: `${tx.id}-out`,
+                sourceType: 'transaction',
+                date: tx.date,
+                voucher: tx.voucherNo ? `Pmt : ${tx.voucherNo}` : `Pmt : ${tx.id.slice(-4)}`,
+                account: `${acc} (Transfer Out)`,
+                debit: 0,
+                credit: amt,
+                remarks: tx.note || '',
+                originalRow: origRow,
+              });
+            }
+          }
+        } else {
+          // All BD banks combined
+          if (tx.type === 'income') {
+            rawItems.push({
+              id: tx.id,
+              sourceType: 'transaction',
+              date: tx.date,
+              voucher: tx.voucherNo ? `Rct : ${tx.voucherNo}` : `Rct : ${tx.id.slice(-4)}`,
+              account: acc,
+              debit: amt,
+              credit: 0,
+              remarks: tx.note || '',
+              originalRow: origRow,
+            });
+          } else if (tx.type === 'expense') {
+            rawItems.push({
+              id: tx.id,
+              sourceType: 'transaction',
+              date: tx.date,
+              voucher: tx.voucherNo ? `Pmt : ${tx.voucherNo}` : `Pmt : ${tx.id.slice(-4)}`,
+              account: acc,
+              debit: 0,
+              credit: amt,
+              remarks: tx.note || '',
+              originalRow: origRow,
+            });
+          } else if (tx.type === 'transfer') {
+            const isFromBd = data.banks.some((b) => b.id === tx.fromBankId);
+            const isToBd = data.banks.some((b) => b.id === tx.toBankId);
+            if (isFromBd && !isToBd) {
+              rawItems.push({
+                id: tx.id,
+                sourceType: 'transaction',
+                date: tx.date,
+                voucher: tx.voucherNo ? `Pmt : ${tx.voucherNo}` : `Pmt : ${tx.id.slice(-4)}`,
+                account: `${acc} (DPS/Savings Transfer)`,
+                debit: 0,
+                credit: amt,
+                remarks: tx.note || '',
+                originalRow: origRow,
+              });
+            } else if (!isFromBd && isToBd) {
+              rawItems.push({
+                id: tx.id,
+                sourceType: 'transaction',
+                date: tx.date,
+                voucher: tx.voucherNo ? `Rct : ${tx.voucherNo}` : `Rct : ${tx.id.slice(-4)}`,
+                account: `${acc} (Transfer In)`,
+                debit: amt,
+                credit: 0,
+                remarks: tx.note || '',
+                originalRow: origRow,
+              });
+            }
+          }
+        }
+      });
+    }
+
+    // 4. Search Filter
+    let filteredItems = rawItems;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      filteredItems = rawItems.filter((item) => {
+        return (
+          item.account.toLowerCase().includes(q) ||
+          item.remarks.toLowerCase().includes(q) ||
+          item.voucher.toLowerCase().includes(q) ||
+          item.date.includes(q)
+        );
+      });
+    }
+
+    // 5. Sort chronologically ascending for proper running balance calculation
+    filteredItems.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    // 6. Build progressive running balance
+    let runningBalance = openingBal;
+    const finalRows = filteredItems.map((item, idx) => {
+      runningBalance = runningBalance + item.debit - item.credit;
+      const dParts = item.date.split('-');
+      const formattedDate =
+        dParts.length === 3 ? `${dParts[2]}/${dParts[1]}/${dParts[0]}` : item.date;
+
+      return {
+        ...item,
+        sl: idx + 3, // In Image 2: SL 1 is Account Banner, SL 2 is Opening Balance, SL 3+ are Transactions!
+        formattedDate,
+        balance: runningBalance,
+      };
+    });
+
+    const totalDebit = filteredItems.reduce((acc, r) => acc + r.debit, 0);
+    const totalCredit = filteredItems.reduce((acc, r) => acc + r.credit, 0);
+
+    return {
+      currency: curr,
+      accountBannerTitle,
+      openingBal,
+      rows: finalRows,
+      totalPeriodDebit: totalDebit,
+      totalPeriodCredit: totalCredit,
+      closingBalance: runningBalance,
+    };
+  }, [
+    isSubLedgerEligible,
+    accountFilter,
+    selectedBankId,
+    startDate,
+    endDate,
+    categoryFilter,
+    typeFilter,
+    statusFilter,
+    searchQuery,
+    data.banks,
+    data.bossDeposits,
+    data.transactions,
+    data.categories,
+    lang,
+    unifiedData,
+  ]);
 
   // Pagination calculation
   const totalPages = Math.ceil(filteredRows.length / pageSize) || 1;
@@ -499,6 +904,62 @@ export const ReportsView: React.FC = () => {
   }, [filteredRows, currentPage, pageSize]);
 
   const handleExportFullCSV = () => {
+    // If Sub Ledger is active, export using the exact Sub Ledger columns (without voucher column)
+    if (isSubLedgerEligible && subLedgerData) {
+      const headers = [
+        '#',
+        'Date',
+        'Account',
+        `Debit (${subLedgerData.currency})`,
+        `Credit (${subLedgerData.currency})`,
+        `Balance (${subLedgerData.currency})`,
+        'Remarks',
+      ];
+
+      const csvRows = [
+        ['1', '', subLedgerData.accountBannerTitle, '', '', '', ''],
+        [
+          '2',
+          '',
+          'Opening Balance',
+          formatSubLedgerNumber(subLedgerData.openingBal, subLedgerData.currency, false),
+          subLedgerData.currency === 'KWD' ? '0.000' : '0.00',
+          formatSubLedgerNumber(subLedgerData.openingBal, subLedgerData.currency, false),
+          '',
+        ],
+        ...subLedgerData.rows.map((r) => [
+          r.sl,
+          r.formattedDate,
+          r.account,
+          r.debit > 0
+            ? formatSubLedgerNumber(r.debit, subLedgerData.currency, false)
+            : subLedgerData.currency === 'KWD' ? '0.000' : '0.00',
+          r.credit > 0
+            ? formatSubLedgerNumber(r.credit, subLedgerData.currency, true)
+            : subLedgerData.currency === 'KWD' ? '0.000' : '0.00',
+          formatSubLedgerNumber(r.balance, subLedgerData.currency, false),
+          r.remarks,
+        ]),
+        [
+          'TOTAL',
+          '',
+          'Closing Balance',
+          formatSubLedgerNumber(
+            subLedgerData.openingBal + subLedgerData.totalPeriodDebit,
+            subLedgerData.currency,
+            false
+          ),
+          formatSubLedgerNumber(subLedgerData.totalPeriodCredit, subLedgerData.currency, true),
+          formatSubLedgerNumber(subLedgerData.closingBalance, subLedgerData.currency, false),
+          '',
+        ],
+      ];
+
+      const filename = `SubLedger-${accountFilter}-${startDate || 'all'}-to-${endDate || 'now'}`;
+      exportToCSV(filename, [headers, ...csvRows]);
+      return;
+    }
+
     const headers = [
       lang === 'bn' ? 'তারিখ' : 'Date',
       lang === 'bn' ? 'অ্যাকাউন্ট / হেড' : 'Account/Head',
@@ -508,7 +969,6 @@ export const ReportsView: React.FC = () => {
       lang === 'bn' ? 'পরিমাণ' : 'Amount',
       lang === 'bn' ? 'অবস্থা' : 'Status',
       lang === 'bn' ? 'নোট / বিবরণ' : 'Note/Details',
-      lang === 'bn' ? 'ভাউচার নং' : 'Voucher No',
     ];
 
     const rows = filteredRows.map((r) => [
@@ -520,7 +980,6 @@ export const ReportsView: React.FC = () => {
       r.amount.toFixed(r.currency === 'KWD' ? 3 : 2),
       r.status ? (r.status === 'paid' ? 'Paid' : 'Unpaid') : '',
       r.note || '',
-      r.voucherNo || '',
     ]);
 
     const filename = `Financial-Report-${startDate || 'all'}-to-${endDate || 'now'}`;
@@ -859,11 +1318,7 @@ export const ReportsView: React.FC = () => {
               return (
                 <button
                   key={acc.id}
-                  onClick={() => {
-                    setAccountFilter(acc.id);
-                    setCategoryFilter('all');
-                    setCurrentPage(1);
-                  }}
+                  onClick={() => handleSelectAccountFilter(acc.id)}
                   className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 border shadow-2xs ${
                     isActive
                       ? `bg-linear-to-r ${acc.activeGradient} border-transparent scale-[1.02]`
@@ -884,6 +1339,47 @@ export const ReportsView: React.FC = () => {
             })}
           </div>
         </div>
+
+        {/* Bank Selection Filter specifically for BD Banking */}
+        {accountFilter === 'bd-bank' && (
+          <div className="pt-3 border-t border-slate-100 flex items-center flex-wrap gap-2 animate-fade-in">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mr-1">
+              {lang === 'bn' ? 'ব্যাংক হিসাব নির্বাচন:' : 'Select Bank:'}
+            </span>
+            <button
+              onClick={() => {
+                setSelectedBankId('all');
+                setCurrentPage(1);
+              }}
+              className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+                selectedBankId === 'all'
+                  ? 'bg-emerald-700 text-white shadow-2xs font-bold'
+                  : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200'
+              }`}
+            >
+              {lang === 'bn' ? 'সকল ব্যাংক (All Banks)' : 'All Banks'}
+            </button>
+            {data.banks.map((b) => {
+              const isSelected = selectedBankId === b.id;
+              return (
+                <button
+                  key={b.id}
+                  onClick={() => {
+                    setSelectedBankId(b.id);
+                    setCurrentPage(1);
+                  }}
+                  className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+                    isSelected
+                      ? 'bg-emerald-700 text-white shadow-2xs font-bold'
+                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200/80 border border-slate-200'
+                  }`}
+                >
+                  🏦 {b.name} {b.accountNumber ? `(${b.accountNumber})` : ''}
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {/* Date Presets and Custom Range */}
         <div className="pt-3 border-t border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-3">
@@ -1521,313 +2017,536 @@ export const ReportsView: React.FC = () => {
           <div>
             <h3 className="text-sm font-bold text-slate-900 tracking-tight flex items-center gap-2">
               <BarChart3 className="w-4 h-4 text-emerald-700" />
-              <span>{lang === 'bn' ? 'ফিল্টারকৃত লেনদেন অডিট খতিয়ান' : 'Filtered Transaction Audit Ledger'}</span>
+              <span>
+                {isSubLedgerEligible && viewMode === 'sub-ledger'
+                  ? (lang === 'bn' ? 'সাব লেজার খতিয়ান স্টেটমেন্ট' : 'Sub Ledger Account Statement')
+                  : (lang === 'bn' ? 'ফিল্টারকৃত লেনদেন অডিট খতিয়ান' : 'Filtered Transaction Audit Ledger')}
+              </span>
             </h3>
             <p className="text-xs text-slate-500 mt-0.5">
-              {lang === 'bn'
-                ? 'যেকোনো রো-তে ক্লিক করে বিস্তারিত অডিট স্লিপ দেখতে পারেন'
-                : 'Click any row to open the complete audit voucher'}
+              {isSubLedgerEligible && viewMode === 'sub-ledger'
+                ? (lang === 'bn'
+                    ? 'রানিং ব্যালেন্সসহ সমন্বিত সাব লেজার খতিয়ান — প্রিন্ট ও অডিট রেডি'
+                    : 'Dual-entry chronological sub ledger with exact running balances')
+                : (lang === 'bn'
+                    ? 'যেকোনো রো-তে ক্লিক করে বিস্তারিত অডিট স্লিপ দেখতে পারেন'
+                    : 'Click any row to open the complete audit voucher')}
             </p>
           </div>
 
-          <div className="flex items-center gap-2.5 no-print">
+          <div className="flex flex-wrap items-center gap-2.5 no-print">
+            {/* View Mode Switcher for Sub Ledger eligible heads */}
+            {isSubLedgerEligible && (
+              <div className="flex items-center gap-1 bg-slate-200/80 p-0.5 rounded-xl text-xs font-semibold">
+                <button
+                  type="button"
+                  onClick={() => setViewMode('sub-ledger')}
+                  className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                    viewMode === 'sub-ledger'
+                      ? 'bg-white text-[#1E536E] font-bold shadow-2xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  📑 {lang === 'bn' ? 'সাব লেজার ভিউ' : 'Sub Ledger'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('list')}
+                  className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                    viewMode === 'list'
+                      ? 'bg-white text-slate-900 font-bold shadow-2xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  📋 {lang === 'bn' ? 'সাধারণ অডিট তালিকা' : 'Standard List'}
+                </button>
+              </div>
+            )}
+
             <button
               type="button"
               onClick={() => window.print()}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg transition-colors cursor-pointer shadow-xs"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors cursor-pointer shadow-xs"
               title={lang === 'bn' ? 'এই ফিল্টার করা খতিয়ানটি সরাসরি প্রিন্ট বা PDF ডাউনলোড করুন' : 'Print or Save PDF'}
             >
               <Printer className="w-3.5 h-3.5 text-white" />
               <span>{lang === 'bn' ? 'প্রিন্ট / PDF ডাউনলোড' : 'Print / Save PDF'}</span>
             </button>
 
-            <span className="text-xs text-slate-500">
-              {lang === 'bn'
-                ? `পৃষ্ঠা ${currentPage} / ${totalPages} (${filteredRows.length}টি এন্ট্রি)`
-                : `Page ${currentPage} of ${totalPages} (${filteredRows.length} entries)`}
-            </span>
+            {(!isSubLedgerEligible || viewMode === 'list') && (
+              <>
+                <span className="text-xs text-slate-500">
+                  {lang === 'bn'
+                    ? `পৃষ্ঠা ${currentPage} / ${totalPages} (${filteredRows.length}টি এন্ট্রি)`
+                    : `Page ${currentPage} of ${totalPages} (${filteredRows.length} entries)`}
+                </span>
 
-            <select
-              value={pageSize}
-              onChange={(e) => {
-                setPageSize(Number(e.target.value));
-                setCurrentPage(1);
-              }}
-              className="px-2.5 py-1 text-xs border border-slate-300 rounded-lg bg-white font-medium text-slate-700 cursor-pointer"
-            >
-              <option value={15}>15 {lang === 'bn' ? 'টি' : 'rows'}</option>
-              <option value={25}>25 {lang === 'bn' ? 'টি' : 'rows'}</option>
-              <option value={50}>50 {lang === 'bn' ? 'টি' : 'rows'}</option>
-              <option value={100}>100 {lang === 'bn' ? 'টি' : 'rows'}</option>
-            </select>
+                <select
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="px-2.5 py-1 text-xs border border-slate-300 rounded-lg bg-white font-medium text-slate-700 cursor-pointer"
+                >
+                  <option value={15}>15 {lang === 'bn' ? 'টি' : 'rows'}</option>
+                  <option value={25}>25 {lang === 'bn' ? 'টি' : 'rows'}</option>
+                  <option value={50}>50 {lang === 'bn' ? 'টি' : 'rows'}</option>
+                  <option value={100}>100 {lang === 'bn' ? 'টি' : 'rows'}</option>
+                </select>
+              </>
+            )}
           </div>
         </div>
 
-        {/* Ledger Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="bg-slate-100/70 border-b border-slate-200 text-slate-600 font-semibold text-[11px] uppercase tracking-wider">
-                <th
-                  onClick={() => handleSort('date')}
-                  className="py-3 px-4 cursor-pointer hover:text-slate-900 whitespace-nowrap"
-                >
-                  <div className="flex items-center gap-1">
-                    <span>{lang === 'bn' ? 'তারিখ' : 'Date'}</span>
-                    <ArrowUpDown className="w-3 h-3 text-slate-400" />
-                  </div>
-                </th>
-                <th className="py-3 px-4 whitespace-nowrap">{lang === 'bn' ? 'অ্যাকাউন্ট / হেড' : 'Account/Head'}</th>
-                <th
-                  onClick={() => handleSort('category')}
-                  className="py-3 px-4 cursor-pointer hover:text-slate-900 whitespace-nowrap"
-                >
-                  <div className="flex items-center gap-1">
-                    <span>{lang === 'bn' ? 'খাত / ক্যাটাগরি' : 'Category'}</span>
-                    <ArrowUpDown className="w-3 h-3 text-slate-400" />
-                  </div>
-                </th>
-                <th className="py-3 px-4 whitespace-nowrap">{lang === 'bn' ? 'ধরণ' : 'Type'}</th>
-                <th className="py-3 px-4">{lang === 'bn' ? 'নোট / বিবরণ' : 'Note'}</th>
-                <th
-                  onClick={() => handleSort('amount')}
-                  className="py-3 px-4 text-right cursor-pointer hover:text-slate-900 whitespace-nowrap"
-                >
-                  <div className="flex items-center justify-end gap-1">
-                    <span>{lang === 'bn' ? 'পরিমাণ' : 'Amount'}</span>
-                    <ArrowUpDown className="w-3 h-3 text-slate-400" />
-                  </div>
-                </th>
-                <th className="py-3 px-4 text-center whitespace-nowrap">{lang === 'bn' ? 'স্ট্যাটাস' : 'Status'}</th>
-                <th className="py-3 px-4 text-right no-print whitespace-nowrap">{lang === 'bn' ? 'অ্যাকশন' : 'Action'}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 text-slate-800">
-              {paginatedRows.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="text-center py-16 text-slate-400">
-                    <Filter className="w-8 h-8 mx-auto text-slate-300 mb-2" />
-                    <p className="font-semibold text-sm text-slate-600">
-                      {lang === 'bn' ? 'নির্বাচিত ফিল্টারে কোনো তথ্য পাওয়া যায়নি' : 'No records match your filters'}
-                    </p>
-                    <p className="text-xs text-slate-400 mt-1">
-                      {lang === 'bn' ? 'তারিখের রেঞ্জ অথবা অ্যাকাউন্ট ফিল্টার পরিবর্তন করে দেখুন' : 'Try adjusting your date range or filters'}
-                    </p>
-                    <button
-                      onClick={handleResetFilters}
-                      className="mt-3 px-3 py-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors cursor-pointer"
-                    >
-                      {lang === 'bn' ? 'সকল ফিল্টার রিসেট করুন' : 'Reset all filters'}
-                    </button>
+        {/* Dynamic Display: Sub Ledger View vs Standard List View */}
+        {isSubLedgerEligible && viewMode === 'sub-ledger' && subLedgerData ? (
+          /* On-screen Sub Ledger (Exact Match to Screenshot 2) */
+          <div className="overflow-x-auto">
+            {/* Sub ledger Title Bar */}
+            <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <div className="font-bold text-[#1E536E] text-sm font-sans flex items-center gap-2">
+                <span>Sub ledger</span>
+                <span className="font-mono text-slate-700 font-semibold text-xs">
+                  {startDate ? startDate.replace(/-/g, '/') : 'All Time'} to{' '}
+                  {endDate ? endDate.replace(/-/g, '/') : new Date().toISOString().split('T')[0].replace(/-/g, '/')}
+                </span>
+                <span className="font-mono text-[11px] text-slate-500 font-normal">
+                  [ {new Date().toLocaleDateString('en-GB')} {new Date().toLocaleTimeString('en-GB')} ]
+                </span>
+              </div>
+              <div className="text-[11px] text-slate-500">
+                {subLedgerData.rows.length + 1} {lang === 'bn' ? 'টি এন্ট্রি (ওপেনিং ব্যালেন্স সহ)' : 'entries (including Opening)'}
+              </div>
+            </div>
+
+            <table className="w-full text-left border-collapse border border-slate-300 text-xs">
+              <thead>
+                <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[11px]">
+                  <th rowSpan={2} className="py-2.5 px-3 text-center border-r border-slate-400 w-12">#</th>
+                  <th rowSpan={2} className="py-2.5 px-3 text-center border-r border-slate-400 whitespace-nowrap w-28">Date</th>
+                  <th rowSpan={2} className="py-2.5 px-4 border-r border-slate-400 min-w-56">Account</th>
+                  <th colSpan={3} className="py-1.5 px-2 text-center border-r border-slate-400 border-b border-slate-400 uppercase tracking-wider text-[10px]">
+                    Base ({subLedgerData.currency})
+                  </th>
+                  <th rowSpan={2} className="py-2.5 px-4 min-w-48">Remarks</th>
+                </tr>
+                <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[10px]">
+                  <th className="py-1.5 px-3 text-right border-r border-slate-400 w-32">Debit</th>
+                  <th className="py-1.5 px-3 text-right border-r border-slate-400 w-32">Credit</th>
+                  <th className="py-1.5 px-3 text-right border-r border-slate-400 w-36">Balance</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200 text-slate-800 text-[11px]">
+                {/* Row 1: Account Banner Row (SL: 1) */}
+                <tr className="bg-[#D8EEF8] font-bold text-slate-900 border-b border-slate-300">
+                  <td className="py-2.5 px-3 text-center border-r border-slate-300 font-mono text-xs">1</td>
+                  <td colSpan={6} className="py-2.5 px-4 text-center tracking-wide font-black text-sm text-slate-900 uppercase">
+                    {subLedgerData.accountBannerTitle}
                   </td>
                 </tr>
-              ) : (
-                paginatedRows.map((row) => {
-                  const isIncome = row.type === 'income';
-                  const isExpense = row.type === 'expense';
-                  const isLoan = row.type === 'loan';
-                  const isTransfer = row.type === 'transfer';
 
-                  return (
+                {/* Row 2: Opening Balance Row (SL: 2) */}
+                <tr className="bg-white hover:bg-slate-50/80 font-medium border-b border-slate-200">
+                  <td className="py-2.5 px-3 text-center border-r border-slate-200 font-mono text-slate-500 text-xs">2</td>
+                  <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono text-slate-400">—</td>
+                  <td className="py-2.5 px-4 border-r border-slate-200 font-bold italic text-slate-900 text-xs">
+                    Opening Balance
+                  </td>
+                  <td className="py-2.5 px-3 text-right border-r border-slate-200 font-mono font-bold text-slate-900 tabular-nums text-sm">
+                    {formatSubLedgerNumber(subLedgerData.openingBal, subLedgerData.currency, false)}
+                  </td>
+                  <td className="py-2.5 px-3 text-right border-r border-slate-200 font-mono text-slate-400 tabular-nums text-sm font-semibold">
+                    {subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
+                  </td>
+                  <td className="py-2.5 px-3 text-right border-r border-slate-200 font-mono font-black text-slate-900 tabular-nums text-sm">
+                    {formatSubLedgerNumber(subLedgerData.openingBal, subLedgerData.currency, false)}
+                  </td>
+                  <td className="py-2.5 px-4 text-slate-400 italic text-xs">—</td>
+                </tr>
+
+                {/* Rows 3+: Dynamic In-Period Transactions */}
+                {subLedgerData.rows.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="py-8 text-center text-slate-400 italic">
+                      {lang === 'bn'
+                        ? 'এই নির্দিষ্ট সময়কালের মধ্যে কোনো লেনদেন পাওয়া যায়নি'
+                        : 'No transactions found in this period'}
+                    </td>
+                  </tr>
+                ) : (
+                  subLedgerData.rows.map((row) => (
                     <tr
-                      key={`${row.sourceType}-${row.id}`}
-                      className="hover:bg-slate-50/80 transition-colors group cursor-pointer"
+                      key={row.id}
                       onClick={() => {
-                        setSelectedAuditRow(row);
-                        setIsVoucherModalOpen(true);
+                        if (row.originalRow) {
+                          setSelectedAuditRow(row.originalRow);
+                          setIsVoucherModalOpen(true);
+                        }
                       }}
+                      className="hover:bg-cyan-50/40 transition-colors cursor-pointer border-b border-slate-100"
                     >
-                      {/* Date */}
-                      <td className="py-3 px-4 whitespace-nowrap font-mono text-slate-600">
-                        {formatDate(row.date, lang)}
+                      <td className="py-2.5 px-3 text-center border-r border-slate-200 font-mono text-slate-600 text-xs">
+                        {row.sl}
                       </td>
-
-                      {/* Account / Head with Cute Pastel Pill */}
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        {(() => {
-                          const badge = getHeadBadgeConfig(row.section);
-                          const BadgeIcon = badge.icon;
-                          return (
-                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold border shadow-2xs ${badge.bg} ${badge.text} ${badge.border}`}>
-                              <BadgeIcon className="w-3.5 h-3.5 shrink-0" />
-                              <span>{lang === 'bn' ? row.sectionNameBn : row.sectionNameEn}</span>
-                            </span>
-                          );
-                        })()}
-                        {row.bankName && (
-                          <span className="text-[10px] text-slate-500 font-mono block mt-1">
-                            🏦 {row.bankName}
-                          </span>
-                        )}
-                        {row.voucherNo && (
-                          <span className="text-[10px] text-indigo-700 font-mono font-medium block">
-                            #{row.voucherNo}
-                          </span>
-                        )}
+                      <td className="py-2.5 px-3 border-r border-slate-200 font-mono text-slate-700 whitespace-nowrap text-center text-xs">
+                        {row.formattedDate}
                       </td>
-
-                      {/* Category */}
-                      <td className="py-3 px-4">
-                        <span className="font-bold text-slate-900 block">
-                          {lang === 'bn' ? row.categoryNameBn : row.categoryNameEn}
-                        </span>
-                        {row.borrowerName && (
-                          <span className="text-[10px] text-indigo-700 font-semibold inline-block mt-0.5 px-1.5 py-0.2 bg-indigo-50 border border-indigo-200 rounded-md">
-                            {lang === 'bn' ? 'ব্যক্তি:' : 'Person:'} {row.borrowerName}
-                          </span>
-                        )}
+                      <td className="py-2.5 px-4 border-r border-slate-200 font-bold text-slate-900 text-xs">
+                        {row.account}
                       </td>
-
-                      {/* Type */}
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        <div className="flex items-center gap-1.5 text-xs font-bold">
-                          {isIncome && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200">
-                              <TrendingUp className="w-3 h-3 text-emerald-600" />
-                              <span>{lang === 'bn' ? 'আয় / জমা' : 'Income'}</span>
-                            </span>
-                          )}
-                          {isExpense && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-50 text-rose-800 border border-rose-200">
-                              <TrendingDown className="w-3 h-3 text-rose-600" />
-                              <span>{lang === 'bn' ? 'ব্যয় / খরচ' : 'Expense'}</span>
-                            </span>
-                          )}
-                          {isLoan && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-800 border border-indigo-200">
-                              <HandCoins className="w-3 h-3 text-indigo-600" />
-                              <span>{lang === 'bn' ? 'দিনার লোন' : 'Loan'}</span>
-                            </span>
-                          )}
-                          {isTransfer && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 text-blue-800 border border-blue-200">
-                              <ArrowRightLeft className="w-3 h-3 text-blue-600" />
-                              <span>{lang === 'bn' ? 'ট্রান্সফার' : 'Transfer'}</span>
-                            </span>
-                          )}
-                        </div>
+                      <td className="py-2.5 px-3 text-right border-r border-slate-200 font-mono tabular-nums text-sm font-bold text-slate-900">
+                        {row.debit > 0
+                          ? formatSubLedgerNumber(row.debit, subLedgerData.currency, false)
+                          : subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
                       </td>
-
-                      {/* Note */}
-                      <td className="py-3 px-4 max-w-xs text-slate-500 truncate" title={row.note}>
-                        {row.note || <span className="text-slate-300 italic">—</span>}
+                      <td className="py-2.5 px-3 text-right border-r border-slate-200 font-mono tabular-nums text-sm font-bold text-rose-700">
+                        {row.credit > 0
+                          ? formatSubLedgerNumber(row.credit, subLedgerData.currency, true)
+                          : subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
                       </td>
-
-                      {/* Amount with Cute Pill Highlight */}
-                      <td className="py-3 px-4 text-right whitespace-nowrap font-mono tabular-nums font-bold text-sm">
-                        <span
-                          className={`inline-block px-2.5 py-1 rounded-lg text-xs font-black font-mono border shadow-2xs ${
-                            isIncome
-                              ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
-                              : isExpense
-                              ? 'bg-rose-50 text-rose-800 border-rose-300'
-                              : isLoan
-                              ? 'bg-indigo-50 text-indigo-900 border-indigo-300'
-                              : 'bg-blue-50 text-blue-800 border-blue-300'
-                          }`}
-                        >
-                          {isIncome ? '+' : isExpense ? '-' : ''}
-                          {row.currency === 'KWD'
-                            ? `${row.amount.toFixed(3)} KD`
-                            : `${row.amount.toLocaleString('en-US')} ৳`}
-                        </span>
+                      <td className="py-2.5 px-3 text-right border-r border-slate-200 font-mono font-black tabular-nums text-sm text-slate-900">
+                        {formatSubLedgerNumber(row.balance, subLedgerData.currency, false)}
                       </td>
-
-                      {/* Status */}
-                      <td className="py-3 px-4 text-center whitespace-nowrap">
-                        {row.status ? (
-                          <div className="inline-flex items-center gap-1.5 text-xs font-semibold">
-                            {row.status === 'paid' ? (
-                              <>
-                                <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
-                                <span className="text-emerald-800">{lang === 'bn' ? 'Paid' : 'Paid'}</span>
-                              </>
-                            ) : (
-                              <>
-                                <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" />
-                                <span className="text-amber-800">{lang === 'bn' ? 'Unpaid' : 'Unpaid'}</span>
-                              </>
-                            )}
-                          </div>
-                        ) : (
-                          <span className="text-slate-300">—</span>
-                        )}
-                      </td>
-
-                      {/* Action */}
-                      <td
-                        className="py-3 px-4 text-right whitespace-nowrap no-print"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <div className="flex items-center justify-end gap-1.5">
-                          {/* Toggle Paid / Unpaid for Kuwait loans */}
-                          {row.sourceType === 'kuwait-loan' && (
-                            <button
-                              type="button"
-                              onClick={() => toggleKuwaitLoanStatus(row.id)}
-                              className={`px-2.5 py-1 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
-                                row.status === 'paid'
-                                  ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
-                                  : 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 shadow-2xs'
-                              }`}
-                            >
-                              {row.status === 'paid'
-                                ? lang === 'bn' ? 'Unpaid করুন' : 'Mark Unpaid'
-                                : lang === 'bn' ? 'Paid করুন' : 'Mark Paid'}
-                            </button>
-                          )}
-
-                          {/* Toggle Paid / Unpaid for Emdad expense */}
-                          {row.sourceType === 'transaction' && row.section === 'emdad-expense' && (
-                            <button
-                              type="button"
-                              onClick={() => togglePaymentStatus(row.id)}
-                              className={`px-2.5 py-1 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
-                                row.status === 'paid'
-                                  ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
-                                  : 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 shadow-2xs'
-                              }`}
-                            >
-                              {row.status === 'paid'
-                                ? lang === 'bn' ? 'Unpaid করুন' : 'Mark Unpaid'
-                                : lang === 'bn' ? 'Paid করুন' : 'Mark Paid'}
-                            </button>
-                          )}
-
-                          {/* View Audit Slip Button */}
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setSelectedAuditRow(row);
-                              setIsVoucherModalOpen(true);
-                            }}
-                            className="p-1.5 text-indigo-700 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-colors cursor-pointer shadow-2xs"
-                            title={lang === 'bn' ? 'অডিট স্লিপ দেখুন ও প্রিন্ট করুন' : 'View slip'}
-                          >
-                            <Eye className="w-3.5 h-3.5" />
-                          </button>
-
-                          {/* Edit Transaction Button */}
-                          <button
-                            type="button"
-                            onClick={() => setEditTarget({ id: row.id, sourceType: row.sourceType })}
-                            className="p-1.5 text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition-colors cursor-pointer shadow-2xs"
-                            title={lang === 'bn' ? 'সংশোধন / এডিট করুন' : 'Edit transaction'}
-                          >
-                            <Edit2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
+                      <td className="py-2.5 px-4 text-slate-600 text-xs max-w-xs truncate" title={row.remarks}>
+                        {row.remarks || <span className="text-slate-300 italic">—</span>}
                       </td>
                     </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+                  ))
+                )}
 
-        {/* Pagination Footer */}
-        {totalPages > 1 && (
+                {/* Total Summary Footer Row */}
+                <tr className="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-400">
+                  <td className="py-3 px-3 text-center border-r border-slate-300 font-mono"></td>
+                  <td className="py-3 px-3 border-r border-slate-300"></td>
+                  <td className="py-3 px-4 border-r border-slate-300 font-black uppercase text-xs">
+                    {lang === 'bn' ? 'সর্বমোট সমাপ্তি হিসাব (Total / Closing)' : 'Total / Closing Balance'}
+                  </td>
+                  <td className="py-3 px-3 text-right border-r border-slate-300 font-mono font-bold text-emerald-900 tabular-nums text-sm md:text-base">
+                    {formatSubLedgerNumber(
+                      subLedgerData.openingBal + subLedgerData.totalPeriodDebit,
+                      subLedgerData.currency,
+                      false
+                    )}
+                  </td>
+                  <td className="py-3 px-3 text-right border-r border-slate-300 font-mono font-bold text-rose-900 tabular-nums text-sm md:text-base">
+                    {formatSubLedgerNumber(subLedgerData.totalPeriodCredit, subLedgerData.currency, true)}
+                  </td>
+                  <td className="py-3 px-3 text-right border-r border-slate-300 font-mono font-black text-slate-900 tabular-nums text-base">
+                    {formatSubLedgerNumber(subLedgerData.closingBalance, subLedgerData.currency, false)}
+                  </td>
+                  <td className="py-3 px-4 text-slate-500 font-normal italic text-[11px]">
+                    {lang === 'bn' ? 'অডিট খতিয়ান সমাপ্ত' : 'Sub ledger verified'}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          /* Standard Audit Ledger Table */
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse border border-slate-300 text-xs">
+              <thead>
+                <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[11px]">
+                  <th
+                    onClick={() => handleSort('date')}
+                    className="py-2.5 px-3 border-r border-slate-400 cursor-pointer hover:bg-[#235870] whitespace-nowrap text-center w-28"
+                  >
+                    <div className="flex items-center justify-center gap-1">
+                      <span>{lang === 'bn' ? 'তারিখ' : 'Date'}</span>
+                      <ArrowUpDown className="w-3 h-3 text-teal-200" />
+                    </div>
+                  </th>
+                  <th className="py-2.5 px-4 border-r border-slate-400 whitespace-nowrap min-w-44">
+                    {lang === 'bn' ? 'অ্যাকাউন্ট / হেড' : 'Account/Head'}
+                  </th>
+                  <th
+                    onClick={() => handleSort('category')}
+                    className="py-2.5 px-4 border-r border-slate-400 cursor-pointer hover:bg-[#235870] whitespace-nowrap min-w-44"
+                  >
+                    <div className="flex items-center gap-1">
+                      <span>{lang === 'bn' ? 'খাত / ক্যাটাগরি' : 'Category'}</span>
+                      <ArrowUpDown className="w-3 h-3 text-teal-200" />
+                    </div>
+                  </th>
+                  <th className="py-2.5 px-3 border-r border-slate-400 text-center whitespace-nowrap w-24">
+                    {lang === 'bn' ? 'ধরণ' : 'Type'}
+                  </th>
+                  <th className="py-2.5 px-4 border-r border-slate-400 min-w-48">
+                    {lang === 'bn' ? 'নোট / বিবরণ' : 'Note'}
+                  </th>
+                  <th
+                    onClick={() => handleSort('amount')}
+                    className="py-2.5 px-4 border-r border-slate-400 text-right cursor-pointer hover:bg-[#235870] whitespace-nowrap w-36"
+                  >
+                    <div className="flex items-center justify-end gap-1">
+                      <span>{lang === 'bn' ? 'পরিমাণ' : 'Amount'}</span>
+                      <ArrowUpDown className="w-3 h-3 text-teal-200" />
+                    </div>
+                  </th>
+                  <th className="py-2.5 px-3 border-r border-slate-400 text-center whitespace-nowrap w-24">
+                    {lang === 'bn' ? 'স্ট্যাটাস' : 'Status'}
+                  </th>
+                  <th className="py-2.5 px-3 text-right no-print whitespace-nowrap w-24">
+                    {lang === 'bn' ? 'অ্যাকশন' : 'Action'}
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200 text-slate-800">
+                {paginatedRows.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="text-center py-16 text-slate-400">
+                      <Filter className="w-8 h-8 mx-auto text-slate-300 mb-2" />
+                      <p className="font-semibold text-sm text-slate-600">
+                        {lang === 'bn' ? 'নির্বাচিত ফিল্টারে কোনো তথ্য পাওয়া যায়নি' : 'No records match your filters'}
+                      </p>
+                      <p className="text-xs text-slate-400 mt-1">
+                        {lang === 'bn' ? 'তারিখের রেঞ্জ অথবা অ্যাকাউন্ট ফিল্টার পরিবর্তন করে দেখুন' : 'Try adjusting your date range or filters'}
+                      </p>
+                      <button
+                        onClick={handleResetFilters}
+                        className="mt-3 px-3 py-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors cursor-pointer"
+                      >
+                        {lang === 'bn' ? 'সকল ফিল্টার রিসেট করুন' : 'Reset all filters'}
+                      </button>
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedRows.map((row) => {
+                    const isIncome = row.type === 'income';
+                    const isExpense = row.type === 'expense';
+                    const isLoan = row.type === 'loan';
+                    const isTransfer = row.type === 'transfer';
+
+                    return (
+                      <tr
+                        key={`${row.sourceType}-${row.id}`}
+                        className="hover:bg-slate-50/80 transition-colors group cursor-pointer"
+                        onClick={() => {
+                          setSelectedAuditRow(row);
+                          setIsVoucherModalOpen(true);
+                        }}
+                      >
+                        {/* Date */}
+                        <td className="py-2.5 px-3 whitespace-nowrap font-mono text-slate-700 text-center border-r border-slate-200 text-xs">
+                          {formatDate(row.date, lang)}
+                        </td>
+
+                        {/* Account / Head */}
+                        <td className="py-2.5 px-4 whitespace-nowrap border-r border-slate-200">
+                          {(() => {
+                            const badge = getHeadBadgeConfig(row.section);
+                            const BadgeIcon = badge.icon;
+                            return (
+                              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold border shadow-2xs ${badge.bg} ${badge.text} ${badge.border}`}>
+                                <BadgeIcon className="w-3.5 h-3.5 shrink-0" />
+                                <span>{lang === 'bn' ? row.sectionNameBn : row.sectionNameEn}</span>
+                              </span>
+                            );
+                          })()}
+                          {row.bankName && (
+                            <span className="text-[10px] text-slate-500 font-mono block mt-1">
+                              🏦 {row.bankName}
+                            </span>
+                          )}
+                        </td>
+
+                        {/* Category */}
+                        <td className="py-2.5 px-4 border-r border-slate-200">
+                          <span className="font-bold text-slate-900 block text-xs">
+                            {lang === 'bn' ? row.categoryNameBn : row.categoryNameEn}
+                          </span>
+                          {row.borrowerName && (
+                            <span className="text-[10px] text-indigo-700 font-semibold inline-block mt-0.5 px-1.5 py-0.2 bg-indigo-50 border border-indigo-200 rounded-md">
+                              {lang === 'bn' ? 'ব্যক্তি:' : 'Person:'} {row.borrowerName}
+                            </span>
+                          )}
+                        </td>
+
+                        {/* Type */}
+                        <td className="py-2.5 px-3 border-r border-slate-200 text-center whitespace-nowrap">
+                          <div className="flex items-center justify-center gap-1 text-xs font-bold">
+                            {isIncome && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                <TrendingUp className="w-3 h-3 text-emerald-600" />
+                                <span>{lang === 'bn' ? 'আয় / জমা' : 'Income'}</span>
+                              </span>
+                            )}
+                            {isExpense && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-50 text-rose-800 border border-rose-200">
+                                <TrendingDown className="w-3 h-3 text-rose-600" />
+                                <span>{lang === 'bn' ? 'ব্যয় / খরচ' : 'Expense'}</span>
+                              </span>
+                            )}
+                            {isLoan && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-800 border border-indigo-200">
+                                <HandCoins className="w-3 h-3 text-indigo-600" />
+                                <span>{lang === 'bn' ? 'দিনার লোন' : 'Loan'}</span>
+                              </span>
+                            )}
+                            {isTransfer && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 text-blue-800 border border-blue-200">
+                                <ArrowRightLeft className="w-3 h-3 text-blue-600" />
+                                <span>{lang === 'bn' ? 'ট্রান্সফার' : 'Transfer'}</span>
+                              </span>
+                            )}
+                          </div>
+                        </td>
+
+                        {/* Note */}
+                        <td className="py-2.5 px-4 border-r border-slate-200 max-w-xs text-slate-600 text-xs truncate" title={row.note}>
+                          {row.note || <span className="text-slate-300 italic">—</span>}
+                        </td>
+
+                        {/* Amount */}
+                        <td className="py-2.5 px-4 border-r border-slate-200 text-right whitespace-nowrap font-mono tabular-nums font-bold text-sm">
+                          <span
+                            className={`inline-block px-2.5 py-1 rounded-lg text-xs font-black font-mono border shadow-2xs ${
+                              isIncome
+                                ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                                : isExpense
+                                ? 'bg-rose-50 text-rose-800 border-rose-300'
+                                : isLoan
+                                ? 'bg-indigo-50 text-indigo-900 border-indigo-300'
+                                : 'bg-blue-50 text-blue-800 border-blue-300'
+                            }`}
+                          >
+                            {isIncome ? '+' : isExpense ? '-' : ''}
+                            {row.currency === 'KWD'
+                              ? `${row.amount.toFixed(3)} KD`
+                              : `${row.amount.toLocaleString('en-US')} ৳`}
+                          </span>
+                        </td>
+
+                        {/* Status */}
+                        <td className="py-2.5 px-3 border-r border-slate-200 text-center whitespace-nowrap text-xs">
+                          {row.status ? (
+                            <div className="inline-flex items-center gap-1.5 font-semibold">
+                              {row.status === 'paid' ? (
+                                <>
+                                  <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
+                                  <span className="text-emerald-800">{lang === 'bn' ? 'Paid' : 'Paid'}</span>
+                                </>
+                              ) : (
+                                <>
+                                  <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" />
+                                  <span className="text-amber-800">{lang === 'bn' ? 'Unpaid' : 'Unpaid'}</span>
+                                </>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-slate-300">—</span>
+                          )}
+                        </td>
+
+                        {/* Action */}
+                        <td
+                          className="py-2.5 px-3 text-right whitespace-nowrap no-print"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="flex items-center justify-end gap-1.5">
+                            {row.sourceType === 'kuwait-loan' && (
+                              <button
+                                type="button"
+                                onClick={() => toggleKuwaitLoanStatus(row.id)}
+                                className={`px-2.5 py-1 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
+                                  row.status === 'paid'
+                                    ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+                                    : 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 shadow-2xs'
+                                }`}
+                              >
+                                {row.status === 'paid'
+                                  ? lang === 'bn' ? 'Unpaid করুন' : 'Mark Unpaid'
+                                  : lang === 'bn' ? 'Paid করুন' : 'Mark Paid'}
+                              </button>
+                            )}
+
+                            {row.sourceType === 'transaction' && row.section === 'emdad-expense' && (
+                              <button
+                                type="button"
+                                onClick={() => togglePaymentStatus(row.id)}
+                                className={`px-2.5 py-1 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
+                                  row.status === 'paid'
+                                    ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+                                    : 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 shadow-2xs'
+                                }`}
+                              >
+                                {row.status === 'paid'
+                                  ? lang === 'bn' ? 'Unpaid করুন' : 'Mark Unpaid'
+                                  : lang === 'bn' ? 'Paid করুন' : 'Mark Paid'}
+                              </button>
+                            )}
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedAuditRow(row);
+                                setIsVoucherModalOpen(true);
+                              }}
+                              className="p-1.5 text-indigo-700 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-colors cursor-pointer shadow-2xs"
+                              title={lang === 'bn' ? 'অডিট স্লিপ দেখুন ও প্রিন্ট করুন' : 'View slip'}
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => setEditTarget({ id: row.id, sourceType: row.sourceType })}
+                              className="p-1.5 text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition-colors cursor-pointer shadow-2xs"
+                              title={lang === 'bn' ? 'সংশোধন / এডিট করুন' : 'Edit transaction'}
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+
+                {/* Integrated Summary Footer Row */}
+                {filteredRows.length > 0 && (
+                  <tr className="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-400">
+                    <td className="py-3 px-3 border-r border-slate-300 text-center font-mono"></td>
+                    <td colSpan={2} className="py-3 px-4 border-r border-slate-300 font-black uppercase text-xs">
+                      {lang === 'bn' ? 'সর্বমোট সমাপ্তি হিসাব (Total Summary)' : 'Total Summary'}
+                    </td>
+                    <td className="py-3 px-3 border-r border-slate-300 text-center text-xs font-semibold text-slate-600">
+                      {filteredRows.length} {lang === 'bn' ? 'টি' : 'txns'}
+                    </td>
+                    <td className="py-3 px-4 border-r border-slate-300 text-xs text-slate-600">
+                      {lang === 'bn' ? 'সম্পূর্ণ সময়কালের সমন্বিত হিসাব' : 'Filtered Period Total'}
+                    </td>
+                    <td className="py-3 px-4 border-r border-slate-300 text-right font-mono font-black tabular-nums text-sm md:text-base text-slate-900">
+                      <div className="space-y-0.5">
+                        {totals.bdtNet !== 0 && (
+                          <div className={totals.bdtNet >= 0 ? 'text-emerald-800' : 'text-rose-800'}>
+                            {totals.bdtNet >= 0 ? '+' : ''}{totals.bdtNet.toLocaleString('en-US')} ৳
+                          </div>
+                        )}
+                        {totals.kwdNet !== 0 && (
+                          <div className={totals.kwdNet >= 0 ? 'text-emerald-800' : 'text-rose-800'}>
+                            {totals.kwdNet >= 0 ? '+' : ''}{totals.kwdNet.toFixed(3)} KD
+                          </div>
+                        )}
+                        {totals.bdtNet === 0 && totals.kwdNet === 0 && (
+                          <div className="text-slate-800">0.00</div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-3 px-3 border-r border-slate-300 text-center text-[11px] text-slate-500 font-normal italic">
+                      Verified
+                    </td>
+                    <td className="py-3 px-3 text-right no-print"></td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Pagination Footer (Only for Standard List View) */}
+        {(!isSubLedgerEligible || viewMode === 'list') && totalPages > 1 && (
           <div className="p-4 border-t border-slate-200/80 bg-slate-50/50 flex items-center justify-between no-print">
             <span className="text-xs text-slate-500">
               {lang === 'bn'
@@ -1859,140 +2578,307 @@ export const ReportsView: React.FC = () => {
       </div>
 
       {/* 6. Official Printable Document (Exclusively rendered during Print / PDF generation) */}
-      <div className="hidden print:block space-y-6 text-slate-900 bg-white p-2">
-        {/* Official Header & Letterhead */}
-        <div className="border-b-2 border-slate-900 pb-4 flex justify-between items-start">
-          <div>
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-slate-900 text-white font-bold flex items-center justify-center text-lg">
-                ৳
+      <div className="hidden print:block space-y-4 text-slate-900 bg-white p-2">
+        {isSubLedgerEligible && subLedgerData ? (
+          /* ========================================================================= */
+          /* SUB LEDGER PRINT DOCUMENT (Matching Screenshot 2)                         */
+          /* ========================================================================= */
+          <div className="space-y-2 font-sans">
+            {/* Top Sub Ledger Title Bar */}
+            <div className="flex justify-between items-baseline py-1 border-b border-slate-300">
+              <div className="text-base font-bold text-[#1E536E] font-sans">
+                Sub ledger &nbsp;
+                <span className="font-mono text-slate-900 font-semibold">
+                  {startDate ? startDate.replace(/-/g, '/') : '2026/01/01'} to{' '}
+                  {endDate ? endDate.replace(/-/g, '/') : new Date().toISOString().split('T')[0].replace(/-/g, '/')}
+                </span>
+                &nbsp;
+                <span className="font-mono text-xs text-slate-500 font-normal">
+                  [ {new Date().toLocaleDateString('en-GB')} {new Date().toLocaleTimeString('en-GB')} ]
+                </span>
               </div>
+              <span className="text-[10px] uppercase font-bold text-slate-500 font-mono tracking-wider">
+                Official Sub Ledger Statement
+              </span>
+            </div>
+
+            {/* Sub Ledger Table */}
+            <div className="overflow-hidden border border-slate-400 rounded-xs">
+              <table className="w-full text-left border-collapse text-[11px]">
+                <thead>
+                  <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[10px]">
+                    <th rowSpan={2} className="py-2 px-2.5 text-center border-r border-slate-400 w-10">#</th>
+                    <th rowSpan={2} className="py-2 px-2.5 text-center border-r border-slate-400 whitespace-nowrap w-24">Date</th>
+                    <th rowSpan={2} className="py-2 px-3 border-r border-slate-400 min-w-44">Account</th>
+                    <th colSpan={3} className="py-1 px-2 text-center border-r border-slate-400 border-b border-slate-400 uppercase tracking-wider text-[9.5px]">
+                      Base ({subLedgerData.currency})
+                    </th>
+                    <th rowSpan={2} className="py-2 px-3 w-44">Remarks</th>
+                  </tr>
+                  <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[9px]">
+                    <th className="py-1.5 px-2.5 text-right border-r border-slate-400 w-28">Debit</th>
+                    <th className="py-1.5 px-2.5 text-right border-r border-slate-400 w-28">Credit</th>
+                    <th className="py-1.5 px-2.5 text-right border-r border-slate-400 w-32">Balance</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-300 text-slate-900 text-[10.5px]">
+                  {/* Row 1: Account Banner Row */}
+                  <tr className="bg-[#D8EEF8] font-bold text-slate-900 border-b border-slate-300 break-inside-avoid">
+                    <td className="py-2 px-2.5 text-center border-r border-slate-300 font-mono text-[10.5px]">1</td>
+                    <td colSpan={6} className="py-2 px-3 text-center tracking-wide font-black text-xs text-slate-900 uppercase">
+                      {subLedgerData.accountBannerTitle}
+                    </td>
+                  </tr>
+
+                  {/* Row 2: Opening Balance Row */}
+                  <tr className="bg-white font-medium border-b border-slate-200 break-inside-avoid">
+                    <td className="py-2 px-2.5 text-center border-r border-slate-200 font-mono text-slate-600">2</td>
+                    <td className="py-2 px-2.5 border-r border-slate-200 text-center font-mono text-slate-400">—</td>
+                    <td className="py-2 px-3 border-r border-slate-200 font-bold italic text-slate-900">
+                      Opening Balance
+                    </td>
+                    <td className="py-2 px-2.5 text-right border-r border-slate-200 font-mono font-bold text-slate-900 tabular-nums text-[12px]">
+                      {formatSubLedgerNumber(subLedgerData.openingBal, subLedgerData.currency, false)}
+                    </td>
+                    <td className="py-2 px-2.5 text-right border-r border-slate-200 font-mono text-slate-400 tabular-nums text-[12px]">
+                      {subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
+                    </td>
+                    <td className="py-2 px-2.5 text-right border-r border-slate-200 font-mono font-black text-slate-900 tabular-nums text-[12.5px]">
+                      {formatSubLedgerNumber(subLedgerData.openingBal, subLedgerData.currency, false)}
+                    </td>
+                    <td className="py-2 px-3 text-slate-400 italic text-[10px]">—</td>
+                  </tr>
+
+                  {/* Dynamic In-Period Transactions */}
+                  {subLedgerData.rows.map((row) => (
+                    <tr key={row.id} className="border-b border-slate-200 break-inside-avoid">
+                      <td className="py-2 px-2.5 text-center border-r border-slate-200 font-mono text-slate-600">
+                        {row.sl}
+                      </td>
+                      <td className="py-2 px-2.5 border-r border-slate-200 font-mono text-slate-700 whitespace-nowrap text-center text-[10px]">
+                        {row.formattedDate}
+                      </td>
+                      <td className="py-2 px-3 border-r border-slate-200 font-bold text-slate-900">
+                        {row.account}
+                      </td>
+                      <td className="py-2 px-2.5 text-right border-r border-slate-200 font-mono tabular-nums text-[12px] font-bold text-slate-900">
+                        {row.debit > 0
+                          ? formatSubLedgerNumber(row.debit, subLedgerData.currency, false)
+                          : subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
+                      </td>
+                      <td className="py-2 px-2.5 text-right border-r border-slate-200 font-mono tabular-nums text-[12px] font-bold text-rose-800">
+                        {row.credit > 0
+                          ? formatSubLedgerNumber(row.credit, subLedgerData.currency, true)
+                          : subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
+                      </td>
+                      <td className="py-2 px-2.5 text-right border-r border-slate-200 font-mono font-black tabular-nums text-[12.5px] text-slate-900">
+                        {formatSubLedgerNumber(row.balance, subLedgerData.currency, false)}
+                      </td>
+                      <td className="py-2 px-3 text-slate-600 text-[10px]">
+                        {row.remarks || <span className="text-slate-300 italic">—</span>}
+                      </td>
+                    </tr>
+                  ))}
+
+                  {/* Summary Footer */}
+                  <tr className="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-400 break-inside-avoid">
+                    <td className="py-2 px-2.5 text-center border-r border-slate-300 font-mono"></td>
+                    <td className="py-2 px-2.5 border-r border-slate-300"></td>
+                    <td className="py-2 px-3 border-r border-slate-300 font-black uppercase text-xs">
+                      {lang === 'bn' ? 'সর্বমোট সমাপ্তি হিসাব (Total / Closing)' : 'Total / Closing Balance'}
+                    </td>
+                    <td className="py-2 px-2.5 text-right border-r border-slate-300 font-mono font-bold text-emerald-900 tabular-nums text-[12.5px]">
+                      {formatSubLedgerNumber(
+                        subLedgerData.openingBal + subLedgerData.totalPeriodDebit,
+                        subLedgerData.currency,
+                        false
+                      )}
+                    </td>
+                    <td className="py-2 px-2.5 text-right border-r border-slate-300 font-mono font-bold text-rose-900 tabular-nums text-[12.5px]">
+                      {formatSubLedgerNumber(subLedgerData.totalPeriodCredit, subLedgerData.currency, true)}
+                    </td>
+                    <td className="py-2 px-2.5 text-right border-r border-slate-300 font-mono font-black text-slate-900 tabular-nums text-[13.5px]">
+                      {formatSubLedgerNumber(subLedgerData.closingBalance, subLedgerData.currency, false)}
+                    </td>
+                    <td className="py-2 px-3 text-slate-500 font-normal italic text-[10px]">
+                      {lang === 'bn' ? 'অডিট খতিয়ান সমাপ্ত' : 'Sub ledger verified'}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* Official Signatures & Verification */}
+            <div className="pt-8 flex justify-between items-center text-xs text-slate-600 break-inside-avoid">
+              <div className="text-center">
+                <div className="border-t border-slate-400 w-44 pt-1 font-semibold">হিসাব প্রস্তুতকারকের স্বাক্ষর</div>
+                <p className="text-[10px] text-slate-400 mt-0.5">Prepared By</p>
+              </div>
+              <div className="text-center">
+                <div className="border-t border-slate-400 w-44 pt-1 font-semibold">অনুমোদনকারী / পরিচালক</div>
+                <p className="text-[10px] text-slate-400 mt-0.5">Authorized Signatory</p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* ========================================================================= */
+          /* STANDARD FINANCIAL REPORT (Preserved for single-direction heads & 'all')  */
+          /* ========================================================================= */
+          <>
+            {/* Official Header & Letterhead */}
+            <div className="border-b-2 border-slate-900 pb-4 flex justify-between items-start">
               <div>
-                <h1 className="text-xl font-bold uppercase tracking-tight text-slate-900">
-                  {lang === 'bn' ? 'হিসাব কিতাব — অফিসিয়াল লেনদেন অডিট ও খতিয়ান রিপোর্ট' : 'Financial Statement & Audit Ledger Report'}
-                </h1>
-                <p className="text-xs text-slate-600 font-medium">
-                  {lang === 'bn' ? 'ব্যক্তিগত ও কর্মক্ষেত্রের সম্পূর্ণ সমন্বিত হিসাব বিবরণী' : 'Official Financial & Audit Ledger Statement'}
-                </p>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-slate-900 text-white font-bold flex items-center justify-center text-lg">
+                    ৳
+                  </div>
+                  <div>
+                    <h1 className="text-xl font-bold uppercase tracking-tight text-slate-900">
+                      {lang === 'bn' ? 'হিসাব কিতাব — অফিসিয়াল লেনদেন অডিট ও খতিয়ান রিপোর্ট' : 'Financial Statement & Audit Ledger Report'}
+                    </h1>
+                    <p className="text-xs text-slate-600 font-medium">
+                      {lang === 'bn' ? 'ব্যক্তিগত ও কর্মক্ষেত্রের সম্পূর্ণ সমন্বিত হিসাব বিবরণী' : 'Official Financial & Audit Ledger Statement'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-3 flex items-center gap-2 text-xs text-slate-700">
+                  <span><strong>{lang === 'bn' ? 'অ্যাকাউন্ট / হেড:' : 'Account:'}</strong> {accountFilter === 'all' ? (lang === 'bn' ? 'সকল হেড (All)' : 'All Accounts') : accountFilter}</span>
+                  <span aria-hidden="true">·</span>
+                  <span><strong>{lang === 'bn' ? 'সময়কাল:' : 'Period:'}</strong> {startDate && endDate ? `${formatDate(startDate, lang)} — ${formatDate(endDate, lang)}` : (lang === 'bn' ? 'সম্পূর্ণ সময়কাল' : 'All Time')}</span>
+                  <span aria-hidden="true">·</span>
+                  <span><strong>{lang === 'bn' ? 'মোট লেনদেন সংখ্যা:' : 'Total Records:'}</strong> {filteredRows.length} {lang === 'bn' ? 'টি' : ''}</span>
+                </div>
+              </div>
+
+              <div className="text-right text-xs text-slate-700">
+                <span className="inline-block px-3 py-1 bg-slate-100 border border-slate-300 rounded font-bold uppercase tracking-wider text-[10px] mb-1">
+                  Verified Audit Statement
+                </span>
+                <p className="font-mono text-[11px]">প্রিন্ট তারিখ: {new Date().toLocaleDateString('en-GB')}</p>
+                <p className="font-mono text-[10px] text-slate-500">সময়: {new Date().toLocaleTimeString('en-US')}</p>
               </div>
             </div>
 
-            <div className="mt-3 flex items-center gap-2 text-xs text-slate-700">
-              <span><strong>{lang === 'bn' ? 'অ্যাকাউন্ট / হেড:' : 'Account:'}</strong> {accountFilter === 'all' ? (lang === 'bn' ? 'সকল হেড (All)' : 'All Accounts') : accountFilter}</span>
-              <span aria-hidden="true">·</span>
-              <span><strong>{lang === 'bn' ? 'সময়কাল:' : 'Period:'}</strong> {startDate && endDate ? `${formatDate(startDate, lang)} — ${formatDate(endDate, lang)}` : (lang === 'bn' ? 'সম্পূর্ণ সময়কাল' : 'All Time')}</span>
-              <span aria-hidden="true">·</span>
-              <span><strong>{lang === 'bn' ? 'মোট লেনদেন সংখ্যা:' : 'Total Records:'}</strong> {filteredRows.length} {lang === 'bn' ? 'টি' : ''}</span>
+            {/* Printable Summary Totals Bar */}
+            <div className="grid grid-cols-3 gap-3 p-3.5 bg-slate-50 border border-slate-300 rounded-lg text-center text-xs">
+              <div>
+                <span className="text-[10px] text-slate-600 font-bold uppercase block">
+                  {lang === 'bn' ? 'মোট প্রাপ্তি / জমা (Inflow)' : 'Total Inflow'}
+                </span>
+                <span className="font-mono font-bold text-sm text-emerald-800 mt-0.5 block">
+                  {totals.bdtIncome > 0 ? `+${totals.bdtIncome.toLocaleString('en-US')} ৳ ` : ''}
+                  {totals.kwdIncome > 0 ? `+${totals.kwdIncome.toFixed(3)} KD` : ''}
+                  {totals.bdtIncome === 0 && totals.kwdIncome === 0 ? '0.00' : ''}
+                </span>
+              </div>
+
+              <div>
+                <span className="text-[10px] text-slate-600 font-bold uppercase block">
+                  {lang === 'bn' ? 'মোট খরচ / ব্যয় (Outflow)' : 'Total Outflow'}
+                </span>
+                <span className="font-mono font-bold text-sm text-rose-800 mt-0.5 block">
+                  {totals.bdtExpense > 0 ? `-${totals.bdtExpense.toLocaleString('en-US')} ৳ ` : ''}
+                  {totals.kwdExpense > 0 ? `-${totals.kwdExpense.toFixed(3)} KD` : ''}
+                  {totals.bdtExpense === 0 && totals.kwdExpense === 0 ? '0.00' : ''}
+                </span>
+              </div>
+
+              <div>
+                <span className="text-[10px] text-slate-600 font-bold uppercase block">
+                  {lang === 'bn' ? 'নিট উদ্বৃত্ত / সঞ্চয় (Net)' : 'Net Balance'}
+                </span>
+                <span className="font-mono font-bold text-sm text-slate-900 mt-0.5 block">
+                  {totals.bdtNet !== 0 ? `${totals.bdtNet >= 0 ? '+' : ''}${totals.bdtNet.toLocaleString('en-US')} ৳ ` : ''}
+                  {totals.kwdNet !== 0 ? `${totals.kwdNet >= 0 ? '+' : ''}${totals.kwdNet.toFixed(3)} KD` : ''}
+                  {totals.bdtNet === 0 && totals.kwdNet === 0 ? '0.00' : ''}
+                </span>
+              </div>
             </div>
-          </div>
 
-          <div className="text-right text-xs text-slate-700">
-            <span className="inline-block px-3 py-1 bg-slate-100 border border-slate-300 rounded font-bold uppercase tracking-wider text-[10px] mb-1">
-              Verified Audit Statement
-            </span>
-            <p className="font-mono text-[11px]">প্রিন্ট তারিখ: {new Date().toLocaleDateString('en-GB')}</p>
-            <p className="font-mono text-[10px] text-slate-500">সময়: {new Date().toLocaleTimeString('en-US')}</p>
-          </div>
-        </div>
+            {/* Complete Unpaginated Table for Print (ALL filteredRows) */}
+            <div className="overflow-hidden border border-slate-400 rounded-xs">
+              <table className="w-full text-left border-collapse text-[11px]">
+                <thead>
+                  <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold uppercase tracking-wider text-[10px]">
+                    <th className="py-2 px-2.5 border-r border-slate-400 text-center w-10">SL</th>
+                    <th className="py-2 px-2.5 border-r border-slate-400 whitespace-nowrap text-center w-24">তারিখ</th>
+                    <th className="py-2 px-2.5 border-r border-slate-400 min-w-40">অ্যাকাউন্ট / হেড</th>
+                    <th className="py-2 px-2.5 border-r border-slate-400 min-w-48">খাত / বিবরণ</th>
+                    <th className="py-2 px-2.5 border-r border-slate-400 text-center whitespace-nowrap w-20">ধরণ</th>
+                    <th className="py-2 px-2.5 border-r border-slate-400 text-right whitespace-nowrap w-28">পরিমাণ</th>
+                    <th className="py-2 px-2.5 text-center whitespace-nowrap w-20">স্ট্যাটাস</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-300 text-slate-800 text-[10.5px]">
+                  {filteredRows.map((row, idx) => (
+                    <tr key={`print-row-${row.id}-${idx}`} className="break-inside-avoid">
+                      <td className="py-1.5 px-2.5 font-mono text-slate-500 border-r border-slate-200 text-center">{idx + 1}</td>
+                      <td className="py-1.5 px-2.5 font-mono text-slate-700 border-r border-slate-200 whitespace-nowrap text-center">{row.date}</td>
+                      <td className="py-1.5 px-2.5 font-semibold text-slate-900 border-r border-slate-200">
+                        {lang === 'bn' ? row.sectionNameBn : row.sectionNameEn}
+                        {row.bankName && <span className="block text-[9px] text-slate-500 font-normal">🏦 {row.bankName}</span>}
+                      </td>
+                      <td className="py-1.5 px-2.5 border-r border-slate-200">
+                        <span className="font-bold text-slate-900">{lang === 'bn' ? row.categoryNameBn : row.categoryNameEn}</span>
+                        {row.borrowerName && <span className="block text-[10px] text-indigo-800">গ্রহীতা: {row.borrowerName}</span>}
+                        {row.note && <span className="block text-[10px] text-slate-500 italic">{row.note}</span>}
+                      </td>
+                      <td className="py-1.5 px-2.5 border-r border-slate-200 font-bold uppercase text-[10px] text-center whitespace-nowrap">
+                        {row.type === 'income' ? 'আয় / জমা' : row.type === 'expense' ? 'ব্যয় / খরচ' : row.type === 'loan' ? 'দিনার লোন' : 'ট্রান্সফার'}
+                      </td>
+                      <td className="py-1.5 px-2.5 text-right font-mono font-bold text-slate-900 border-r border-slate-200 whitespace-nowrap text-[12px]">
+                        {row.type === 'income' ? '+' : row.type === 'expense' ? '-' : ''}
+                        {row.currency === 'KWD' ? `${row.amount.toFixed(3)} KD` : `${row.amount.toLocaleString('en-US')} ৳`}
+                      </td>
+                      <td className="py-1.5 px-2.5 text-center font-bold text-[10px] whitespace-nowrap">
+                        {row.status ? (
+                          <span className={row.status === 'paid' ? 'text-emerald-700' : 'text-amber-700'}>
+                            {row.status === 'paid' ? 'Paid' : 'Unpaid'}
+                          </span>
+                        ) : (
+                          '—'
+                        )}
+                      </td>
+                    </tr>
+                  ))}
 
-        {/* Printable Summary Totals Bar */}
-        <div className="grid grid-cols-3 gap-3 p-3.5 bg-slate-50 border border-slate-300 rounded-lg text-center text-xs">
-          <div>
-            <span className="text-[10px] text-slate-600 font-bold uppercase block">
-              {lang === 'bn' ? 'মোট প্রাপ্তি / জমা (Inflow)' : 'Total Inflow'}
-            </span>
-            <span className="font-mono font-bold text-sm text-emerald-800 mt-0.5 block">
-              {totals.bdtIncome > 0 ? `+${totals.bdtIncome.toLocaleString('en-US')} ৳ ` : ''}
-              {totals.kwdIncome > 0 ? `+${totals.kwdIncome.toFixed(3)} KD` : ''}
-              {totals.bdtIncome === 0 && totals.kwdIncome === 0 ? '0.00' : ''}
-            </span>
-          </div>
+                  {/* Summary Footer inside Print Table */}
+                  <tr className="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-400 break-inside-avoid">
+                    <td className="py-2 px-2.5 text-center border-r border-slate-300 font-mono"></td>
+                    <td className="py-2 px-2.5 border-r border-slate-300"></td>
+                    <td colSpan={2} className="py-2 px-2.5 border-r border-slate-300 font-black uppercase text-[11px]">
+                      {lang === 'bn' ? 'সর্বমোট সমাপ্তি হিসাব (Total / Net Balance)' : 'Total / Net Balance'}
+                    </td>
+                    <td className="py-2 px-2.5 border-r border-slate-300 text-center font-bold text-[10px]">
+                      {filteredRows.length} {lang === 'bn' ? 'টি এন্ট্রি' : 'entries'}
+                    </td>
+                    <td className="py-2 px-2.5 text-right font-mono font-black tabular-nums text-[12.5px] border-r border-slate-300 text-slate-900 whitespace-nowrap">
+                      {totals.bdtNet !== 0 ? `${totals.bdtNet >= 0 ? '+' : ''}${totals.bdtNet.toLocaleString('en-US')} ৳ ` : ''}
+                      {totals.kwdNet !== 0 ? `${totals.kwdNet >= 0 ? '+' : ''}${totals.kwdNet.toFixed(3)} KD` : ''}
+                      {totals.bdtNet === 0 && totals.kwdNet === 0 ? '0.00' : ''}
+                    </td>
+                    <td className="py-2 px-2.5 text-center font-bold text-[10px] text-slate-600">
+                      Verified
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
 
-          <div>
-            <span className="text-[10px] text-slate-600 font-bold uppercase block">
-              {lang === 'bn' ? 'মোট খরচ / ব্যয় (Outflow)' : 'Total Outflow'}
-            </span>
-            <span className="font-mono font-bold text-sm text-rose-800 mt-0.5 block">
-              {totals.bdtExpense > 0 ? `-${totals.bdtExpense.toLocaleString('en-US')} ৳ ` : ''}
-              {totals.kwdExpense > 0 ? `-${totals.kwdExpense.toFixed(3)} KD` : ''}
-              {totals.bdtExpense === 0 && totals.kwdExpense === 0 ? '0.00' : ''}
-            </span>
-          </div>
-
-          <div>
-            <span className="text-[10px] text-slate-600 font-bold uppercase block">
-              {lang === 'bn' ? 'নিট উদ্বৃত্ত / সঞ্চয় (Net)' : 'Net Balance'}
-            </span>
-            <span className="font-mono font-bold text-sm text-slate-900 mt-0.5 block">
-              {totals.bdtNet !== 0 ? `${totals.bdtNet >= 0 ? '+' : ''}${totals.bdtNet.toLocaleString('en-US')} ৳ ` : ''}
-              {totals.kwdNet !== 0 ? `${totals.kwdNet >= 0 ? '+' : ''}${totals.kwdNet.toFixed(3)} KD` : ''}
-              {totals.bdtNet === 0 && totals.kwdNet === 0 ? '0.00' : ''}
-            </span>
-          </div>
-        </div>
-
-        {/* Complete Unpaginated Table for Print (ALL filteredRows) */}
-        <div className="overflow-hidden border border-slate-300 rounded">
-          <table className="w-full text-left border-collapse text-[11px]">
-            <thead>
-              <tr className="bg-slate-100 border-b border-slate-300 text-slate-800 font-bold uppercase tracking-wider text-[10px]">
-                <th className="py-2 px-2.5 border-r border-slate-300 text-center w-10">SL</th>
-                <th className="py-2 px-2.5 border-r border-slate-300 whitespace-nowrap">তারিখ</th>
-                <th className="py-2 px-2.5 border-r border-slate-300">অ্যাকাউন্ট / হেড</th>
-                <th className="py-2 px-2.5 border-r border-slate-300">খাত / বিবরণ</th>
-                <th className="py-2 px-2.5 border-r border-slate-300 whitespace-nowrap">ধরণ</th>
-                <th className="py-2 px-2.5 border-r border-slate-300 text-right whitespace-nowrap">পরিমাণ</th>
-                <th className="py-2 px-2.5 text-center whitespace-nowrap">স্ট্যাটাস</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200 text-slate-800">
-              {filteredRows.map((row, idx) => (
-                <tr key={`print-row-${row.id}-${idx}`} className="break-inside-avoid">
-                  <td className="py-1.5 px-2.5 font-mono text-slate-500 border-r border-slate-200 text-center">{idx + 1}</td>
-                  <td className="py-1.5 px-2.5 font-mono text-slate-700 border-r border-slate-200 whitespace-nowrap">{row.date}</td>
-                  <td className="py-1.5 px-2.5 font-semibold text-slate-900 border-r border-slate-200">
-                    {lang === 'bn' ? row.sectionNameBn : row.sectionNameEn}
-                    {row.bankName && <span className="block text-[9px] text-slate-500 font-normal">{row.bankName}</span>}
-                    {row.voucherNo && <span className="block text-[9px] text-indigo-700 font-mono">#{row.voucherNo}</span>}
-                  </td>
-                  <td className="py-1.5 px-2.5 border-r border-slate-200">
-                    <span className="font-bold text-slate-900">{lang === 'bn' ? row.categoryNameBn : row.categoryNameEn}</span>
-                    {row.borrowerName && <span className="block text-[10px] text-indigo-800">গ্রহীতা: {row.borrowerName}</span>}
-                    {row.note && <span className="block text-[10px] text-slate-500 italic">{row.note}</span>}
-                  </td>
-                  <td className="py-1.5 px-2.5 border-r border-slate-200 font-bold uppercase text-[10px] whitespace-nowrap">
-                    {row.type === 'income' ? 'আয় / জমা' : row.type === 'expense' ? 'ব্যয় / খরচ' : row.type === 'loan' ? 'দিনার লোন' : 'ট্রান্সফার'}
-                  </td>
-                  <td className="py-1.5 px-2.5 text-right font-mono font-bold text-slate-900 border-r border-slate-200 whitespace-nowrap">
-                    {row.type === 'income' ? '+' : row.type === 'expense' ? '-' : ''}
-                    {row.currency === 'KWD' ? `${row.amount.toFixed(3)} KD` : `${row.amount.toLocaleString('en-US')} ৳`}
-                  </td>
-                  <td className="py-1.5 px-2.5 text-center font-bold text-[10px] whitespace-nowrap">
-                    {row.status ? (
-                      <span className={row.status === 'paid' ? 'text-emerald-700' : 'text-amber-700'}>
-                        {row.status === 'paid' ? 'Paid' : 'Unpaid'}
-                      </span>
-                    ) : (
-                      '—'
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Official Signatures & Verification */}
-        <div className="pt-8 flex justify-between items-center text-xs text-slate-600 break-inside-avoid">
-          <div className="text-center">
-            <div className="border-t border-slate-400 w-44 pt-1 font-semibold">হিসাব প্রস্তুতকারকের স্বাক্ষর</div>
-            <p className="text-[10px] text-slate-400 mt-0.5">Prepared By</p>
-          </div>
-          <div className="text-center">
-            <div className="border-t border-slate-400 w-44 pt-1 font-semibold">অনুমোদনকারী / পরিচালক</div>
-            <p className="text-[10px] text-slate-400 mt-0.5">Authorized Signatory</p>
-          </div>
-        </div>
+            {/* Official Signatures & Verification */}
+            <div className="pt-8 flex justify-between items-center text-xs text-slate-600 break-inside-avoid">
+              <div className="text-center">
+                <div className="border-t border-slate-400 w-44 pt-1 font-semibold">হিসাব প্রস্তুতকারকের স্বাক্ষর</div>
+                <p className="text-[10px] text-slate-400 mt-0.5">Prepared By</p>
+              </div>
+              <div className="text-center">
+                <div className="border-t border-slate-400 w-44 pt-1 font-semibold">অনুমোদনকারী / পরিচালক</div>
+                <p className="text-[10px] text-slate-400 mt-0.5">Authorized Signatory</p>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* 7. Transaction Audit Voucher Slip Modal */}

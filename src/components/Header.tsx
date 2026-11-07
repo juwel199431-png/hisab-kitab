@@ -38,6 +38,9 @@ export const Header: React.FC = () => {
     setIsConverterOpen,
     setIsAlertsOpen,
     totalAlertsCount,
+    unreadAlertsCount,
+    markAlertsAsSeen,
+    isAlertSeen,
     smartAlerts,
     setIsUniversalSearchOpen,
     isPinEnabled,
@@ -145,7 +148,7 @@ export const Header: React.FC = () => {
     },
   ];
 
-  const hasOverdueAlerts = smartAlerts.some((a) => a.isOverdue);
+  const hasUnreadOverdueAlerts = smartAlerts.some((a) => a.isOverdue && !isAlertSeen(a.id, true));
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 no-print shadow-xs transition-colors duration-200">

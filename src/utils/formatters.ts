@@ -216,3 +216,58 @@ export const TRANSLATIONS = {
     submitterSignature: 'Prepared By (Signature)',
   },
 };
+
+/**
+ * Automatically calculates the next sequential voucher / invoice serial number.
+ * Finds the highest numeric serial across existing transactions/deposits and increments by 1.
+ * Defaults to 1001 if no numbered vouchers exist yet.
+ */
+export function getNextVoucherNumber(
+  transactions: Array<{ voucherNo?: string }> = [],
+  bossDeposits: Array<{ receiptNumber?: string }> = [],
+  kuwaitReceivables: Array<{ voucherNo?: string }> = [],
+  kuwaitPayables: Array<{ voucherNo?: string }> = []
+): string {
+  const allVouchers: string[] = [];
+
+  transactions.forEach((t) => {
+    if (t?.voucherNo && t.voucherNo.trim()) allVouchers.push(t.voucherNo.trim());
+  });
+  bossDeposits.forEach((d) => {
+    if (d?.receiptNumber && d.receiptNumber.trim()) allVouchers.push(d.receiptNumber.trim());
+  });
+  kuwaitReceivables.forEach((r) => {
+    if (r?.voucherNo && r.voucherNo.trim()) allVouchers.push(r.voucherNo.trim());
+  });
+  kuwaitPayables.forEach((p) => {
+    if (p?.voucherNo && p.voucherNo.trim()) allVouchers.push(p.voucherNo.trim());
+  });
+
+  let maxNum = 0;
+  let detectedPrefix = '';
+  let minPadding = 0;
+
+  for (const v of allVouchers) {
+    // Matches patterns like "15", "1001", "VCH-1002", "INV-1005", "V-12"
+    const match = v.match(/^([A-Za-z_\-\s#]*)(\d+)$/);
+    if (match) {
+      const prefix = match[1];
+      const digits = match[2];
+      const num = parseInt(digits, 10);
+      if (!isNaN(num) && num > maxNum && num < 10000000) {
+        maxNum = num;
+        detectedPrefix = prefix;
+        minPadding = digits.length;
+      }
+    }
+  }
+
+  // If no transactions have numbered vouchers yet, start from standard 1001
+  if (maxNum === 0) {
+    return '1001';
+  }
+
+  const nextNum = maxNum + 1;
+  const nextNumStr = minPadding > 1 ? String(nextNum).padStart(minPadding, '0') : String(nextNum);
+  return detectedPrefix ? `${detectedPrefix}${nextNumStr}` : nextNumStr;
+}

@@ -40,6 +40,7 @@ export const KuwaitLoanTracker: React.FC = () => {
     t,
     getKuwaitReceivableTotals,
     getBorrowerBalance,
+    getNextVoucherNo,
     addKuwaitReceivableBorrower,
     updateKuwaitReceivableBorrower,
     deleteKuwaitReceivableBorrower,
@@ -134,7 +135,7 @@ export const KuwaitLoanTracker: React.FC = () => {
     }
     setLendAmount('');
     setLendDate(new Date().toISOString().split('T')[0]);
-    setLendVoucher(`LND-${Date.now().toString().slice(-4)}`);
+    setLendVoucher(getNextVoucherNo());
     setLendNote('');
     setIsLendModalOpen(true);
   };
@@ -151,7 +152,7 @@ export const KuwaitLoanTracker: React.FC = () => {
     }
     setCollectAmount('');
     setCollectDate(new Date().toISOString().split('T')[0]);
-    setCollectVoucher(`COL-${Date.now().toString().slice(-4)}`);
+    setCollectVoucher(getNextVoucherNo());
     setCollectNote('');
     setIsCollectModalOpen(true);
   };

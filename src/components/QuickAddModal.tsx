@@ -34,6 +34,7 @@ export const QuickAddModal: React.FC = () => {
     setIsQuickAddOpen,
     quickAddDefaultSection,
     activeSection,
+    getNextVoucherNo,
     addTransaction,
     addBossDeposit,
     addKuwaitLoan,
@@ -82,7 +83,7 @@ export const QuickAddModal: React.FC = () => {
       setDate(new Date().toISOString().split('T')[0]);
       setAmount('');
       setNote('');
-      setVoucherNo('');
+      setVoucherNo(getNextVoucherNo());
       setPaymentStatus('unpaid');
       if (data.banks.length > 0) {
         setBankId(data.banks[0].id);
@@ -152,6 +153,7 @@ export const QuickAddModal: React.FC = () => {
         currency: 'KWD',
         note: note.trim(),
         paymentStatus,
+        voucherNo: voucherNo.trim() || undefined,
       });
       setIsQuickAddOpen(false);
       return;
@@ -170,6 +172,7 @@ export const QuickAddModal: React.FC = () => {
         amount: parsedAmount,
         currency: 'KWD',
         note: note.trim(),
+        voucherNo: voucherNo.trim() || undefined,
       });
       setIsQuickAddOpen(false);
       return;
@@ -230,6 +233,7 @@ export const QuickAddModal: React.FC = () => {
         targetSavingsId: transferTargetType !== 'bank' ? targetSavingsId : undefined,
         categoryNameBn: catNameBn,
         categoryNameEn: catNameEn,
+        voucherNo: voucherNo.trim() || undefined,
         note:
           note.trim() ||
           (transferTargetType !== 'bank' && targetDpsOrIns
@@ -749,18 +753,23 @@ export const QuickAddModal: React.FC = () => {
             </div>
           )}
 
-          {/* Voucher No (optional, for shaker bhai expenses/deposits) */}
-          {(mode === 'boss-expense' || mode === 'boss-deposit') && (
+          {/* Voucher / Invoice Serial Number (Auto-generated & sequential) */}
+          {mode !== 'kuwait-loan' && (
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                {lang === 'bn' ? 'ভাউচার / মেমো / ক্যাশ রসিদ নম্বর' : 'Voucher / Bill #'}
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-semibold text-slate-700">
+                  {lang === 'bn' ? 'ভাউচার / ইনভয়েস নং' : 'Voucher / Invoice #'}
+                </label>
+                <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                  ⚡ {lang === 'bn' ? 'অটো জেনারেটেড' : 'Auto Generated'}
+                </span>
+              </div>
               <input
                 type="text"
                 value={voucherNo}
                 onChange={(e) => setVoucherNo(e.target.value)}
-                placeholder="যেমন: VCH-102"
-                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
+                placeholder="e.g. 1001"
+                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-emerald-500 font-mono font-bold text-slate-800"
               />
             </div>
           )}

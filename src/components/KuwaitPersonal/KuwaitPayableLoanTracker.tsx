@@ -40,6 +40,7 @@ export const KuwaitPayableLoanTracker: React.FC = () => {
     t,
     getKuwaitPayableTotals,
     getLenderBalance,
+    getNextVoucherNo,
     addKuwaitPayableLender,
     updateKuwaitPayableLender,
     deleteKuwaitPayableLender,
@@ -135,7 +136,7 @@ export const KuwaitPayableLoanTracker: React.FC = () => {
     }
     setBorrowAmount('');
     setBorrowDate(new Date().toISOString().split('T')[0]);
-    setBorrowVoucher(`BRW-${Date.now().toString().slice(-4)}`);
+    setBorrowVoucher(getNextVoucherNo());
     setBorrowNote('');
     setIsBorrowModalOpen(true);
   };
@@ -146,7 +147,7 @@ export const KuwaitPayableLoanTracker: React.FC = () => {
     setRepayLenderId(targetId);
     setRepayAmount('');
     setRepayDate(new Date().toISOString().split('T')[0]);
-    setRepayVoucher(`RPY-${Date.now().toString().slice(-4)}`);
+    setRepayVoucher(getNextVoucherNo());
     setRepayNote('');
     setIsRepayModalOpen(true);
   };
