@@ -2123,33 +2123,43 @@ export const ReportsView: React.FC = () => {
             <table className="w-full text-left border-collapse border border-slate-300 text-xs table-fixed">
               <colgroup>
                 <col style={{ width: '4%' }} />
-                <col style={{ width: '11%' }} />
+                <col style={{ width: '10%' }} />
                 <col style={{ width: '15%' }} />
                 <col style={{ width: '8%' }} />
                 <col style={{ width: '8%' }} />
-                <col style={{ width: '10%' }} />
-                <col style={{ width: '44%' }} />
+                <col style={{ width: '9%' }} />
+                <col style={{ width: '46%' }} />
               </colgroup>
               <thead>
+                {/* Sizing dummy row for strict column calculation */}
+                <tr style={{ height: 0, lineHeight: 0, padding: 0, margin: 0, border: 'none' }}>
+                  <th style={{ width: '4%', height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
+                  <th style={{ width: '10%', height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
+                  <th style={{ width: '15%', height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
+                  <th style={{ width: '8%', height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
+                  <th style={{ width: '8%', height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
+                  <th style={{ width: '9%', height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
+                  <th style={{ width: '46%', height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
+                </tr>
                 <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[11px]">
-                  <th rowSpan={2} className="py-2 px-1 text-center border-r border-slate-400">#</th>
-                  <th rowSpan={2} className="py-2 px-1 text-center border-r border-slate-400 whitespace-nowrap">Date</th>
-                  <th rowSpan={2} className="py-2 px-2 border-r border-slate-400">Account</th>
-                  <th colSpan={3} className="py-1 px-1 text-center border-r border-slate-400 border-b border-slate-400 uppercase tracking-wider text-[10px]">
+                  <th rowSpan={2} style={{ width: '4%' }} className="py-2 px-1 text-center border-r border-slate-400">#</th>
+                  <th rowSpan={2} style={{ width: '10%' }} className="py-2 px-1 text-center border-r border-slate-400 whitespace-nowrap">Date</th>
+                  <th rowSpan={2} style={{ width: '15%' }} className="py-2 px-2 border-r border-slate-400">Account</th>
+                  <th colSpan={3} style={{ width: '25%' }} className="py-1 px-1 text-center border-r border-slate-400 border-b border-slate-400 uppercase tracking-wider text-[10px]">
                     Base ({subLedgerData.currency})
                   </th>
-                  <th rowSpan={2} className="py-2 px-3 text-left">Remarks</th>
+                  <th rowSpan={2} style={{ width: '46%' }} className="py-2 px-3 text-left">Remarks</th>
                 </tr>
                 <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[10px]">
-                  <th className="py-1 px-1 text-right border-r border-slate-400">Debit</th>
-                  <th className="py-1 px-1 text-right border-r border-slate-400">Credit</th>
-                  <th className="py-1 px-1 text-right border-r border-slate-400">Balance</th>
+                  <th style={{ width: '8%' }} className="py-1 px-1 text-right border-r border-slate-400">Debit</th>
+                  <th style={{ width: '8%' }} className="py-1 px-1 text-right border-r border-slate-400">Credit</th>
+                  <th style={{ width: '9%' }} className="py-1 px-1 text-right border-r border-slate-400">Balance</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 text-slate-800 text-[11px]">
                 {/* Row 1: Account Banner Row (SL: 1) */}
                 <tr className="bg-[#D8EEF8] font-bold text-slate-900 border-b border-slate-300">
-                  <td className="py-1.5 px-2 text-center border-r border-slate-300 font-mono text-xs">1</td>
+                  <td style={{ width: '4%' }} className="py-1.5 px-1 text-center border-r border-slate-300 font-mono text-xs">1</td>
                   <td colSpan={6} className="py-1.5 px-3 text-center tracking-wide font-black text-xs md:text-sm text-slate-900 uppercase">
                     {subLedgerData.accountBannerTitle}
                   </td>
@@ -2157,21 +2167,21 @@ export const ReportsView: React.FC = () => {
 
                 {/* Row 2: Opening Balance Row (SL: 2) */}
                 <tr className="bg-white hover:bg-slate-50/80 font-medium border-b border-slate-200">
-                  <td className="py-1.5 px-2 text-center border-r border-slate-200 font-mono text-slate-500 text-xs">2</td>
-                  <td className="py-1.5 px-2 border-r border-slate-200 text-center font-mono text-slate-400">—</td>
-                  <td className="py-1.5 px-3 border-r border-slate-200 font-bold italic text-slate-900 text-xs truncate">
+                  <td style={{ width: '4%' }} className="py-1.5 px-1 text-center border-r border-slate-200 font-mono text-slate-500 text-xs">2</td>
+                  <td style={{ width: '10%' }} className="py-1.5 px-1 border-r border-slate-200 text-center font-mono text-slate-400">—</td>
+                  <td style={{ width: '15%' }} className="py-1.5 px-2 border-r border-slate-200 font-bold italic text-slate-900 text-xs truncate">
                     Opening Balance
                   </td>
-                  <td className="py-1.5 px-2 text-right border-r border-slate-200 font-mono font-bold text-slate-900 tabular-nums text-xs md:text-sm">
+                  <td style={{ width: '8%' }} className="py-1.5 px-1 text-right border-r border-slate-200 font-mono font-bold text-slate-900 tabular-nums text-xs md:text-sm">
                     {formatSubLedgerNumber(subLedgerData.openingBal, subLedgerData.currency, false)}
                   </td>
-                  <td className="py-1.5 px-2 text-right border-r border-slate-200 font-mono text-slate-400 tabular-nums text-xs md:text-sm font-semibold">
+                  <td style={{ width: '8%' }} className="py-1.5 px-1 text-right border-r border-slate-200 font-mono text-slate-400 tabular-nums text-xs md:text-sm font-semibold">
                     {subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
                   </td>
-                  <td className="py-1.5 px-2 text-right border-r border-slate-200 font-mono font-black text-slate-900 tabular-nums text-xs md:text-sm">
+                  <td style={{ width: '9%' }} className="py-1.5 px-1 text-right border-r border-slate-200 font-mono font-black text-slate-900 tabular-nums text-xs md:text-sm">
                     {formatSubLedgerNumber(subLedgerData.openingBal, subLedgerData.currency, false)}
                   </td>
-                  <td className="py-1.5 px-3 text-slate-400 italic text-xs">—</td>
+                  <td style={{ width: '46%' }} className="py-1.5 px-3 text-slate-400 italic text-xs">—</td>
                 </tr>
 
                 {/* Rows 3+: Dynamic In-Period Transactions */}
@@ -2195,29 +2205,29 @@ export const ReportsView: React.FC = () => {
                       }}
                       className="hover:bg-cyan-50/40 transition-colors cursor-pointer border-b border-slate-100"
                     >
-                      <td className="py-1.5 px-1 text-center border-r border-slate-200 font-mono text-slate-600 text-xs">
+                      <td style={{ width: '4%' }} className="py-1.5 px-1 text-center border-r border-slate-200 font-mono text-slate-600 text-xs">
                         {row.sl}
                       </td>
-                      <td className="py-1.5 px-1 border-r border-slate-200 font-mono text-slate-700 whitespace-nowrap text-center text-xs">
+                      <td style={{ width: '10%' }} className="py-1.5 px-1 border-r border-slate-200 font-mono text-slate-700 whitespace-nowrap text-center text-xs">
                         {row.formattedDate}
                       </td>
-                      <td className="py-1.5 px-2 border-r border-slate-200 font-bold text-slate-900 text-xs leading-snug">
+                      <td style={{ width: '15%' }} className="py-1.5 px-2 border-r border-slate-200 font-bold text-slate-900 text-xs leading-snug">
                         {row.account}
                       </td>
-                      <td className="py-1.5 px-1 text-right border-r border-slate-200 font-mono tabular-nums text-xs md:text-sm font-bold text-slate-900">
+                      <td style={{ width: '8%' }} className="py-1.5 px-1 text-right border-r border-slate-200 font-mono tabular-nums text-xs md:text-sm font-bold text-slate-900">
                         {row.debit > 0
                           ? formatSubLedgerNumber(row.debit, subLedgerData.currency, false)
                           : subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
                       </td>
-                      <td className="py-1.5 px-1 text-right border-r border-slate-200 font-mono tabular-nums text-xs md:text-sm font-bold text-rose-700">
+                      <td style={{ width: '8%' }} className="py-1.5 px-1 text-right border-r border-slate-200 font-mono tabular-nums text-xs md:text-sm font-bold text-rose-700">
                         {row.credit > 0
                           ? formatSubLedgerNumber(row.credit, subLedgerData.currency, true)
                           : subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
                       </td>
-                      <td className="py-1.5 px-1 text-right border-r border-slate-200 font-mono font-black tabular-nums text-xs md:text-sm text-slate-900">
+                      <td style={{ width: '9%' }} className="py-1.5 px-1 text-right border-r border-slate-200 font-mono font-black tabular-nums text-xs md:text-sm text-slate-900">
                         {formatSubLedgerNumber(row.balance, subLedgerData.currency, false)}
                       </td>
-                      <td className="py-1.5 px-3 text-slate-700 text-xs leading-snug break-words" title={row.remarks}>
+                      <td style={{ width: '46%' }} className="py-1.5 px-3 text-slate-700 text-xs leading-snug break-words" title={row.remarks}>
                         {row.remarks || <span className="text-slate-300 italic">—</span>}
                       </td>
                     </tr>
@@ -2226,25 +2236,25 @@ export const ReportsView: React.FC = () => {
 
                 {/* Total Summary Footer Row */}
                 <tr className="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-400">
-                  <td className="py-2 px-2 text-center border-r border-slate-300 font-mono"></td>
-                  <td className="py-2 px-2 border-r border-slate-300"></td>
-                  <td className="py-2 px-3 border-r border-slate-300 font-black uppercase text-xs">
+                  <td style={{ width: '4%' }} className="py-2 px-1 text-center border-r border-slate-300 font-mono"></td>
+                  <td style={{ width: '10%' }} className="py-2 px-1 border-r border-slate-300"></td>
+                  <td style={{ width: '15%' }} className="py-2 px-2 border-r border-slate-300 font-black uppercase text-xs">
                     {lang === 'bn' ? 'সর্বমোট সমাপ্তি হিসাব (Total / Closing)' : 'Total / Closing Balance'}
                   </td>
-                  <td className="py-2 px-2 text-right border-r border-slate-300 font-mono font-bold text-emerald-900 tabular-nums text-xs md:text-sm">
+                  <td style={{ width: '8%' }} className="py-2 px-1 text-right border-r border-slate-300 font-mono font-bold text-emerald-900 tabular-nums text-xs md:text-sm">
                     {formatSubLedgerNumber(
                       subLedgerData.openingBal + subLedgerData.totalPeriodDebit,
                       subLedgerData.currency,
                       false
                     )}
                   </td>
-                  <td className="py-2 px-2 text-right border-r border-slate-300 font-mono font-bold text-rose-900 tabular-nums text-xs md:text-sm">
+                  <td style={{ width: '8%' }} className="py-2 px-1 text-right border-r border-slate-300 font-mono font-bold text-rose-900 tabular-nums text-xs md:text-sm">
                     {formatSubLedgerNumber(subLedgerData.totalPeriodCredit, subLedgerData.currency, true)}
                   </td>
-                  <td className="py-2 px-2 text-right border-r border-slate-300 font-mono font-black text-slate-900 tabular-nums text-sm md:text-base">
+                  <td style={{ width: '9%' }} className="py-2 px-1 text-right border-r border-slate-300 font-mono font-black text-slate-900 tabular-nums text-sm md:text-base">
                     {formatSubLedgerNumber(subLedgerData.closingBalance, subLedgerData.currency, false)}
                   </td>
-                  <td className="py-2 px-3 border-r border-slate-300"></td>
+                  <td style={{ width: '46%' }} className="py-2 px-3 border-r border-slate-300"></td>
                 </tr>
               </tbody>
             </table>
@@ -2614,33 +2624,43 @@ export const ReportsView: React.FC = () => {
               <table className="w-full text-left border-collapse text-[10px] table-fixed">
                 <colgroup>
                   <col style={{ width: '4%' }} />
-                  <col style={{ width: '11%' }} />
+                  <col style={{ width: '10%' }} />
                   <col style={{ width: '15%' }} />
                   <col style={{ width: '8%' }} />
                   <col style={{ width: '8%' }} />
-                  <col style={{ width: '10%' }} />
-                  <col style={{ width: '44%' }} />
+                  <col style={{ width: '9%' }} />
+                  <col style={{ width: '46%' }} />
                 </colgroup>
                 <thead>
+                  {/* Invisible 0-height 7-column sizing row that forces Blink/WebKit print engine to lock column ratios */}
+                  <tr style={{ height: 0, lineHeight: 0, padding: 0, margin: 0, border: 'none' }}>
+                    <th style={{ width: '4%', height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
+                    <th style={{ width: '10%', height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
+                    <th style={{ width: '15%', height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
+                    <th style={{ width: '8%', height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
+                    <th style={{ width: '8%', height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
+                    <th style={{ width: '9%', height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
+                    <th style={{ width: '46%', height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
+                  </tr>
                   <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[9.5px]">
-                    <th rowSpan={2} className="py-1 px-1 text-center border-r border-slate-400">#</th>
-                    <th rowSpan={2} className="py-1 px-1 text-center border-r border-slate-400 whitespace-nowrap">Date</th>
-                    <th rowSpan={2} className="py-1 px-2 border-r border-slate-400">Account</th>
-                    <th colSpan={3} className="py-1 px-1 text-center border-r border-slate-400 border-b border-slate-400 uppercase tracking-wider text-[9px]">
+                    <th rowSpan={2} style={{ width: '4%' }} className="py-1 px-1 text-center border-r border-slate-400">#</th>
+                    <th rowSpan={2} style={{ width: '10%' }} className="py-1 px-1 text-center border-r border-slate-400 whitespace-nowrap">Date</th>
+                    <th rowSpan={2} style={{ width: '15%' }} className="py-1 px-2 border-r border-slate-400">Account</th>
+                    <th colSpan={3} style={{ width: '25%' }} className="py-1 px-1 text-center border-r border-slate-400 border-b border-slate-400 uppercase tracking-wider text-[9px]">
                       Base ({subLedgerData.currency})
                     </th>
-                    <th rowSpan={2} className="py-1 px-2 text-left">Remarks</th>
+                    <th rowSpan={2} style={{ width: '46%' }} className="py-1 px-2.5 text-left border-slate-400">Remarks</th>
                   </tr>
                   <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[9px]">
-                    <th className="py-1 px-1 text-right border-r border-slate-400">Debit</th>
-                    <th className="py-1 px-1 text-right border-r border-slate-400">Credit</th>
-                    <th className="py-1 px-1 text-right border-r border-slate-400">Balance</th>
+                    <th style={{ width: '8%' }} className="py-1 px-1 text-right border-r border-slate-400">Debit</th>
+                    <th style={{ width: '8%' }} className="py-1 px-1 text-right border-r border-slate-400">Credit</th>
+                    <th style={{ width: '9%' }} className="py-1 px-1 text-right border-r border-slate-400">Balance</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-300 text-slate-900 text-[10px]">
                   {/* Row 1: Account Banner Row */}
                   <tr className="bg-[#D8EEF8] font-bold text-slate-900 border-b border-slate-300 break-inside-avoid">
-                    <td className="py-1 px-1.5 text-center border-r border-slate-300 font-mono text-[10px]">1</td>
+                    <td style={{ width: '4%' }} className="py-1 px-1 text-center border-r border-slate-300 font-mono text-[10px]">1</td>
                     <td colSpan={6} className="py-1 px-2 text-center tracking-wide font-black text-xs text-slate-900 uppercase">
                       {subLedgerData.accountBannerTitle}
                     </td>
@@ -2648,49 +2668,49 @@ export const ReportsView: React.FC = () => {
 
                   {/* Row 2: Opening Balance Row */}
                   <tr className="bg-white font-medium border-b border-slate-200 break-inside-avoid">
-                    <td className="py-1 px-1.5 text-center border-r border-slate-200 font-mono text-slate-600">2</td>
-                    <td className="py-1 px-1.5 border-r border-slate-200 text-center font-mono text-slate-400">—</td>
-                    <td className="py-1 px-2 border-r border-slate-200 font-bold italic text-slate-900 truncate">
+                    <td style={{ width: '4%' }} className="py-1 px-1 text-center border-r border-slate-200 font-mono text-slate-600">2</td>
+                    <td style={{ width: '10%' }} className="py-1 px-1 border-r border-slate-200 text-center font-mono text-slate-400">—</td>
+                    <td style={{ width: '15%' }} className="py-1 px-2 border-r border-slate-200 font-bold italic text-slate-900 truncate">
                       Opening Balance
                     </td>
-                    <td className="py-1 px-1.5 text-right border-r border-slate-200 font-mono font-bold text-slate-900 tabular-nums text-[11px]">
+                    <td style={{ width: '8%' }} className="py-1 px-1 text-right border-r border-slate-200 font-mono font-bold text-slate-900 tabular-nums text-[10.5px]">
                       {formatSubLedgerNumber(subLedgerData.openingBal, subLedgerData.currency, false)}
                     </td>
-                    <td className="py-1 px-1.5 text-right border-r border-slate-200 font-mono text-slate-400 tabular-nums text-[11px]">
+                    <td style={{ width: '8%' }} className="py-1 px-1 text-right border-r border-slate-200 font-mono text-slate-400 tabular-nums text-[10.5px]">
                       {subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
                     </td>
-                    <td className="py-1 px-1.5 text-right border-r border-slate-200 font-mono font-black text-slate-900 tabular-nums text-[11.5px]">
+                    <td style={{ width: '9%' }} className="py-1 px-1 text-right border-r border-slate-200 font-mono font-black text-slate-900 tabular-nums text-[11px]">
                       {formatSubLedgerNumber(subLedgerData.openingBal, subLedgerData.currency, false)}
                     </td>
-                    <td className="py-1 px-2.5 text-slate-400 italic text-[9.5px]">—</td>
+                    <td style={{ width: '46%' }} className="py-1 px-2.5 text-slate-400 italic text-[9.5px]">—</td>
                   </tr>
 
                   {/* Dynamic In-Period Transactions */}
                   {subLedgerData.rows.map((row) => (
                     <tr key={row.id} className="border-b border-slate-200 break-inside-avoid">
-                      <td className="py-1 px-1.5 text-center border-r border-slate-200 font-mono text-slate-600 text-[10px]">
+                      <td style={{ width: '4%' }} className="py-1 px-1 text-center border-r border-slate-200 font-mono text-slate-600 text-[10px]">
                         {row.sl}
                       </td>
-                      <td className="py-1 px-1.5 border-r border-slate-200 font-mono text-slate-700 whitespace-nowrap text-center text-[9.5px]">
+                      <td style={{ width: '10%' }} className="py-1 px-1 border-r border-slate-200 font-mono text-slate-700 whitespace-nowrap text-center text-[9.5px]">
                         {row.formattedDate}
                       </td>
-                      <td className="py-1 px-2 border-r border-slate-200 font-bold text-slate-900 text-[10px] leading-tight">
+                      <td style={{ width: '15%' }} className="py-1 px-2 border-r border-slate-200 font-bold text-slate-900 text-[10px] leading-tight">
                         {row.account}
                       </td>
-                      <td className="py-1 px-1.5 text-right border-r border-slate-200 font-mono tabular-nums text-[11px] font-bold text-slate-900">
+                      <td style={{ width: '8%' }} className="py-1 px-1 text-right border-r border-slate-200 font-mono tabular-nums text-[10.5px] font-bold text-slate-900">
                         {row.debit > 0
                           ? formatSubLedgerNumber(row.debit, subLedgerData.currency, false)
                           : subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
                       </td>
-                      <td className="py-1 px-1.5 text-right border-r border-slate-200 font-mono tabular-nums text-[11px] font-bold text-rose-800">
+                      <td style={{ width: '8%' }} className="py-1 px-1 text-right border-r border-slate-200 font-mono tabular-nums text-[10.5px] font-bold text-rose-800">
                         {row.credit > 0
                           ? formatSubLedgerNumber(row.credit, subLedgerData.currency, true)
                           : subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
                       </td>
-                      <td className="py-1 px-1.5 text-right border-r border-slate-200 font-mono font-black tabular-nums text-[11.5px] text-slate-900">
+                      <td style={{ width: '9%' }} className="py-1 px-1 text-right border-r border-slate-200 font-mono font-black tabular-nums text-[11px] text-slate-900">
                         {formatSubLedgerNumber(row.balance, subLedgerData.currency, false)}
                       </td>
-                      <td className="py-1 px-2.5 text-slate-700 text-[9.5px] leading-tight break-words">
+                      <td style={{ width: '46%' }} className="py-1 px-2.5 text-slate-800 text-[10px] leading-snug break-words">
                         {row.remarks || <span className="text-slate-300 italic">—</span>}
                       </td>
                     </tr>
@@ -2698,25 +2718,25 @@ export const ReportsView: React.FC = () => {
 
                   {/* Summary Footer */}
                   <tr className="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-400 break-inside-avoid">
-                    <td className="py-1.5 px-1.5 text-center border-r border-slate-300 font-mono"></td>
-                    <td className="py-1.5 px-1.5 border-r border-slate-300"></td>
-                    <td className="py-1.5 px-2 border-r border-slate-300 font-black uppercase text-[10.5px]">
+                    <td style={{ width: '4%' }} className="py-1.5 px-1 text-center border-r border-slate-300 font-mono"></td>
+                    <td style={{ width: '10%' }} className="py-1.5 px-1 border-r border-slate-300"></td>
+                    <td style={{ width: '15%' }} className="py-1.5 px-2 border-r border-slate-300 font-black uppercase text-[10px]">
                       {lang === 'bn' ? 'সর্বমোট সমাপ্তি হিসাব (Total / Closing)' : 'Total / Closing Balance'}
                     </td>
-                    <td className="py-1.5 px-1.5 text-right border-r border-slate-300 font-mono font-bold text-emerald-900 tabular-nums text-[11.5px]">
+                    <td style={{ width: '8%' }} className="py-1.5 px-1 text-right border-r border-slate-300 font-mono font-bold text-emerald-900 tabular-nums text-[11px]">
                       {formatSubLedgerNumber(
                         subLedgerData.openingBal + subLedgerData.totalPeriodDebit,
                         subLedgerData.currency,
                         false
                       )}
                     </td>
-                    <td className="py-1.5 px-1.5 text-right border-r border-slate-300 font-mono font-bold text-rose-900 tabular-nums text-[11.5px]">
+                    <td style={{ width: '8%' }} className="py-1.5 px-1 text-right border-r border-slate-300 font-mono font-bold text-rose-900 tabular-nums text-[11px]">
                       {formatSubLedgerNumber(subLedgerData.totalPeriodCredit, subLedgerData.currency, true)}
                     </td>
-                    <td className="py-1.5 px-1.5 text-right border-r border-slate-300 font-mono font-black text-slate-900 tabular-nums text-[12px]">
+                    <td style={{ width: '9%' }} className="py-1.5 px-1 text-right border-r border-slate-300 font-mono font-black text-slate-900 tabular-nums text-[11.5px]">
                       {formatSubLedgerNumber(subLedgerData.closingBalance, subLedgerData.currency, false)}
                     </td>
-                    <td className="py-1.5 px-2.5 border-r border-slate-300"></td>
+                    <td style={{ width: '46%' }} className="py-1.5 px-2.5 border-r border-slate-300"></td>
                   </tr>
                 </tbody>
               </table>
