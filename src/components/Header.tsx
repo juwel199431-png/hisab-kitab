@@ -260,18 +260,27 @@ export const Header: React.FC = () => {
 
           {/* 3. Smart Alerts Bell */}
           <button
-            onClick={() => setIsAlertsOpen(true)}
+            onClick={() => {
+              markAlertsAsSeen();
+              setIsAlertsOpen(true);
+            }}
             className="relative p-2 rounded-xl bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
-            title={lang === 'bn' ? 'স্মার্ট তাগাদা ও অ্যালার্ট' : 'Smart Alerts'}
+            title={
+              lang === 'bn'
+                ? unreadAlertsCount > 0
+                  ? `${unreadAlertsCount} টি নতুন আনরীড নোটিফিকেশন`
+                  : 'স্মার্ট তাগাদা ও অ্যালার্ট'
+                : 'Smart Alerts'
+            }
           >
-            <Bell className="w-4 h-4" />
-            {totalAlertsCount > 0 && (
+            <Bell className={`w-4 h-4 ${unreadAlertsCount > 0 ? 'text-amber-600 dark:text-amber-400' : ''}`} />
+            {unreadAlertsCount > 0 && (
               <span
                 className={`absolute -top-1 -right-1 px-1.5 py-0.2 text-[10px] font-black rounded-full text-white shadow-xs ${
-                  hasOverdueAlerts ? 'bg-rose-600 animate-pulse' : 'bg-amber-500'
+                  hasUnreadOverdueAlerts ? 'bg-rose-600 animate-pulse' : 'bg-amber-500'
                 }`}
               >
-                {totalAlertsCount}
+                {unreadAlertsCount}
               </span>
             )}
           </button>

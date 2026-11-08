@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   X,
   Bell,
@@ -9,7 +9,7 @@ import {
   ArrowRight,
   UserCheck,
   PiggyBank,
-  AlertCircle,
+  CheckCheck,
 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { formatCurrency } from '../../utils/formatters';
@@ -20,14 +20,26 @@ export const SmartAlertsModal: React.FC = () => {
     isAlertsOpen,
     setIsAlertsOpen,
     smartAlerts,
+    unreadAlertsCount,
+    markAlertsAsSeen,
+    markSingleAlertAsSeen,
+    isAlertSeen,
     lang,
     isPrivacyMode,
     setActiveSection,
   } = useFinance();
 
+  // Automatically mark all current alerts as seen when modal opens
+  useEffect(() => {
+    if (isAlertsOpen && unreadAlertsCount > 0) {
+      markAlertsAsSeen();
+    }
+  }, [isAlertsOpen, unreadAlertsCount, markAlertsAsSeen]);
+
   if (!isAlertsOpen) return null;
 
   const handleAction = (alert: SmartAlert) => {
+    markSingleAlertAsSeen(alert.id, alert.isOverdue);
     setActiveSection(alert.actionSection);
     setIsAlertsOpen(false);
   };
@@ -44,9 +56,14 @@ export const SmartAlertsModal: React.FC = () => {
               <Bell className="w-4 h-4 text-white" />
             </div>
             <div>
-              <h2 className="text-sm font-bold tracking-tight">
-                {lang === 'bn' ? 'স্মার্ট তাগাদা ও অ্যালার্ট নোটিফিকেশন' : 'Smart Due Dates & Reminders'}
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-bold tracking-tight">
+                  {lang === 'bn' ? 'স্মার্ট তাগাদা ও অ্যালার্ট নোটিফিকেশন' : 'Smart Due Dates & Reminders'}
+                </h2>
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-white/20 text-white border border-white/30">
+                  {lang === 'bn' ? '✓ চেক করা হয়েছে' : 'Checked'}
+                </span>
+              </div>
               <p className="text-[11px] text-amber-100">
                 {lang === 'bn'
                   ? `${smartAlerts.length} টি সক্রিয় তাগাদা${overdueCount > 0 ? ` (${overdueCount} টি মেয়াদোত্তীর্ণ)` : ''}`
@@ -56,7 +73,7 @@ export const SmartAlertsModal: React.FC = () => {
           </div>
           <button
             onClick={() => setIsAlertsOpen(false)}
-            className="p-1 rounded-lg text-amber-100 hover:text-white hover:bg-white/10 transition-colors"
+            className="p-1 rounded-lg text-amber-100 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
