@@ -2121,20 +2121,29 @@ export const ReportsView: React.FC = () => {
             </div>
 
             <table className="w-full text-left border-collapse border border-slate-300 text-xs table-fixed">
+              <colgroup>
+                <col style={{ width: '4%' }} />
+                <col style={{ width: '11%' }} />
+                <col style={{ width: '15%' }} />
+                <col style={{ width: '8%' }} />
+                <col style={{ width: '8%' }} />
+                <col style={{ width: '10%' }} />
+                <col style={{ width: '44%' }} />
+              </colgroup>
               <thead>
                 <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[11px]">
-                  <th rowSpan={2} className="py-2 px-2 text-center border-r border-slate-400 w-10">#</th>
-                  <th rowSpan={2} className="py-2 px-2 text-center border-r border-slate-400 whitespace-nowrap w-24">Date</th>
-                  <th rowSpan={2} className="py-2 px-3 border-r border-slate-400 w-44">Account</th>
-                  <th colSpan={3} className="py-1 px-2 text-center border-r border-slate-400 border-b border-slate-400 uppercase tracking-wider text-[10px] w-76">
+                  <th rowSpan={2} className="py-2 px-1 text-center border-r border-slate-400">#</th>
+                  <th rowSpan={2} className="py-2 px-1 text-center border-r border-slate-400 whitespace-nowrap">Date</th>
+                  <th rowSpan={2} className="py-2 px-2 border-r border-slate-400">Account</th>
+                  <th colSpan={3} className="py-1 px-1 text-center border-r border-slate-400 border-b border-slate-400 uppercase tracking-wider text-[10px]">
                     Base ({subLedgerData.currency})
                   </th>
-                  <th rowSpan={2} className="py-2 px-3">Remarks</th>
+                  <th rowSpan={2} className="py-2 px-3 text-left">Remarks</th>
                 </tr>
                 <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[10px]">
-                  <th className="py-1 px-2 text-right border-r border-slate-400 w-24">Debit</th>
-                  <th className="py-1 px-2 text-right border-r border-slate-400 w-24">Credit</th>
-                  <th className="py-1 px-2 text-right border-r border-slate-400 w-28">Balance</th>
+                  <th className="py-1 px-1 text-right border-r border-slate-400">Debit</th>
+                  <th className="py-1 px-1 text-right border-r border-slate-400">Credit</th>
+                  <th className="py-1 px-1 text-right border-r border-slate-400">Balance</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 text-slate-800 text-[11px]">
@@ -2186,26 +2195,26 @@ export const ReportsView: React.FC = () => {
                       }}
                       className="hover:bg-cyan-50/40 transition-colors cursor-pointer border-b border-slate-100"
                     >
-                      <td className="py-1.5 px-2 text-center border-r border-slate-200 font-mono text-slate-600 text-xs">
+                      <td className="py-1.5 px-1 text-center border-r border-slate-200 font-mono text-slate-600 text-xs">
                         {row.sl}
                       </td>
-                      <td className="py-1.5 px-2 border-r border-slate-200 font-mono text-slate-700 whitespace-nowrap text-center text-xs">
+                      <td className="py-1.5 px-1 border-r border-slate-200 font-mono text-slate-700 whitespace-nowrap text-center text-xs">
                         {row.formattedDate}
                       </td>
-                      <td className="py-1.5 px-3 border-r border-slate-200 font-bold text-slate-900 text-xs leading-snug">
+                      <td className="py-1.5 px-2 border-r border-slate-200 font-bold text-slate-900 text-xs leading-snug">
                         {row.account}
                       </td>
-                      <td className="py-1.5 px-2 text-right border-r border-slate-200 font-mono tabular-nums text-xs md:text-sm font-bold text-slate-900">
+                      <td className="py-1.5 px-1 text-right border-r border-slate-200 font-mono tabular-nums text-xs md:text-sm font-bold text-slate-900">
                         {row.debit > 0
                           ? formatSubLedgerNumber(row.debit, subLedgerData.currency, false)
                           : subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
                       </td>
-                      <td className="py-1.5 px-2 text-right border-r border-slate-200 font-mono tabular-nums text-xs md:text-sm font-bold text-rose-700">
+                      <td className="py-1.5 px-1 text-right border-r border-slate-200 font-mono tabular-nums text-xs md:text-sm font-bold text-rose-700">
                         {row.credit > 0
                           ? formatSubLedgerNumber(row.credit, subLedgerData.currency, true)
                           : subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
                       </td>
-                      <td className="py-1.5 px-2 text-right border-r border-slate-200 font-mono font-black tabular-nums text-xs md:text-sm text-slate-900">
+                      <td className="py-1.5 px-1 text-right border-r border-slate-200 font-mono font-black tabular-nums text-xs md:text-sm text-slate-900">
                         {formatSubLedgerNumber(row.balance, subLedgerData.currency, false)}
                       </td>
                       <td className="py-1.5 px-3 text-slate-700 text-xs leading-snug break-words" title={row.remarks}>
@@ -2603,20 +2612,29 @@ export const ReportsView: React.FC = () => {
             {/* Sub Ledger Table */}
             <div className="overflow-hidden border border-slate-400 rounded-xs w-full">
               <table className="w-full text-left border-collapse text-[10px] table-fixed">
+                <colgroup>
+                  <col style={{ width: '4%' }} />
+                  <col style={{ width: '11%' }} />
+                  <col style={{ width: '15%' }} />
+                  <col style={{ width: '8%' }} />
+                  <col style={{ width: '8%' }} />
+                  <col style={{ width: '10%' }} />
+                  <col style={{ width: '44%' }} />
+                </colgroup>
                 <thead>
                   <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[9.5px]">
-                    <th rowSpan={2} className="py-1.5 px-1.5 text-center border-r border-slate-400 w-8">#</th>
-                    <th rowSpan={2} className="py-1.5 px-1.5 text-center border-r border-slate-400 whitespace-nowrap w-20">Date</th>
-                    <th rowSpan={2} className="py-1.5 px-2 border-r border-slate-400 w-36">Account</th>
-                    <th colSpan={3} className="py-1 px-1.5 text-center border-r border-slate-400 border-b border-slate-400 uppercase tracking-wider text-[9px] w-66">
+                    <th rowSpan={2} className="py-1 px-1 text-center border-r border-slate-400">#</th>
+                    <th rowSpan={2} className="py-1 px-1 text-center border-r border-slate-400 whitespace-nowrap">Date</th>
+                    <th rowSpan={2} className="py-1 px-2 border-r border-slate-400">Account</th>
+                    <th colSpan={3} className="py-1 px-1 text-center border-r border-slate-400 border-b border-slate-400 uppercase tracking-wider text-[9px]">
                       Base ({subLedgerData.currency})
                     </th>
-                    <th rowSpan={2} className="py-1.5 px-2.5">Remarks</th>
+                    <th rowSpan={2} className="py-1 px-2 text-left">Remarks</th>
                   </tr>
                   <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[9px]">
-                    <th className="py-1 px-1.5 text-right border-r border-slate-400 w-20">Debit</th>
-                    <th className="py-1 px-1.5 text-right border-r border-slate-400 w-20">Credit</th>
-                    <th className="py-1 px-1.5 text-right border-r border-slate-400 w-26">Balance</th>
+                    <th className="py-1 px-1 text-right border-r border-slate-400">Debit</th>
+                    <th className="py-1 px-1 text-right border-r border-slate-400">Credit</th>
+                    <th className="py-1 px-1 text-right border-r border-slate-400">Balance</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-300 text-slate-900 text-[10px]">
