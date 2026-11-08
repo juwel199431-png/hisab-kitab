@@ -38,6 +38,7 @@ import {
   Receipt,
   ShieldCheck,
   ShoppingBag,
+  Banknote,
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import { exportToCSV } from '../../utils/storage';
@@ -80,6 +81,7 @@ export const ReportsView: React.FC = () => {
     getTotalDpsSavings,
     getTotalInsuranceSavings,
     getKuwaitReceivableTotals,
+    getBorrowerBalance,
     getKuwaitPayableTotals,
     getBossSalaryTotals,
     getEmdadTotals,
@@ -95,6 +97,7 @@ export const ReportsView: React.FC = () => {
   // Filter States
   const [accountFilter, setAccountFilter] = useState<AccountFilter>('all');
   const [selectedBankId, setSelectedBankId] = useState<string>('all');
+  const [borrowerFilter, setBorrowerFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
@@ -250,6 +253,7 @@ export const ReportsView: React.FC = () => {
   const handleResetFilters = () => {
     setAccountFilter('all');
     setSelectedBankId('all');
+    setBorrowerFilter('all');
     setCategoryFilter('all');
     setTypeFilter('all');
     setStatusFilter('all');
@@ -263,6 +267,7 @@ export const ReportsView: React.FC = () => {
   const handleSelectAccountFilter = (accId: AccountFilter) => {
     setAccountFilter(accId);
     setSelectedBankId('all');
+    setBorrowerFilter('all');
     setCategoryFilter('all');
     setCurrentPage(1);
     if (accId === 'boss-salary' || accId === 'bd-bank') {
@@ -363,6 +368,7 @@ export const ReportsView: React.FC = () => {
         currency: loan.currency,
         note: loan.note ? `${loan.note}${loan.dueDate ? ` (ফেরত: ${loan.dueDate})` : ''}` : loan.dueDate ? `ফেরত দেওয়ার তারিখ: ${loan.dueDate}` : undefined,
         status: loan.status,
+        borrowerId: loan.id,
         borrowerName: loan.borrowerName,
       });
     });
@@ -383,6 +389,7 @@ export const ReportsView: React.FC = () => {
         currency: tx.currency,
         note: tx.note,
         voucherNo: tx.voucherNo,
+        borrowerId: tx.lenderId,
         borrowerName: tx.lenderName,
       });
     });
@@ -403,6 +410,7 @@ export const ReportsView: React.FC = () => {
         currency: tx.currency,
         note: tx.note,
         voucherNo: tx.voucherNo,
+        borrowerId: tx.borrowerId,
         borrowerName: tx.borrowerName,
       });
     });
@@ -429,6 +437,44 @@ export const ReportsView: React.FC = () => {
     return Array.from(catMap.values());
   }, [data.categories, accountFilter]);
 
+  // Available Borrowers for Personal Receivable Loans
+  const availableBorrowers = useMemo(() => {
+    const map = new Map<string, string>(); // identifier -> name
+
+    // 1. Registered borrower accounts
+    (data.kuwaitReceivableBorrowers || []).forEach((b) => {
+      if (b.id && b.name) {
+        map.set(b.id, b.name);
+      }
+    });
+
+    // 2. Transactions borrowers (in case borrower not in borrowers table or legacy)
+    (data.kuwaitReceivableTransactions || []).forEach((tx) => {
+      if (tx.borrowerName) {
+        const id = tx.borrowerId || tx.borrowerName;
+        if (!map.has(id)) {
+          map.set(id, tx.borrowerName);
+        }
+      }
+    });
+
+    // 3. Legacy Kuwait loans
+    (data.kuwaitLoans || []).forEach((l) => {
+      if (l.borrowerName) {
+        const existingEntry = Array.from(map.entries()).find(
+          ([_, name]) => name.toLowerCase() === l.borrowerName.toLowerCase()
+        );
+        if (!existingEntry) {
+          map.set(l.id || l.borrowerName, l.borrowerName);
+        }
+      }
+    });
+
+    return Array.from(map.entries())
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [data.kuwaitReceivableBorrowers, data.kuwaitReceivableTransactions, data.kuwaitLoans]);
+
   // Filtered Rows matching all chosen criteria
   const filteredRows = useMemo(() => {
     let rows = unifiedData.filter((row) => {
@@ -450,7 +496,24 @@ export const ReportsView: React.FC = () => {
       if (startDate && row.date < startDate) return false;
       if (endDate && row.date > endDate) return false;
 
-      // 3. Category Filter
+      // 3. Borrower Filter (specifically for Personal Receivable Loans or any rows with borrower)
+      if (borrowerFilter !== 'all') {
+        const selectedBorrowerObj = availableBorrowers.find(
+          (b) => b.id === borrowerFilter || b.name === borrowerFilter
+        );
+        const targetName = selectedBorrowerObj
+          ? selectedBorrowerObj.name.toLowerCase()
+          : borrowerFilter.toLowerCase();
+        const targetId = selectedBorrowerObj ? selectedBorrowerObj.id : borrowerFilter;
+
+        const matchesBorrower =
+          (row.borrowerId && (row.borrowerId === targetId || row.borrowerId === borrowerFilter)) ||
+          (row.borrowerName && row.borrowerName.toLowerCase() === targetName);
+
+        if (!matchesBorrower) return false;
+      }
+
+      // 4. Category Filter
       if (categoryFilter !== 'all') {
         const cat = data.categories.find((c) => c.id === categoryFilter);
         if (cat) {
@@ -460,13 +523,13 @@ export const ReportsView: React.FC = () => {
         }
       }
 
-      // 4. Type Filter
+      // 5. Type Filter
       if (typeFilter !== 'all' && row.type !== typeFilter) return false;
 
-      // 5. Status Filter
+      // 6. Status Filter
       if (statusFilter !== 'all' && row.status !== statusFilter) return false;
 
-      // 6. Search Query
+      // 7. Search Query
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const catMatch =
@@ -508,6 +571,8 @@ export const ReportsView: React.FC = () => {
     unifiedData,
     activeTab,
     accountFilter,
+    borrowerFilter,
+    availableBorrowers,
     startDate,
     endDate,
     categoryFilter,
@@ -595,13 +660,14 @@ export const ReportsView: React.FC = () => {
     let count = 0;
     if (accountFilter !== 'all') count++;
     if (selectedBankId !== 'all') count++;
+    if (borrowerFilter !== 'all') count++;
     if (categoryFilter !== 'all') count++;
     if (typeFilter !== 'all') count++;
     if (statusFilter !== 'all') count++;
     if (searchQuery.trim()) count++;
     if (datePreset !== 'all') count++;
     return count;
-  }, [accountFilter, selectedBankId, categoryFilter, typeFilter, statusFilter, searchQuery, datePreset]);
+  }, [accountFilter, selectedBankId, borrowerFilter, categoryFilter, typeFilter, statusFilter, searchQuery, datePreset]);
 
   // Format numbers specifically for the accounting Sub Ledger style
   const formatSubLedgerNumber = (num: number, curr: 'BDT' | 'KWD', isCredit: boolean = false): string => {
@@ -1086,7 +1152,54 @@ export const ReportsView: React.FC = () => {
 
   // Head-specific summary calculations for cute executive cards
   const bossTotals = getBossSalaryTotals();
-  const recTotals = getKuwaitReceivableTotals();
+  const recTotals = useMemo(() => {
+    if (borrowerFilter !== 'all') {
+      const selectedBorrowerObj = availableBorrowers.find(
+        (b) => b.id === borrowerFilter || b.name === borrowerFilter
+      );
+      const targetId = selectedBorrowerObj ? selectedBorrowerObj.id : borrowerFilter;
+      const targetName = selectedBorrowerObj ? selectedBorrowerObj.name.toLowerCase() : '';
+
+      // If borrower exists in registered borrowers, get accurate balance
+      if (targetId && data.kuwaitReceivableBorrowers?.some((b) => b.id === targetId)) {
+        const bal = getBorrowerBalance(targetId);
+        return {
+          borrowerName: selectedBorrowerObj?.name || 'Selected Borrower',
+          totalLent: bal.totalLent,
+          totalCollected: bal.totalCollected,
+          totalRemaining: bal.remaining,
+        };
+      }
+
+      // Fallback: calculate from all kuwait-loan rows for this borrower
+      const matchedRows = unifiedData.filter(
+        (r) =>
+          r.section === 'kuwait-loan' &&
+          ((r.borrowerId && (r.borrowerId === targetId || r.borrowerId === borrowerFilter)) ||
+            (r.borrowerName && r.borrowerName.toLowerCase() === targetName))
+      );
+      const lent = matchedRows
+        .filter((r) => r.type === 'loan')
+        .reduce((sum, r) => sum + r.amount, 0);
+      const collected = matchedRows
+        .filter((r) => r.type === 'income')
+        .reduce((sum, r) => sum + r.amount, 0);
+      return {
+        borrowerName: selectedBorrowerObj?.name || 'Selected Borrower',
+        totalLent: lent,
+        totalCollected: collected,
+        totalRemaining: Math.max(0, lent - collected),
+      };
+    }
+
+    const gen = getKuwaitReceivableTotals();
+    return {
+      borrowerName: '',
+      totalLent: gen.totalLent,
+      totalCollected: gen.totalCollected,
+      totalRemaining: gen.totalRemaining,
+    };
+  }, [borrowerFilter, availableBorrowers, data.kuwaitReceivableBorrowers, getBorrowerBalance, getKuwaitReceivableTotals, unifiedData]);
   const payTotals = getKuwaitPayableTotals();
   const emdadTotals = getEmdadTotals();
   const kwtPersonalTotals = getKuwaitPersonalTotals();
@@ -1732,6 +1845,72 @@ export const ReportsView: React.FC = () => {
           </div>
         )}
 
+        {/* Borrower Selection Filter specifically for Personal Receivable Loans */}
+        {accountFilter === 'kuwait-loan' && (
+          <div className="pt-3 border-t border-slate-100 flex items-center flex-wrap gap-2 animate-fade-in">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mr-1 flex items-center gap-1.5">
+              <UserCheck className="w-3.5 h-3.5 text-blue-600" />
+              <span>{lang === 'bn' ? 'গ্রহীতার নাম ফিল্টার:' : 'Filter by Borrower:'}</span>
+            </span>
+
+            {/* Dropdown matching Receivable Loans Audit Ledger in screenshot */}
+            <select
+              value={borrowerFilter}
+              onChange={(e) => {
+                setBorrowerFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="px-2.5 py-1 text-xs border border-blue-300 rounded-lg bg-blue-50/80 font-bold text-blue-900 focus:outline-hidden focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-2xs"
+            >
+              <option value="all">{lang === 'bn' ? 'সকল গ্রহীতা (All Borrowers)' : 'All Borrowers'}</option>
+              {availableBorrowers.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.name}
+                </option>
+              ))}
+            </select>
+
+            {/* Quick Pills for each borrower */}
+            <div className="flex items-center gap-1.5 flex-wrap ml-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setBorrowerFilter('all');
+                  setCurrentPage(1);
+                }}
+                className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+                  borrowerFilter === 'all'
+                    ? 'bg-blue-600 text-white font-bold shadow-2xs'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200/80 border border-slate-200'
+                }`}
+              >
+                {lang === 'bn' ? 'সকল গ্রহীতা' : 'All Borrowers'}
+              </button>
+              {availableBorrowers.map((b) => {
+                const isSelected = borrowerFilter === b.id;
+                return (
+                  <button
+                    key={b.id}
+                    type="button"
+                    onClick={() => {
+                      setBorrowerFilter(b.id);
+                      setCurrentPage(1);
+                    }}
+                    className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
+                      isSelected
+                        ? 'bg-blue-600 text-white font-bold shadow-2xs'
+                        : 'bg-blue-50/70 text-blue-900 hover:bg-blue-100 border border-blue-200'
+                    }`}
+                  >
+                    <span>👤</span>
+                    <span>{b.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Date Presets and Custom Range */}
         <div className="pt-3 border-t border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-1.5">
@@ -1819,7 +1998,7 @@ export const ReportsView: React.FC = () => {
           </div>
 
           {showAdvancedFilters && (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 mt-2 border-t border-slate-100">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 pt-3 mt-2 border-t border-slate-100">
               {/* Category */}
               <div>
                 <label className="block text-[11px] font-semibold text-slate-600 mb-1">
@@ -1837,6 +2016,44 @@ export const ReportsView: React.FC = () => {
                   {availableCategories.map((c) => (
                     <option key={c.id} value={c.id}>
                       {lang === 'bn' ? c.nameBn : c.nameEn}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Borrower */}
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-600 mb-1 flex items-center justify-between">
+                  <span>{lang === 'bn' ? 'গ্রহীতা (Borrower)' : 'Borrower'}</span>
+                  {borrowerFilter !== 'all' && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setBorrowerFilter('all');
+                        setCurrentPage(1);
+                      }}
+                      className="text-[10px] text-blue-600 hover:text-blue-800 font-bold cursor-pointer"
+                    >
+                      {lang === 'bn' ? 'ক্লিয়ার' : 'Clear'}
+                    </button>
+                  )}
+                </label>
+                <select
+                  value={borrowerFilter}
+                  onChange={(e) => {
+                    setBorrowerFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className={`w-full px-3 py-1.5 text-xs border rounded-lg font-medium focus:outline-hidden focus:ring-1 focus:ring-slate-900 cursor-pointer ${
+                    borrowerFilter !== 'all'
+                      ? 'border-blue-400 bg-blue-50/80 text-blue-900 font-bold'
+                      : 'border-slate-300 bg-white text-slate-800'
+                  }`}
+                >
+                  <option value="all">{lang === 'bn' ? 'সকল গ্রহীতা (All Borrowers)' : 'All Borrowers'}</option>
+                  {availableBorrowers.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.name}
                     </option>
                   ))}
                 </select>
@@ -2028,17 +2245,38 @@ export const ReportsView: React.FC = () => {
           <div className="absolute top-0 right-0 -mt-8 -mr-8 w-44 h-44 bg-blue-400/20 rounded-full blur-2xl pointer-events-none" />
           <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="space-y-1">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/20 text-blue-100 text-xs font-bold border border-white/20 backdrop-blur-md">
-                <HandCoins className="w-3.5 h-3.5" />
-                <span>{lang === 'bn' ? 'Personal Receivable Loan হেড' : 'Personal Receivable Loan'}</span>
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/20 text-blue-100 text-xs font-bold border border-white/20 backdrop-blur-md">
+                  <HandCoins className="w-3.5 h-3.5" />
+                  <span>{lang === 'bn' ? 'Personal Receivable Loan হেড' : 'Personal Receivable Loan'}</span>
+                </div>
+                {borrowerFilter !== 'all' && (
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-400/30 text-amber-100 text-xs font-bold border border-amber-300/40 backdrop-blur-md animate-fade-in">
+                    <span>👤 {recTotals.borrowerName}</span>
+                    <button
+                      type="button"
+                      onClick={() => setBorrowerFilter('all')}
+                      className="hover:text-white transition-colors cursor-pointer ml-0.5"
+                      title={lang === 'bn' ? 'ফিল্টার মুছুন' : 'Clear filter'}
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                )}
               </div>
               <h2 className="text-xl md:text-2xl font-black text-white tracking-tight">
-                {lang === 'bn' ? 'ব্যক্তিগত পাওনা লোন ও কিস্তি আদায় খতিয়ান' : 'Receivable Loans & Collections'}
+                {borrowerFilter !== 'all'
+                  ? `${recTotals.borrowerName} — ${lang === 'bn' ? 'ব্যক্তিগত পাওনা ও কিস্তি আদায় বিবরণী' : 'Receivable Statement'}`
+                  : (lang === 'bn' ? 'ব্যক্তিগত পাওনা লোন ও কিস্তি আদায় খতিয়ান' : 'Receivable Loans & Collections')}
               </h2>
               <p className="text-xs text-blue-100/90 max-w-xl">
-                {lang === 'bn'
-                  ? 'ব্যক্তিগত প্রয়োজনে যাদের দিনার লোন দিয়েছেন, তাদের আংশিক ও মোট ফেরত আদায়ের সম্পূর্ণ স্টেটমেন্ট।'
-                  : 'Borrowers you lent KWD to, partial/full repayments, and remaining outstanding amounts.'}
+                {borrowerFilter !== 'all'
+                  ? (lang === 'bn'
+                      ? `${recTotals.borrowerName}-কে প্রদত্ত দিনার লোন, কিস্তি আদায় এবং অবশিষ্ট বকেয়া পাওনার হিসাব।`
+                      : `Loans given to ${recTotals.borrowerName}, repayments collected, and outstanding due balance.`)
+                  : (lang === 'bn'
+                      ? 'ব্যক্তিগত প্রয়োজনে যাদের দিনার লোন দিয়েছেন, তাদের আংশিক ও মোট ফেরত আদায়ের সম্পূর্ণ স্টেটমেন্ট।'
+                      : 'Borrowers you lent KWD to, partial/full repayments, and remaining outstanding amounts.')}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
@@ -2060,7 +2298,9 @@ export const ReportsView: React.FC = () => {
               </div>
               <div className="bg-white/25 backdrop-blur-md border border-white/30 rounded-xl px-4 py-2.5 min-w-[140px]">
                 <span className="text-[10px] uppercase font-bold tracking-wider text-yellow-200 block">
-                  {lang === 'bn' ? 'অবশিষ্ট বকেয়া পাওনা' : 'Remaining Due'}
+                  {borrowerFilter !== 'all'
+                    ? (lang === 'bn' ? 'ফিল্টারকৃত অবশিষ্ট পাওনা' : 'Filtered Remaining Due')
+                    : (lang === 'bn' ? 'অবশিষ্ট বকেয়া পাওনা' : 'Remaining Due')}
                 </span>
                 <span className="font-mono text-lg font-black text-yellow-300">
                   {recTotals.totalRemaining.toFixed(3)} KD
@@ -2366,16 +2606,33 @@ export const ReportsView: React.FC = () => {
         {/* Table Title and Pagination Header */}
         <div className="p-4 sm:p-5 border-b border-slate-200/80 bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h3 className="text-sm font-bold text-slate-900 tracking-tight flex items-center gap-2">
-              <BarChart3 className="w-4 h-4 text-emerald-700" />
-              <span>
-                {isSubLedgerEligible && viewMode === 'sub-ledger'
-                  ? (lang === 'bn' ? 'সাব লেজার খতিয়ান স্টেটমেন্ট' : 'Sub Ledger Account Statement')
-                  : (lang === 'bn' ? 'ফিল্টারকৃত লেনদেন অডিট খতিয়ান' : 'Filtered Transaction Audit Ledger')}
-              </span>
-            </h3>
+            {accountFilter === 'kuwait-loan' ? (
+              <div className="flex items-center gap-2">
+                <Banknote className="w-5 h-5 text-emerald-700" />
+                <h3 className="text-sm font-extrabold text-slate-900 tracking-wide uppercase">
+                  RECEIVABLE LOANS AUDIT LEDGER
+                </h3>
+              </div>
+            ) : (
+              <h3 className="text-sm font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                <BarChart3 className="w-4 h-4 text-emerald-700" />
+                <span>
+                  {isSubLedgerEligible && viewMode === 'sub-ledger'
+                    ? (lang === 'bn' ? 'সাব লেজার খতিয়ান স্টেটমেন্ট' : 'Sub Ledger Account Statement')
+                    : (lang === 'bn' ? 'ফিল্টারকৃত লেনদেন অডিট খতিয়ান' : 'Filtered Transaction Audit Ledger')}
+                </span>
+              </h3>
+            )}
             <p className="text-xs text-slate-500 mt-0.5">
-              {isSubLedgerEligible && viewMode === 'sub-ledger'
+              {accountFilter === 'kuwait-loan'
+                ? (borrowerFilter !== 'all'
+                    ? (lang === 'bn'
+                        ? `ফিল্টারকৃত গ্রহীতা: ${recTotals.borrowerName} — মোট পাওনা ও কিস্তি আদায়ের অডিট খতিয়ান`
+                        : `Filtered Borrower: ${recTotals.borrowerName} — Complete lend & collection audit ledger`)
+                    : (lang === 'bn'
+                        ? 'সকল লোন গ্রহীতা, প্রদানকৃত অর্থ, কিস্তি আদায় এবং বর্তমান অবশিষ্ট পাওনার খতিয়ান'
+                        : 'All loan recipients, disbursed amounts, collected installments, and outstanding dues'))
+                : isSubLedgerEligible && viewMode === 'sub-ledger'
                 ? (lang === 'bn'
                     ? 'রানিং ব্যালেন্সসহ সমন্বিত সাব লেজার খতিয়ান — প্রিন্ট ও অডিট রেডি'
                     : 'Dual-entry chronological sub ledger with exact running balances')
@@ -2386,65 +2643,127 @@ export const ReportsView: React.FC = () => {
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5 no-print">
-            {/* View Mode Switcher for Sub Ledger eligible heads */}
-            {isSubLedgerEligible && (
-              <div className="flex items-center gap-1 bg-slate-200/80 p-0.5 rounded-xl text-xs font-semibold">
-                <button
-                  type="button"
-                  onClick={() => setViewMode('sub-ledger')}
-                  className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
-                    viewMode === 'sub-ledger'
-                      ? 'bg-white text-[#1E536E] font-bold shadow-2xs'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  📑 {lang === 'bn' ? 'সাব লেজার ভিউ' : 'Sub Ledger'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setViewMode('list')}
-                  className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
-                    viewMode === 'list'
-                      ? 'bg-white text-slate-900 font-bold shadow-2xs'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  📋 {lang === 'bn' ? 'সাধারণ অডিট তালিকা' : 'Standard List'}
-                </button>
-              </div>
-            )}
-
-            <button
-              type="button"
-              onClick={() => window.print()}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors cursor-pointer shadow-xs"
-              title={lang === 'bn' ? 'এই ফিল্টার করা খতিয়ানটি সরাসরি প্রিন্ট বা PDF ডাউনলোড করুন' : 'Print or Save PDF'}
-            >
-              <Printer className="w-3.5 h-3.5 text-white" />
-              <span>{lang === 'bn' ? 'প্রিন্ট / PDF ডাউনলোড' : 'Print / Save PDF'}</span>
-            </button>
-
-            {(!isSubLedgerEligible || viewMode === 'list') && (
+            {accountFilter === 'kuwait-loan' ? (
               <>
-                <span className="text-xs text-slate-500">
-                  {lang === 'bn'
-                    ? `পৃষ্ঠা ${currentPage} / ${totalPages} (${filteredRows.length}টি এন্ট্রি)`
-                    : `Page ${currentPage} of ${totalPages} (${filteredRows.length} entries)`}
-                </span>
-
+                {/* Borrower Filter Dropdown matching screenshot */}
                 <select
-                  value={pageSize}
+                  value={borrowerFilter}
                   onChange={(e) => {
-                    setPageSize(Number(e.target.value));
+                    setBorrowerFilter(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="px-2.5 py-1 text-xs border border-slate-300 rounded-lg bg-white font-medium text-slate-700 cursor-pointer"
+                  className="px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg bg-white font-semibold text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-blue-500 shadow-2xs cursor-pointer"
                 >
-                  <option value={15}>15 {lang === 'bn' ? 'টি' : 'rows'}</option>
-                  <option value={25}>25 {lang === 'bn' ? 'টি' : 'rows'}</option>
-                  <option value={50}>50 {lang === 'bn' ? 'টি' : 'rows'}</option>
-                  <option value={100}>100 {lang === 'bn' ? 'টি' : 'rows'}</option>
+                  <option value="all">{lang === 'bn' ? 'সকল গ্রহীতা (All Borrowers)' : 'All Borrowers'}</option>
+                  {availableBorrowers.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.name}
+                    </option>
+                  ))}
                 </select>
+
+                {/* Type Filter Dropdown matching screenshot */}
+                <select
+                  value={typeFilter}
+                  onChange={(e) => {
+                    setTypeFilter(e.target.value as any);
+                    setCurrentPage(1);
+                  }}
+                  className="px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg bg-white font-medium text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-blue-500 shadow-2xs cursor-pointer"
+                >
+                  <option value="all">{lang === 'bn' ? 'সকল ধরন' : 'All Types'}</option>
+                  <option value="loan">{lang === 'bn' ? 'লোন প্রদান (Lend)' : 'Lend'}</option>
+                  <option value="income">{lang === 'bn' ? 'ফেরত আদায় (Collect)' : 'Collect'}</option>
+                </select>
+
+                {/* Search Box matching screenshot */}
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2" />
+                  <input
+                    type="text"
+                    placeholder={lang === 'bn' ? 'খুঁজুন...' : 'Search...'}
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="pl-7 pr-3 py-1.5 text-xs border border-slate-300 rounded-lg bg-white w-32 sm:w-40 focus:outline-hidden focus:ring-2 focus:ring-blue-500 shadow-2xs"
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors cursor-pointer shadow-xs"
+                  title={lang === 'bn' ? 'প্রিন্ট বা PDF ডাউনলোড করুন' : 'Print / Save PDF'}
+                >
+                  <Printer className="w-3.5 h-3.5 text-white" />
+                  <span>{lang === 'bn' ? 'প্রিন্ট' : 'Print'}</span>
+                </button>
+              </>
+            ) : (
+              <>
+                {/* View Mode Switcher for Sub Ledger eligible heads */}
+                {isSubLedgerEligible && (
+                  <div className="flex items-center gap-1 bg-slate-200/80 p-0.5 rounded-xl text-xs font-semibold">
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('sub-ledger')}
+                      className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                        viewMode === 'sub-ledger'
+                          ? 'bg-white text-[#1E536E] font-bold shadow-2xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      📑 {lang === 'bn' ? 'সাব লেজার ভিউ' : 'Sub Ledger'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('list')}
+                      className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                        viewMode === 'list'
+                          ? 'bg-white text-slate-900 font-bold shadow-2xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      📋 {lang === 'bn' ? 'সাধারণ অডিট তালিকা' : 'Standard List'}
+                    </button>
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors cursor-pointer shadow-xs"
+                  title={lang === 'bn' ? 'এই ফিল্টার করা খতিয়ানটি সরাসরি প্রিন্ট বা PDF ডাউনলোড করুন' : 'Print or Save PDF'}
+                >
+                  <Printer className="w-3.5 h-3.5 text-white" />
+                  <span>{lang === 'bn' ? 'প্রিন্ট / PDF ডাউনলোড' : 'Print / Save PDF'}</span>
+                </button>
+
+                {(!isSubLedgerEligible || viewMode === 'list') && (
+                  <>
+                    <span className="text-xs text-slate-500">
+                      {lang === 'bn'
+                        ? `পৃষ্ঠা ${currentPage} / ${totalPages} (${filteredRows.length}টি এন্ট্রি)`
+                        : `Page ${currentPage} of ${totalPages} (${filteredRows.length} entries)`}
+                    </span>
+
+                    <select
+                      value={pageSize}
+                      onChange={(e) => {
+                        setPageSize(Number(e.target.value));
+                        setCurrentPage(1);
+                      }}
+                      className="px-2.5 py-1 text-xs border border-slate-300 rounded-lg bg-white font-medium text-slate-700 cursor-pointer"
+                    >
+                      <option value={15}>15 {lang === 'bn' ? 'টি' : 'rows'}</option>
+                      <option value={25}>25 {lang === 'bn' ? 'টি' : 'rows'}</option>
+                      <option value={50}>50 {lang === 'bn' ? 'টি' : 'rows'}</option>
+                      <option value={100}>100 {lang === 'bn' ? 'টি' : 'rows'}</option>
+                    </select>
+                  </>
+                )}
               </>
             )}
           </div>

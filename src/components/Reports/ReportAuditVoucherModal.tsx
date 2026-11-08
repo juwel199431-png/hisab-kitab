@@ -34,6 +34,7 @@ export interface AuditReportRow {
   currency: 'BDT' | 'KWD';
   note?: string;
   status?: 'paid' | 'unpaid';
+  borrowerId?: string;
   borrowerName?: string;
   bankName?: string;
   voucherNo?: string;
