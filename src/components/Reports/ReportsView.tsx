@@ -2120,49 +2120,49 @@ export const ReportsView: React.FC = () => {
               </div>
             </div>
 
-            <table className="w-full text-left border-collapse border border-slate-300 text-xs">
+            <table className="w-full text-left border-collapse border border-slate-300 text-xs table-fixed">
               <thead>
                 <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[11px]">
-                  <th rowSpan={2} className="py-2.5 px-3 text-center border-r border-slate-400 w-12">#</th>
-                  <th rowSpan={2} className="py-2.5 px-3 text-center border-r border-slate-400 whitespace-nowrap w-28">Date</th>
-                  <th rowSpan={2} className="py-2.5 px-4 border-r border-slate-400 min-w-56">Account</th>
-                  <th colSpan={3} className="py-1.5 px-2 text-center border-r border-slate-400 border-b border-slate-400 uppercase tracking-wider text-[10px]">
+                  <th rowSpan={2} className="py-2 px-2 text-center border-r border-slate-400 w-10">#</th>
+                  <th rowSpan={2} className="py-2 px-2 text-center border-r border-slate-400 whitespace-nowrap w-24">Date</th>
+                  <th rowSpan={2} className="py-2 px-3 border-r border-slate-400 w-44">Account</th>
+                  <th colSpan={3} className="py-1 px-2 text-center border-r border-slate-400 border-b border-slate-400 uppercase tracking-wider text-[10px] w-76">
                     Base ({subLedgerData.currency})
                   </th>
-                  <th rowSpan={2} className="py-2.5 px-4 min-w-48">Remarks</th>
+                  <th rowSpan={2} className="py-2 px-3">Remarks</th>
                 </tr>
                 <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[10px]">
-                  <th className="py-1.5 px-3 text-right border-r border-slate-400 w-32">Debit</th>
-                  <th className="py-1.5 px-3 text-right border-r border-slate-400 w-32">Credit</th>
-                  <th className="py-1.5 px-3 text-right border-r border-slate-400 w-36">Balance</th>
+                  <th className="py-1 px-2 text-right border-r border-slate-400 w-24">Debit</th>
+                  <th className="py-1 px-2 text-right border-r border-slate-400 w-24">Credit</th>
+                  <th className="py-1 px-2 text-right border-r border-slate-400 w-28">Balance</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 text-slate-800 text-[11px]">
                 {/* Row 1: Account Banner Row (SL: 1) */}
                 <tr className="bg-[#D8EEF8] font-bold text-slate-900 border-b border-slate-300">
-                  <td className="py-2.5 px-3 text-center border-r border-slate-300 font-mono text-xs">1</td>
-                  <td colSpan={6} className="py-2.5 px-4 text-center tracking-wide font-black text-sm text-slate-900 uppercase">
+                  <td className="py-1.5 px-2 text-center border-r border-slate-300 font-mono text-xs">1</td>
+                  <td colSpan={6} className="py-1.5 px-3 text-center tracking-wide font-black text-xs md:text-sm text-slate-900 uppercase">
                     {subLedgerData.accountBannerTitle}
                   </td>
                 </tr>
 
                 {/* Row 2: Opening Balance Row (SL: 2) */}
                 <tr className="bg-white hover:bg-slate-50/80 font-medium border-b border-slate-200">
-                  <td className="py-2.5 px-3 text-center border-r border-slate-200 font-mono text-slate-500 text-xs">2</td>
-                  <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono text-slate-400">—</td>
-                  <td className="py-2.5 px-4 border-r border-slate-200 font-bold italic text-slate-900 text-xs">
+                  <td className="py-1.5 px-2 text-center border-r border-slate-200 font-mono text-slate-500 text-xs">2</td>
+                  <td className="py-1.5 px-2 border-r border-slate-200 text-center font-mono text-slate-400">—</td>
+                  <td className="py-1.5 px-3 border-r border-slate-200 font-bold italic text-slate-900 text-xs truncate">
                     Opening Balance
                   </td>
-                  <td className="py-2.5 px-3 text-right border-r border-slate-200 font-mono font-bold text-slate-900 tabular-nums text-sm">
+                  <td className="py-1.5 px-2 text-right border-r border-slate-200 font-mono font-bold text-slate-900 tabular-nums text-xs md:text-sm">
                     {formatSubLedgerNumber(subLedgerData.openingBal, subLedgerData.currency, false)}
                   </td>
-                  <td className="py-2.5 px-3 text-right border-r border-slate-200 font-mono text-slate-400 tabular-nums text-sm font-semibold">
+                  <td className="py-1.5 px-2 text-right border-r border-slate-200 font-mono text-slate-400 tabular-nums text-xs md:text-sm font-semibold">
                     {subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
                   </td>
-                  <td className="py-2.5 px-3 text-right border-r border-slate-200 font-mono font-black text-slate-900 tabular-nums text-sm">
+                  <td className="py-1.5 px-2 text-right border-r border-slate-200 font-mono font-black text-slate-900 tabular-nums text-xs md:text-sm">
                     {formatSubLedgerNumber(subLedgerData.openingBal, subLedgerData.currency, false)}
                   </td>
-                  <td className="py-2.5 px-4 text-slate-400 italic text-xs">—</td>
+                  <td className="py-1.5 px-3 text-slate-400 italic text-xs">—</td>
                 </tr>
 
                 {/* Rows 3+: Dynamic In-Period Transactions */}
@@ -2186,29 +2186,29 @@ export const ReportsView: React.FC = () => {
                       }}
                       className="hover:bg-cyan-50/40 transition-colors cursor-pointer border-b border-slate-100"
                     >
-                      <td className="py-2.5 px-3 text-center border-r border-slate-200 font-mono text-slate-600 text-xs">
+                      <td className="py-1.5 px-2 text-center border-r border-slate-200 font-mono text-slate-600 text-xs">
                         {row.sl}
                       </td>
-                      <td className="py-2.5 px-3 border-r border-slate-200 font-mono text-slate-700 whitespace-nowrap text-center text-xs">
+                      <td className="py-1.5 px-2 border-r border-slate-200 font-mono text-slate-700 whitespace-nowrap text-center text-xs">
                         {row.formattedDate}
                       </td>
-                      <td className="py-2.5 px-4 border-r border-slate-200 font-bold text-slate-900 text-xs">
+                      <td className="py-1.5 px-3 border-r border-slate-200 font-bold text-slate-900 text-xs leading-snug">
                         {row.account}
                       </td>
-                      <td className="py-2.5 px-3 text-right border-r border-slate-200 font-mono tabular-nums text-sm font-bold text-slate-900">
+                      <td className="py-1.5 px-2 text-right border-r border-slate-200 font-mono tabular-nums text-xs md:text-sm font-bold text-slate-900">
                         {row.debit > 0
                           ? formatSubLedgerNumber(row.debit, subLedgerData.currency, false)
                           : subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
                       </td>
-                      <td className="py-2.5 px-3 text-right border-r border-slate-200 font-mono tabular-nums text-sm font-bold text-rose-700">
+                      <td className="py-1.5 px-2 text-right border-r border-slate-200 font-mono tabular-nums text-xs md:text-sm font-bold text-rose-700">
                         {row.credit > 0
                           ? formatSubLedgerNumber(row.credit, subLedgerData.currency, true)
                           : subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
                       </td>
-                      <td className="py-2.5 px-3 text-right border-r border-slate-200 font-mono font-black tabular-nums text-sm text-slate-900">
+                      <td className="py-1.5 px-2 text-right border-r border-slate-200 font-mono font-black tabular-nums text-xs md:text-sm text-slate-900">
                         {formatSubLedgerNumber(row.balance, subLedgerData.currency, false)}
                       </td>
-                      <td className="py-2.5 px-4 text-slate-600 text-xs max-w-xs truncate" title={row.remarks}>
+                      <td className="py-1.5 px-3 text-slate-700 text-xs leading-snug break-words" title={row.remarks}>
                         {row.remarks || <span className="text-slate-300 italic">—</span>}
                       </td>
                     </tr>
@@ -2217,27 +2217,25 @@ export const ReportsView: React.FC = () => {
 
                 {/* Total Summary Footer Row */}
                 <tr className="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-400">
-                  <td className="py-3 px-3 text-center border-r border-slate-300 font-mono"></td>
-                  <td className="py-3 px-3 border-r border-slate-300"></td>
-                  <td className="py-3 px-4 border-r border-slate-300 font-black uppercase text-xs">
+                  <td className="py-2 px-2 text-center border-r border-slate-300 font-mono"></td>
+                  <td className="py-2 px-2 border-r border-slate-300"></td>
+                  <td className="py-2 px-3 border-r border-slate-300 font-black uppercase text-xs">
                     {lang === 'bn' ? 'সর্বমোট সমাপ্তি হিসাব (Total / Closing)' : 'Total / Closing Balance'}
                   </td>
-                  <td className="py-3 px-3 text-right border-r border-slate-300 font-mono font-bold text-emerald-900 tabular-nums text-sm md:text-base">
+                  <td className="py-2 px-2 text-right border-r border-slate-300 font-mono font-bold text-emerald-900 tabular-nums text-xs md:text-sm">
                     {formatSubLedgerNumber(
                       subLedgerData.openingBal + subLedgerData.totalPeriodDebit,
                       subLedgerData.currency,
                       false
                     )}
                   </td>
-                  <td className="py-3 px-3 text-right border-r border-slate-300 font-mono font-bold text-rose-900 tabular-nums text-sm md:text-base">
+                  <td className="py-2 px-2 text-right border-r border-slate-300 font-mono font-bold text-rose-900 tabular-nums text-xs md:text-sm">
                     {formatSubLedgerNumber(subLedgerData.totalPeriodCredit, subLedgerData.currency, true)}
                   </td>
-                  <td className="py-3 px-3 text-right border-r border-slate-300 font-mono font-black text-slate-900 tabular-nums text-base">
+                  <td className="py-2 px-2 text-right border-r border-slate-300 font-mono font-black text-slate-900 tabular-nums text-sm md:text-base">
                     {formatSubLedgerNumber(subLedgerData.closingBalance, subLedgerData.currency, false)}
                   </td>
-                  <td className="py-3 px-4 text-slate-500 font-normal italic text-[11px]">
-                    {lang === 'bn' ? 'অডিট খতিয়ান সমাপ্ত' : 'Sub ledger verified'}
-                  </td>
+                  <td className="py-2 px-3 border-r border-slate-300"></td>
                 </tr>
               </tbody>
             </table>
@@ -2578,12 +2576,12 @@ export const ReportsView: React.FC = () => {
       </div>
 
       {/* 6. Official Printable Document (Exclusively rendered during Print / PDF generation) */}
-      <div className="hidden print:block space-y-4 text-slate-900 bg-white p-2">
+      <div className="hidden print:block space-y-2 text-slate-900 bg-white p-0 w-full">
         {isSubLedgerEligible && subLedgerData ? (
           /* ========================================================================= */
           /* SUB LEDGER PRINT DOCUMENT (Matching Screenshot 2)                         */
           /* ========================================================================= */
-          <div className="space-y-2 font-sans">
+          <div className="space-y-2 font-sans w-full">
             {/* Top Sub Ledger Title Bar */}
             <div className="flex justify-between items-baseline py-1 border-b border-slate-300">
               <div className="text-base font-bold text-[#1E536E] font-sans">
@@ -2603,78 +2601,78 @@ export const ReportsView: React.FC = () => {
             </div>
 
             {/* Sub Ledger Table */}
-            <div className="overflow-hidden border border-slate-400 rounded-xs">
-              <table className="w-full text-left border-collapse text-[11px]">
+            <div className="overflow-hidden border border-slate-400 rounded-xs w-full">
+              <table className="w-full text-left border-collapse text-[10px] table-fixed">
                 <thead>
-                  <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[10px]">
-                    <th rowSpan={2} className="py-2 px-2.5 text-center border-r border-slate-400 w-10">#</th>
-                    <th rowSpan={2} className="py-2 px-2.5 text-center border-r border-slate-400 whitespace-nowrap w-24">Date</th>
-                    <th rowSpan={2} className="py-2 px-3 border-r border-slate-400 min-w-44">Account</th>
-                    <th colSpan={3} className="py-1 px-2 text-center border-r border-slate-400 border-b border-slate-400 uppercase tracking-wider text-[9.5px]">
+                  <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[9.5px]">
+                    <th rowSpan={2} className="py-1.5 px-1.5 text-center border-r border-slate-400 w-8">#</th>
+                    <th rowSpan={2} className="py-1.5 px-1.5 text-center border-r border-slate-400 whitespace-nowrap w-20">Date</th>
+                    <th rowSpan={2} className="py-1.5 px-2 border-r border-slate-400 w-36">Account</th>
+                    <th colSpan={3} className="py-1 px-1.5 text-center border-r border-slate-400 border-b border-slate-400 uppercase tracking-wider text-[9px] w-66">
                       Base ({subLedgerData.currency})
                     </th>
-                    <th rowSpan={2} className="py-2 px-3 w-44">Remarks</th>
+                    <th rowSpan={2} className="py-1.5 px-2.5">Remarks</th>
                   </tr>
                   <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[9px]">
-                    <th className="py-1.5 px-2.5 text-right border-r border-slate-400 w-28">Debit</th>
-                    <th className="py-1.5 px-2.5 text-right border-r border-slate-400 w-28">Credit</th>
-                    <th className="py-1.5 px-2.5 text-right border-r border-slate-400 w-32">Balance</th>
+                    <th className="py-1 px-1.5 text-right border-r border-slate-400 w-20">Debit</th>
+                    <th className="py-1 px-1.5 text-right border-r border-slate-400 w-20">Credit</th>
+                    <th className="py-1 px-1.5 text-right border-r border-slate-400 w-26">Balance</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-300 text-slate-900 text-[10.5px]">
+                <tbody className="divide-y divide-slate-300 text-slate-900 text-[10px]">
                   {/* Row 1: Account Banner Row */}
                   <tr className="bg-[#D8EEF8] font-bold text-slate-900 border-b border-slate-300 break-inside-avoid">
-                    <td className="py-2 px-2.5 text-center border-r border-slate-300 font-mono text-[10.5px]">1</td>
-                    <td colSpan={6} className="py-2 px-3 text-center tracking-wide font-black text-xs text-slate-900 uppercase">
+                    <td className="py-1 px-1.5 text-center border-r border-slate-300 font-mono text-[10px]">1</td>
+                    <td colSpan={6} className="py-1 px-2 text-center tracking-wide font-black text-xs text-slate-900 uppercase">
                       {subLedgerData.accountBannerTitle}
                     </td>
                   </tr>
 
                   {/* Row 2: Opening Balance Row */}
                   <tr className="bg-white font-medium border-b border-slate-200 break-inside-avoid">
-                    <td className="py-2 px-2.5 text-center border-r border-slate-200 font-mono text-slate-600">2</td>
-                    <td className="py-2 px-2.5 border-r border-slate-200 text-center font-mono text-slate-400">—</td>
-                    <td className="py-2 px-3 border-r border-slate-200 font-bold italic text-slate-900">
+                    <td className="py-1 px-1.5 text-center border-r border-slate-200 font-mono text-slate-600">2</td>
+                    <td className="py-1 px-1.5 border-r border-slate-200 text-center font-mono text-slate-400">—</td>
+                    <td className="py-1 px-2 border-r border-slate-200 font-bold italic text-slate-900 truncate">
                       Opening Balance
                     </td>
-                    <td className="py-2 px-2.5 text-right border-r border-slate-200 font-mono font-bold text-slate-900 tabular-nums text-[12px]">
+                    <td className="py-1 px-1.5 text-right border-r border-slate-200 font-mono font-bold text-slate-900 tabular-nums text-[11px]">
                       {formatSubLedgerNumber(subLedgerData.openingBal, subLedgerData.currency, false)}
                     </td>
-                    <td className="py-2 px-2.5 text-right border-r border-slate-200 font-mono text-slate-400 tabular-nums text-[12px]">
+                    <td className="py-1 px-1.5 text-right border-r border-slate-200 font-mono text-slate-400 tabular-nums text-[11px]">
                       {subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
                     </td>
-                    <td className="py-2 px-2.5 text-right border-r border-slate-200 font-mono font-black text-slate-900 tabular-nums text-[12.5px]">
+                    <td className="py-1 px-1.5 text-right border-r border-slate-200 font-mono font-black text-slate-900 tabular-nums text-[11.5px]">
                       {formatSubLedgerNumber(subLedgerData.openingBal, subLedgerData.currency, false)}
                     </td>
-                    <td className="py-2 px-3 text-slate-400 italic text-[10px]">—</td>
+                    <td className="py-1 px-2.5 text-slate-400 italic text-[9.5px]">—</td>
                   </tr>
 
                   {/* Dynamic In-Period Transactions */}
                   {subLedgerData.rows.map((row) => (
                     <tr key={row.id} className="border-b border-slate-200 break-inside-avoid">
-                      <td className="py-2 px-2.5 text-center border-r border-slate-200 font-mono text-slate-600">
+                      <td className="py-1 px-1.5 text-center border-r border-slate-200 font-mono text-slate-600 text-[10px]">
                         {row.sl}
                       </td>
-                      <td className="py-2 px-2.5 border-r border-slate-200 font-mono text-slate-700 whitespace-nowrap text-center text-[10px]">
+                      <td className="py-1 px-1.5 border-r border-slate-200 font-mono text-slate-700 whitespace-nowrap text-center text-[9.5px]">
                         {row.formattedDate}
                       </td>
-                      <td className="py-2 px-3 border-r border-slate-200 font-bold text-slate-900">
+                      <td className="py-1 px-2 border-r border-slate-200 font-bold text-slate-900 text-[10px] leading-tight">
                         {row.account}
                       </td>
-                      <td className="py-2 px-2.5 text-right border-r border-slate-200 font-mono tabular-nums text-[12px] font-bold text-slate-900">
+                      <td className="py-1 px-1.5 text-right border-r border-slate-200 font-mono tabular-nums text-[11px] font-bold text-slate-900">
                         {row.debit > 0
                           ? formatSubLedgerNumber(row.debit, subLedgerData.currency, false)
                           : subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
                       </td>
-                      <td className="py-2 px-2.5 text-right border-r border-slate-200 font-mono tabular-nums text-[12px] font-bold text-rose-800">
+                      <td className="py-1 px-1.5 text-right border-r border-slate-200 font-mono tabular-nums text-[11px] font-bold text-rose-800">
                         {row.credit > 0
                           ? formatSubLedgerNumber(row.credit, subLedgerData.currency, true)
                           : subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
                       </td>
-                      <td className="py-2 px-2.5 text-right border-r border-slate-200 font-mono font-black tabular-nums text-[12.5px] text-slate-900">
+                      <td className="py-1 px-1.5 text-right border-r border-slate-200 font-mono font-black tabular-nums text-[11.5px] text-slate-900">
                         {formatSubLedgerNumber(row.balance, subLedgerData.currency, false)}
                       </td>
-                      <td className="py-2 px-3 text-slate-600 text-[10px]">
+                      <td className="py-1 px-2.5 text-slate-700 text-[9.5px] leading-tight break-words">
                         {row.remarks || <span className="text-slate-300 italic">—</span>}
                       </td>
                     </tr>
@@ -2682,27 +2680,25 @@ export const ReportsView: React.FC = () => {
 
                   {/* Summary Footer */}
                   <tr className="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-400 break-inside-avoid">
-                    <td className="py-2 px-2.5 text-center border-r border-slate-300 font-mono"></td>
-                    <td className="py-2 px-2.5 border-r border-slate-300"></td>
-                    <td className="py-2 px-3 border-r border-slate-300 font-black uppercase text-xs">
+                    <td className="py-1.5 px-1.5 text-center border-r border-slate-300 font-mono"></td>
+                    <td className="py-1.5 px-1.5 border-r border-slate-300"></td>
+                    <td className="py-1.5 px-2 border-r border-slate-300 font-black uppercase text-[10.5px]">
                       {lang === 'bn' ? 'সর্বমোট সমাপ্তি হিসাব (Total / Closing)' : 'Total / Closing Balance'}
                     </td>
-                    <td className="py-2 px-2.5 text-right border-r border-slate-300 font-mono font-bold text-emerald-900 tabular-nums text-[12.5px]">
+                    <td className="py-1.5 px-1.5 text-right border-r border-slate-300 font-mono font-bold text-emerald-900 tabular-nums text-[11.5px]">
                       {formatSubLedgerNumber(
                         subLedgerData.openingBal + subLedgerData.totalPeriodDebit,
                         subLedgerData.currency,
                         false
                       )}
                     </td>
-                    <td className="py-2 px-2.5 text-right border-r border-slate-300 font-mono font-bold text-rose-900 tabular-nums text-[12.5px]">
+                    <td className="py-1.5 px-1.5 text-right border-r border-slate-300 font-mono font-bold text-rose-900 tabular-nums text-[11.5px]">
                       {formatSubLedgerNumber(subLedgerData.totalPeriodCredit, subLedgerData.currency, true)}
                     </td>
-                    <td className="py-2 px-2.5 text-right border-r border-slate-300 font-mono font-black text-slate-900 tabular-nums text-[13.5px]">
+                    <td className="py-1.5 px-1.5 text-right border-r border-slate-300 font-mono font-black text-slate-900 tabular-nums text-[12px]">
                       {formatSubLedgerNumber(subLedgerData.closingBalance, subLedgerData.currency, false)}
                     </td>
-                    <td className="py-2 px-3 text-slate-500 font-normal italic text-[10px]">
-                      {lang === 'bn' ? 'অডিট খতিয়ান সমাপ্ত' : 'Sub ledger verified'}
-                    </td>
+                    <td className="py-1.5 px-2.5 border-r border-slate-300"></td>
                   </tr>
                 </tbody>
               </table>
