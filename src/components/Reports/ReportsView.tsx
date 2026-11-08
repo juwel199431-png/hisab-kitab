@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useFinance } from '../../context/FinanceContext';
 import {
   BarChart3,
@@ -46,6 +46,13 @@ import {
   UniversalTransactionEditModal,
   UniversalEditTarget,
 } from '../Common/UniversalTransactionEditModal';
+import {
+  ReportPageSettingsPanel,
+  ReportPageSettings,
+  DEFAULT_PAGE_SETTINGS,
+  PAGE_SETTINGS_STORAGE_KEY,
+  loadSavedPageSettings,
+} from './ReportPageSettingsPanel';
 
 type AccountFilter =
   | 'all'
@@ -114,6 +121,88 @@ export const ReportsView: React.FC = () => {
 
   // Universal Transaction Edit Modal State
   const [editTarget, setEditTarget] = useState<UniversalEditTarget | null>(null);
+
+  // Manual Page Margins, Orientation & Column Proportions State (Persistent)
+  const [pageSettings, setPageSettings] = useState<ReportPageSettings>(loadSavedPageSettings);
+  const [isPageSettingsOpen, setIsPageSettingsOpen] = useState(false);
+  const [isLivePaperPreview, setIsLivePaperPreview] = useState(false);
+
+  // Update page settings handler with local storage persistence
+  const handleUpdatePageSettings = (updates: Partial<ReportPageSettings>) => {
+    setPageSettings((prev) => {
+      const next = { ...prev, ...updates };
+      try {
+        localStorage.setItem(PAGE_SETTINGS_STORAGE_KEY, JSON.stringify(next));
+      } catch (err) {
+        console.error('Failed to save page settings:', err);
+      }
+      return next;
+    });
+  };
+
+  // Reset page settings to defaults
+  const handleResetPageSettings = () => {
+    setPageSettings(DEFAULT_PAGE_SETTINGS);
+    try {
+      localStorage.removeItem(PAGE_SETTINGS_STORAGE_KEY);
+    } catch (err) {
+      console.error('Failed to reset page settings:', err);
+    }
+  };
+
+  // Dynamic Column Width Proportions for Sub Ledger Table (ensures 100% total)
+  const dynamicColWidths = useMemo(() => {
+    const sl = 4;
+    const date = 9;
+    const debit = pageSettings.debitWidth;
+    const credit = pageSettings.creditWidth;
+    const balance = pageSettings.balanceWidth;
+    const remarks = pageSettings.remarksWidth;
+    // Calculate remaining for account to ensure exact 100%
+    const fixedTotal = sl + date + debit + credit + balance + remarks;
+    const account = Math.max(8, Number((100 - fixedTotal).toFixed(1)));
+    const baseColSpanWidth = Number((debit + credit + balance).toFixed(1));
+
+    return {
+      sl: `${sl}%`,
+      date: `${date}%`,
+      account: `${account}%`,
+      debit: `${debit}%`,
+      credit: `${credit}%`,
+      balance: `${balance}%`,
+      remarks: `${remarks}%`,
+      baseColSpan: `${baseColSpanWidth}%`,
+    };
+  }, [pageSettings]);
+
+  // Inject dynamic print stylesheet to strictly enforce user's manual page margins and orientation
+  useEffect(() => {
+    const styleId = 'dynamic-custom-report-page-style';
+    let styleEl = document.getElementById(styleId) as HTMLStyleElement | null;
+    if (!styleEl) {
+      styleEl = document.createElement('style');
+      styleEl.id = styleId;
+      document.head.appendChild(styleEl);
+    }
+
+    styleEl.innerHTML = `
+      @media print {
+        @page {
+          size: A4 ${pageSettings.orientation} !important;
+          margin: ${pageSettings.marginTop}mm ${pageSettings.marginRight}mm ${pageSettings.marginBottom}mm ${pageSettings.marginLeft}mm !important;
+        }
+        body {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+        .printable-report-wrapper {
+          zoom: ${pageSettings.scale / 100} !important;
+          font-size: ${pageSettings.fontSizePt}pt !important;
+          width: 100% !important;
+        }
+      }
+    `;
+  }, [pageSettings]);
 
   // Date Range Presets
   const [datePreset, setDatePreset] = useState<'all' | 'this-month' | 'last-month' | 'last-30' | 'custom'>('this-month');
@@ -1207,7 +1296,21 @@ export const ReportsView: React.FC = () => {
           </div>
 
           {/* Quick Actions */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={() => setIsPageSettingsOpen((prev) => !prev)}
+              className={`inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl transition-all shadow-2xs cursor-pointer border ${
+                isPageSettingsOpen
+                  ? 'bg-indigo-600 text-white border-indigo-700 shadow-sm'
+                  : 'bg-white text-slate-800 border-slate-300 hover:bg-slate-50'
+              }`}
+              title={lang === 'bn' ? 'পেইজের মার্জিন, স্কেল ও কলামের মাপ কাস্টমাইজ করুন' : 'Page Dimensions & Margins Setup'}
+            >
+              <SlidersHorizontal className={`w-3.5 h-3.5 ${isPageSettingsOpen ? 'text-white' : 'text-indigo-600'}`} />
+              <span>{lang === 'bn' ? 'পেইজের মাপ ও মার্জিন' : 'Page Margins'}</span>
+            </button>
+
             <button
               onClick={() => window.print()}
               className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition-all shadow-xs cursor-pointer"
@@ -1304,7 +1407,255 @@ export const ReportsView: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. Structured Filter Panel (Clean, Uncluttered, Functional) */}
+      {/* 2. Interactive Page Settings & Margins Studio Panel */}
+      <ReportPageSettingsPanel
+        settings={pageSettings}
+        onChange={handleUpdatePageSettings}
+        onReset={handleResetPageSettings}
+        isOpen={isPageSettingsOpen}
+        onToggle={() => setIsPageSettingsOpen((prev) => !prev)}
+        isLivePreview={isLivePaperPreview}
+        onToggleLivePreview={() => setIsLivePaperPreview((prev) => !prev)}
+        onPrint={() => window.print()}
+        lang={lang}
+      />
+
+      {/* Live Paper Preview Canvas (When user clicks 'লাইভ প্রিভিউ দেখুন') */}
+      {isLivePaperPreview && (
+        <div className="bg-slate-900/95 p-6 rounded-2xl border border-slate-700 text-white shadow-2xl space-y-4 no-print animate-fade-in">
+          <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
+            <div className="flex items-center gap-2">
+              <span className="p-1.5 rounded-lg bg-amber-400/20 text-amber-300 font-bold text-xs flex items-center gap-1.5">
+                <span>📄</span>
+                <span>{lang === 'bn' ? 'লাইভ পেজ প্রিভিউ (Live Paper Preview)' : 'Live Paper Preview'}</span>
+              </span>
+              <span className="text-xs text-slate-300">
+                {lang === 'bn'
+                  ? `দিক: ${pageSettings.orientation === 'portrait' ? 'A4 লম্বালম্বি' : 'A4 চওড়া/আড়াআড়ি'} | মার্জিন: উপ ${pageSettings.marginTop}mm, নি ${pageSettings.marginBottom}mm, বা ${pageSettings.marginLeft}mm, ডা ${pageSettings.marginRight}mm | স্কেল: ${pageSettings.scale}%`
+                  : `A4 ${pageSettings.orientation} | Margins: ${pageSettings.marginTop}mm / ${pageSettings.marginLeft}mm`}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="px-3.5 py-1.5 text-xs font-bold bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>{lang === 'bn' ? 'প্রিন্ট / PDF করুন' : 'Print Now'}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsLivePaperPreview(false)}
+                className="px-3 py-1.5 text-xs font-semibold bg-white/10 hover:bg-white/20 text-slate-300 rounded-lg transition-colors cursor-pointer"
+              >
+                {lang === 'bn' ? 'প্রিভিউ বন্ধ করুন' : 'Close Preview'}
+              </button>
+            </div>
+          </div>
+
+          {/* Paper Mockup Container with exact custom margins */}
+          <div className="overflow-x-auto py-6 flex justify-center bg-slate-950/70 rounded-xl p-4">
+            <div
+              className="bg-white text-slate-900 shadow-2xl rounded-xs transition-all origin-top border border-slate-300 overflow-hidden"
+              style={{
+                width: pageSettings.orientation === 'portrait' ? '210mm' : '297mm',
+                minHeight: pageSettings.orientation === 'portrait' ? '297mm' : '210mm',
+                paddingTop: `${pageSettings.marginTop}mm`,
+                paddingBottom: `${pageSettings.marginBottom}mm`,
+                paddingLeft: `${pageSettings.marginLeft}mm`,
+                paddingRight: `${pageSettings.marginRight}mm`,
+                fontSize: `${pageSettings.fontSizePt}pt`,
+                zoom: pageSettings.scale / 100,
+              }}
+            >
+              {/* Report content inside the live paper preview */}
+              {isSubLedgerEligible && subLedgerData ? (
+                <div className="space-y-2 font-sans w-full">
+                  <div className="flex justify-between items-baseline py-1 border-b border-slate-300">
+                    <div className="text-sm font-bold text-[#1E536E]">
+                      Sub ledger &nbsp;
+                      <span className="font-mono text-slate-900 font-semibold text-xs">
+                        {startDate ? startDate.replace(/-/g, '/') : '2026/01/01'} to{' '}
+                        {endDate ? endDate.replace(/-/g, '/') : new Date().toISOString().split('T')[0].replace(/-/g, '/')}
+                      </span>
+                      &nbsp;
+                      <span className="font-mono text-[10px] text-slate-500 font-normal">
+                        [ {new Date().toLocaleDateString('en-GB')} {new Date().toLocaleTimeString('en-GB')} ]
+                      </span>
+                    </div>
+                    <span className="text-[9px] uppercase font-bold text-slate-500 font-mono tracking-wider">
+                      Official Sub Ledger Statement
+                    </span>
+                  </div>
+
+                  <div className="overflow-hidden border border-slate-400 rounded-xs w-full">
+                    <table className="w-full text-left border-collapse text-[10px] table-fixed">
+                      <colgroup>
+                        <col style={{ width: dynamicColWidths.sl }} />
+                        <col style={{ width: dynamicColWidths.date }} />
+                        <col style={{ width: dynamicColWidths.account }} />
+                        <col style={{ width: dynamicColWidths.debit }} />
+                        <col style={{ width: dynamicColWidths.credit }} />
+                        <col style={{ width: dynamicColWidths.balance }} />
+                        <col style={{ width: dynamicColWidths.remarks }} />
+                      </colgroup>
+                      <thead>
+                        <tr style={{ height: 0, lineHeight: 0, padding: 0, margin: 0, border: 'none' }}>
+                          <th style={{ width: dynamicColWidths.sl, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
+                          <th style={{ width: dynamicColWidths.date, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
+                          <th style={{ width: dynamicColWidths.account, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
+                          <th style={{ width: dynamicColWidths.debit, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
+                          <th style={{ width: dynamicColWidths.credit, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
+                          <th style={{ width: dynamicColWidths.balance, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
+                          <th style={{ width: dynamicColWidths.remarks, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
+                        </tr>
+                        <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[9.5px]">
+                          <th rowSpan={2} style={{ width: dynamicColWidths.sl }} className="py-1 px-1 text-center border-r border-slate-400">#</th>
+                          <th rowSpan={2} style={{ width: dynamicColWidths.date }} className="py-1 px-1 text-center border-r border-slate-400 whitespace-nowrap">Date</th>
+                          <th rowSpan={2} style={{ width: dynamicColWidths.account }} className="py-1 px-2 border-r border-slate-400">Account</th>
+                          <th colSpan={3} style={{ width: dynamicColWidths.baseColSpan }} className="py-1 px-1 text-center border-r border-slate-400 border-b border-slate-400 uppercase tracking-wider text-[9px]">
+                            Base ({subLedgerData.currency})
+                          </th>
+                          <th rowSpan={2} style={{ width: dynamicColWidths.remarks }} className="py-1 px-2.5 text-left border-slate-400">Remarks</th>
+                        </tr>
+                        <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[9px]">
+                          <th style={{ width: dynamicColWidths.debit }} className="py-1 px-1 text-right border-r border-slate-400">Debit</th>
+                          <th style={{ width: dynamicColWidths.credit }} className="py-1 px-1 text-right border-r border-slate-400">Credit</th>
+                          <th style={{ width: dynamicColWidths.balance }} className="py-1 px-1 text-right border-r border-slate-400">Balance</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-300 text-slate-900 text-[10px]">
+                        <tr className="bg-[#D8EEF8] font-bold text-slate-900 border-b border-slate-300">
+                          <td style={{ width: dynamicColWidths.sl }} className="py-1 px-1 text-center border-r border-slate-300 font-mono text-[10px]">1</td>
+                          <td colSpan={6} className="py-1 px-2 text-center tracking-wide font-black text-xs text-slate-900 uppercase">
+                            {subLedgerData.accountBannerTitle}
+                          </td>
+                        </tr>
+                        <tr className="bg-white font-medium border-b border-slate-200">
+                          <td style={{ width: dynamicColWidths.sl }} className="py-1 px-1 text-center border-r border-slate-200 font-mono text-slate-600">2</td>
+                          <td style={{ width: dynamicColWidths.date }} className="py-1 px-1 border-r border-slate-200 text-center font-mono text-slate-400">—</td>
+                          <td style={{ width: dynamicColWidths.account }} className="py-1 px-2 border-r border-slate-200 font-bold italic text-slate-900 truncate">
+                            Opening Balance
+                          </td>
+                          <td style={{ width: dynamicColWidths.debit }} className="py-1 px-1 text-right border-r border-slate-200 font-mono font-bold text-slate-900 tabular-nums text-[10.5px]">
+                            {formatSubLedgerNumber(subLedgerData.openingBal, subLedgerData.currency, false)}
+                          </td>
+                          <td style={{ width: dynamicColWidths.credit }} className="py-1 px-1 text-right border-r border-slate-200 font-mono text-slate-400 tabular-nums text-[10.5px]">
+                            {subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
+                          </td>
+                          <td style={{ width: dynamicColWidths.balance }} className="py-1 px-1 text-right border-r border-slate-200 font-mono font-black text-slate-900 tabular-nums text-[11px]">
+                            {formatSubLedgerNumber(subLedgerData.openingBal, subLedgerData.currency, false)}
+                          </td>
+                          <td style={{ width: dynamicColWidths.remarks }} className="py-1 px-2.5 text-slate-400 italic text-[9.5px]">—</td>
+                        </tr>
+                        {subLedgerData.rows.map((row) => (
+                          <tr key={`prev-row-${row.id}`} className="border-b border-slate-200">
+                            <td style={{ width: dynamicColWidths.sl }} className="py-1 px-1 text-center border-r border-slate-200 font-mono text-slate-600 text-[10px]">
+                              {row.sl}
+                            </td>
+                            <td style={{ width: dynamicColWidths.date }} className="py-1 px-1 border-r border-slate-200 font-mono text-slate-700 whitespace-nowrap text-center text-[9.5px]">
+                              {row.formattedDate}
+                            </td>
+                            <td style={{ width: dynamicColWidths.account }} className="py-1 px-2 border-r border-slate-200 font-bold text-slate-900 text-[10px] leading-tight">
+                              {row.account}
+                            </td>
+                            <td style={{ width: dynamicColWidths.debit }} className="py-1 px-1 text-right border-r border-slate-200 font-mono tabular-nums text-[10.5px] font-bold text-slate-900">
+                              {row.debit > 0
+                                ? formatSubLedgerNumber(row.debit, subLedgerData.currency, false)
+                                : subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
+                            </td>
+                            <td style={{ width: dynamicColWidths.credit }} className="py-1 px-1 text-right border-r border-slate-200 font-mono tabular-nums text-[10.5px] font-bold text-rose-800">
+                              {row.credit > 0
+                                ? formatSubLedgerNumber(row.credit, subLedgerData.currency, true)
+                                : subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
+                            </td>
+                            <td style={{ width: dynamicColWidths.balance }} className="py-1 px-1 text-right border-r border-slate-200 font-mono font-black tabular-nums text-[11px] text-slate-900">
+                              {formatSubLedgerNumber(row.balance, subLedgerData.currency, false)}
+                            </td>
+                            <td style={{ width: dynamicColWidths.remarks }} className="py-1 px-2.5 text-slate-800 text-[10px] leading-snug break-words">
+                              {row.remarks || <span className="text-slate-300 italic">—</span>}
+                            </td>
+                          </tr>
+                        ))}
+                        <tr className="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-400">
+                          <td style={{ width: dynamicColWidths.sl }} className="py-1.5 px-1 text-center border-r border-slate-300 font-mono"></td>
+                          <td style={{ width: dynamicColWidths.date }} className="py-1.5 px-1 border-r border-slate-300"></td>
+                          <td style={{ width: dynamicColWidths.account }} className="py-1.5 px-2 border-r border-slate-300 font-black uppercase text-[10px]">
+                            {lang === 'bn' ? 'সর্বমোট সমাপ্তি হিসাব' : 'Total / Closing Balance'}
+                          </td>
+                          <td style={{ width: dynamicColWidths.debit }} className="py-1.5 px-1 text-right border-r border-slate-300 font-mono font-bold text-emerald-900 tabular-nums text-[11px]">
+                            {formatSubLedgerNumber(
+                              subLedgerData.openingBal + subLedgerData.totalPeriodDebit,
+                              subLedgerData.currency,
+                              false
+                            )}
+                          </td>
+                          <td style={{ width: dynamicColWidths.credit }} className="py-1.5 px-1 text-right border-r border-slate-300 font-mono font-bold text-rose-900 tabular-nums text-[11px]">
+                            {formatSubLedgerNumber(subLedgerData.totalPeriodCredit, subLedgerData.currency, true)}
+                          </td>
+                          <td style={{ width: dynamicColWidths.balance }} className="py-1.5 px-1 text-right border-r border-slate-300 font-mono font-black text-slate-900 tabular-nums text-[11.5px]">
+                            {formatSubLedgerNumber(subLedgerData.closingBalance, subLedgerData.currency, false)}
+                          </td>
+                          <td style={{ width: dynamicColWidths.remarks }} className="py-1.5 px-2.5 border-r border-slate-300"></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3 font-sans w-full">
+                  <div className="border-b-2 border-slate-900 pb-2 flex justify-between items-start">
+                    <div>
+                      <h2 className="text-sm font-bold uppercase tracking-tight text-slate-900">
+                        {lang === 'bn' ? 'হিসাব কিতাব — অফিসিয়াল লেনদেন অডিট ও খতিয়ান রিপোর্ট' : 'Financial Statement & Audit Ledger Report'}
+                      </h2>
+                      <p className="text-[10px] text-slate-600">
+                        {startDate && endDate ? `${formatDate(startDate, lang)} — ${formatDate(endDate, lang)}` : 'All Time'} · {filteredRows.length} Records
+                      </p>
+                    </div>
+                    <span className="px-2 py-0.5 bg-slate-100 border border-slate-300 rounded font-bold uppercase text-[9px]">
+                      Verified Audit
+                    </span>
+                  </div>
+                  <div className="border border-slate-400 rounded-xs overflow-hidden">
+                    <table className="w-full text-left border-collapse text-[10px]">
+                      <thead>
+                        <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold uppercase text-[9px]">
+                          <th className="py-1.5 px-2 border-r border-slate-400 text-center w-8">SL</th>
+                          <th className="py-1.5 px-2 border-r border-slate-400 text-center w-20">তারিখ</th>
+                          <th className="py-1.5 px-2 border-r border-slate-400">অ্যাকাউন্ট / হেড</th>
+                          <th className="py-1.5 px-2 border-r border-slate-400">খাত / বিবরণ</th>
+                          <th className="py-1.5 px-2 border-r border-slate-400 text-center w-16">ধরণ</th>
+                          <th className="py-1.5 px-2 border-r border-slate-400 text-right w-24">পরিমাণ</th>
+                          <th className="py-1.5 px-2 text-center w-16">স্ট্যাটাস</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-300 text-slate-800 text-[9.5px]">
+                        {filteredRows.slice(0, 15).map((row, idx) => (
+                          <tr key={`prev-std-${row.id}-${idx}`}>
+                            <td className="py-1 px-2 font-mono text-center border-r border-slate-200">{idx + 1}</td>
+                            <td className="py-1 px-2 font-mono text-center border-r border-slate-200">{row.date}</td>
+                            <td className="py-1 px-2 font-semibold border-r border-slate-200">{lang === 'bn' ? row.sectionNameBn : row.sectionNameEn}</td>
+                            <td className="py-1 px-2 border-r border-slate-200">{lang === 'bn' ? row.categoryNameBn : row.categoryNameEn}</td>
+                            <td className="py-1 px-2 text-center uppercase text-[9px] border-r border-slate-200">{row.type}</td>
+                            <td className="py-1 px-2 text-right font-mono font-bold border-r border-slate-200">
+                              {row.currency === 'KWD' ? `${row.amount.toFixed(3)} KD` : `${row.amount.toLocaleString()} ৳`}
+                            </td>
+                            <td className="py-1 px-2 text-center">{row.status || '—'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 3. Structured Filter Panel (Clean, Uncluttered, Functional) */}
       <div className="bg-white rounded-2xl p-5 border border-slate-200/90 shadow-xs space-y-4 no-print">
         {/* Account Scope Segmented Pills */}
         <div>
@@ -2122,44 +2473,44 @@ export const ReportsView: React.FC = () => {
 
             <table className="w-full text-left border-collapse border border-slate-300 text-xs table-fixed">
               <colgroup>
-                <col style={{ width: '4%' }} />
-                <col style={{ width: '10%' }} />
-                <col style={{ width: '15%' }} />
-                <col style={{ width: '8%' }} />
-                <col style={{ width: '8%' }} />
-                <col style={{ width: '9%' }} />
-                <col style={{ width: '46%' }} />
+                <col style={{ width: dynamicColWidths.sl }} />
+                <col style={{ width: dynamicColWidths.date }} />
+                <col style={{ width: dynamicColWidths.account }} />
+                <col style={{ width: dynamicColWidths.debit }} />
+                <col style={{ width: dynamicColWidths.credit }} />
+                <col style={{ width: dynamicColWidths.balance }} />
+                <col style={{ width: dynamicColWidths.remarks }} />
               </colgroup>
               <thead>
                 {/* Sizing dummy row for strict column calculation */}
                 <tr style={{ height: 0, lineHeight: 0, padding: 0, margin: 0, border: 'none' }}>
-                  <th style={{ width: '4%', height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
-                  <th style={{ width: '10%', height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
-                  <th style={{ width: '15%', height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
-                  <th style={{ width: '8%', height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
-                  <th style={{ width: '8%', height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
-                  <th style={{ width: '9%', height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
-                  <th style={{ width: '46%', height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
+                  <th style={{ width: dynamicColWidths.sl, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
+                  <th style={{ width: dynamicColWidths.date, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
+                  <th style={{ width: dynamicColWidths.account, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
+                  <th style={{ width: dynamicColWidths.debit, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
+                  <th style={{ width: dynamicColWidths.credit, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
+                  <th style={{ width: dynamicColWidths.balance, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
+                  <th style={{ width: dynamicColWidths.remarks, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
                 </tr>
                 <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[11px]">
-                  <th rowSpan={2} style={{ width: '4%' }} className="py-2 px-1 text-center border-r border-slate-400">#</th>
-                  <th rowSpan={2} style={{ width: '10%' }} className="py-2 px-1 text-center border-r border-slate-400 whitespace-nowrap">Date</th>
-                  <th rowSpan={2} style={{ width: '15%' }} className="py-2 px-2 border-r border-slate-400">Account</th>
-                  <th colSpan={3} style={{ width: '25%' }} className="py-1 px-1 text-center border-r border-slate-400 border-b border-slate-400 uppercase tracking-wider text-[10px]">
+                  <th rowSpan={2} style={{ width: dynamicColWidths.sl }} className="py-2 px-1 text-center border-r border-slate-400">#</th>
+                  <th rowSpan={2} style={{ width: dynamicColWidths.date }} className="py-2 px-1 text-center border-r border-slate-400 whitespace-nowrap">Date</th>
+                  <th rowSpan={2} style={{ width: dynamicColWidths.account }} className="py-2 px-2 border-r border-slate-400">Account</th>
+                  <th colSpan={3} style={{ width: dynamicColWidths.baseColSpan }} className="py-1 px-1 text-center border-r border-slate-400 border-b border-slate-400 uppercase tracking-wider text-[10px]">
                     Base ({subLedgerData.currency})
                   </th>
-                  <th rowSpan={2} style={{ width: '46%' }} className="py-2 px-3 text-left">Remarks</th>
+                  <th rowSpan={2} style={{ width: dynamicColWidths.remarks }} className="py-2 px-3 text-left">Remarks</th>
                 </tr>
                 <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[10px]">
-                  <th style={{ width: '8%' }} className="py-1 px-1 text-right border-r border-slate-400">Debit</th>
-                  <th style={{ width: '8%' }} className="py-1 px-1 text-right border-r border-slate-400">Credit</th>
-                  <th style={{ width: '9%' }} className="py-1 px-1 text-right border-r border-slate-400">Balance</th>
+                  <th style={{ width: dynamicColWidths.debit }} className="py-1 px-1 text-right border-r border-slate-400">Debit</th>
+                  <th style={{ width: dynamicColWidths.credit }} className="py-1 px-1 text-right border-r border-slate-400">Credit</th>
+                  <th style={{ width: dynamicColWidths.balance }} className="py-1 px-1 text-right border-r border-slate-400">Balance</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 text-slate-800 text-[11px]">
                 {/* Row 1: Account Banner Row (SL: 1) */}
                 <tr className="bg-[#D8EEF8] font-bold text-slate-900 border-b border-slate-300">
-                  <td style={{ width: '4%' }} className="py-1.5 px-1 text-center border-r border-slate-300 font-mono text-xs">1</td>
+                  <td style={{ width: dynamicColWidths.sl }} className="py-1.5 px-1 text-center border-r border-slate-300 font-mono text-xs">1</td>
                   <td colSpan={6} className="py-1.5 px-3 text-center tracking-wide font-black text-xs md:text-sm text-slate-900 uppercase">
                     {subLedgerData.accountBannerTitle}
                   </td>
@@ -2167,21 +2518,21 @@ export const ReportsView: React.FC = () => {
 
                 {/* Row 2: Opening Balance Row (SL: 2) */}
                 <tr className="bg-white hover:bg-slate-50/80 font-medium border-b border-slate-200">
-                  <td style={{ width: '4%' }} className="py-1.5 px-1 text-center border-r border-slate-200 font-mono text-slate-500 text-xs">2</td>
-                  <td style={{ width: '10%' }} className="py-1.5 px-1 border-r border-slate-200 text-center font-mono text-slate-400">—</td>
-                  <td style={{ width: '15%' }} className="py-1.5 px-2 border-r border-slate-200 font-bold italic text-slate-900 text-xs truncate">
+                  <td style={{ width: dynamicColWidths.sl }} className="py-1.5 px-1 text-center border-r border-slate-200 font-mono text-slate-500 text-xs">2</td>
+                  <td style={{ width: dynamicColWidths.date }} className="py-1.5 px-1 border-r border-slate-200 text-center font-mono text-slate-400">—</td>
+                  <td style={{ width: dynamicColWidths.account }} className="py-1.5 px-2 border-r border-slate-200 font-bold italic text-slate-900 text-xs truncate">
                     Opening Balance
                   </td>
-                  <td style={{ width: '8%' }} className="py-1.5 px-1 text-right border-r border-slate-200 font-mono font-bold text-slate-900 tabular-nums text-xs md:text-sm">
+                  <td style={{ width: dynamicColWidths.debit }} className="py-1.5 px-1 text-right border-r border-slate-200 font-mono font-bold text-slate-900 tabular-nums text-xs md:text-sm">
                     {formatSubLedgerNumber(subLedgerData.openingBal, subLedgerData.currency, false)}
                   </td>
-                  <td style={{ width: '8%' }} className="py-1.5 px-1 text-right border-r border-slate-200 font-mono text-slate-400 tabular-nums text-xs md:text-sm font-semibold">
+                  <td style={{ width: dynamicColWidths.credit }} className="py-1.5 px-1 text-right border-r border-slate-200 font-mono text-slate-400 tabular-nums text-xs md:text-sm font-semibold">
                     {subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
                   </td>
-                  <td style={{ width: '9%' }} className="py-1.5 px-1 text-right border-r border-slate-200 font-mono font-black text-slate-900 tabular-nums text-xs md:text-sm">
+                  <td style={{ width: dynamicColWidths.balance }} className="py-1.5 px-1 text-right border-r border-slate-200 font-mono font-black text-slate-900 tabular-nums text-xs md:text-sm">
                     {formatSubLedgerNumber(subLedgerData.openingBal, subLedgerData.currency, false)}
                   </td>
-                  <td style={{ width: '46%' }} className="py-1.5 px-3 text-slate-400 italic text-xs">—</td>
+                  <td style={{ width: dynamicColWidths.remarks }} className="py-1.5 px-3 text-slate-400 italic text-xs">—</td>
                 </tr>
 
                 {/* Rows 3+: Dynamic In-Period Transactions */}
@@ -2205,29 +2556,29 @@ export const ReportsView: React.FC = () => {
                       }}
                       className="hover:bg-cyan-50/40 transition-colors cursor-pointer border-b border-slate-100"
                     >
-                      <td style={{ width: '4%' }} className="py-1.5 px-1 text-center border-r border-slate-200 font-mono text-slate-600 text-xs">
+                      <td style={{ width: dynamicColWidths.sl }} className="py-1.5 px-1 text-center border-r border-slate-200 font-mono text-slate-600 text-xs">
                         {row.sl}
                       </td>
-                      <td style={{ width: '10%' }} className="py-1.5 px-1 border-r border-slate-200 font-mono text-slate-700 whitespace-nowrap text-center text-xs">
+                      <td style={{ width: dynamicColWidths.date }} className="py-1.5 px-1 border-r border-slate-200 font-mono text-slate-700 whitespace-nowrap text-center text-xs">
                         {row.formattedDate}
                       </td>
-                      <td style={{ width: '15%' }} className="py-1.5 px-2 border-r border-slate-200 font-bold text-slate-900 text-xs leading-snug">
+                      <td style={{ width: dynamicColWidths.account }} className="py-1.5 px-2 border-r border-slate-200 font-bold text-slate-900 text-xs leading-snug">
                         {row.account}
                       </td>
-                      <td style={{ width: '8%' }} className="py-1.5 px-1 text-right border-r border-slate-200 font-mono tabular-nums text-xs md:text-sm font-bold text-slate-900">
+                      <td style={{ width: dynamicColWidths.debit }} className="py-1.5 px-1 text-right border-r border-slate-200 font-mono tabular-nums text-xs md:text-sm font-bold text-slate-900">
                         {row.debit > 0
                           ? formatSubLedgerNumber(row.debit, subLedgerData.currency, false)
                           : subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
                       </td>
-                      <td style={{ width: '8%' }} className="py-1.5 px-1 text-right border-r border-slate-200 font-mono tabular-nums text-xs md:text-sm font-bold text-rose-700">
+                      <td style={{ width: dynamicColWidths.credit }} className="py-1.5 px-1 text-right border-r border-slate-200 font-mono tabular-nums text-xs md:text-sm font-bold text-rose-700">
                         {row.credit > 0
                           ? formatSubLedgerNumber(row.credit, subLedgerData.currency, true)
                           : subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
                       </td>
-                      <td style={{ width: '9%' }} className="py-1.5 px-1 text-right border-r border-slate-200 font-mono font-black tabular-nums text-xs md:text-sm text-slate-900">
+                      <td style={{ width: dynamicColWidths.balance }} className="py-1.5 px-1 text-right border-r border-slate-200 font-mono font-black tabular-nums text-xs md:text-sm text-slate-900">
                         {formatSubLedgerNumber(row.balance, subLedgerData.currency, false)}
                       </td>
-                      <td style={{ width: '46%' }} className="py-1.5 px-3 text-slate-700 text-xs leading-snug break-words" title={row.remarks}>
+                      <td style={{ width: dynamicColWidths.remarks }} className="py-1.5 px-3 text-slate-700 text-xs leading-snug break-words" title={row.remarks}>
                         {row.remarks || <span className="text-slate-300 italic">—</span>}
                       </td>
                     </tr>
@@ -2236,25 +2587,25 @@ export const ReportsView: React.FC = () => {
 
                 {/* Total Summary Footer Row */}
                 <tr className="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-400">
-                  <td style={{ width: '4%' }} className="py-2 px-1 text-center border-r border-slate-300 font-mono"></td>
-                  <td style={{ width: '10%' }} className="py-2 px-1 border-r border-slate-300"></td>
-                  <td style={{ width: '15%' }} className="py-2 px-2 border-r border-slate-300 font-black uppercase text-xs">
+                  <td style={{ width: dynamicColWidths.sl }} className="py-2 px-1 text-center border-r border-slate-300 font-mono"></td>
+                  <td style={{ width: dynamicColWidths.date }} className="py-2 px-1 border-r border-slate-300"></td>
+                  <td style={{ width: dynamicColWidths.account }} className="py-2 px-2 border-r border-slate-300 font-black uppercase text-xs">
                     {lang === 'bn' ? 'সর্বমোট সমাপ্তি হিসাব (Total / Closing)' : 'Total / Closing Balance'}
                   </td>
-                  <td style={{ width: '8%' }} className="py-2 px-1 text-right border-r border-slate-300 font-mono font-bold text-emerald-900 tabular-nums text-xs md:text-sm">
+                  <td style={{ width: dynamicColWidths.debit }} className="py-2 px-1 text-right border-r border-slate-300 font-mono font-bold text-emerald-900 tabular-nums text-xs md:text-sm">
                     {formatSubLedgerNumber(
                       subLedgerData.openingBal + subLedgerData.totalPeriodDebit,
                       subLedgerData.currency,
                       false
                     )}
                   </td>
-                  <td style={{ width: '8%' }} className="py-2 px-1 text-right border-r border-slate-300 font-mono font-bold text-rose-900 tabular-nums text-xs md:text-sm">
+                  <td style={{ width: dynamicColWidths.credit }} className="py-2 px-1 text-right border-r border-slate-300 font-mono font-bold text-rose-900 tabular-nums text-xs md:text-sm">
                     {formatSubLedgerNumber(subLedgerData.totalPeriodCredit, subLedgerData.currency, true)}
                   </td>
-                  <td style={{ width: '9%' }} className="py-2 px-1 text-right border-r border-slate-300 font-mono font-black text-slate-900 tabular-nums text-sm md:text-base">
+                  <td style={{ width: dynamicColWidths.balance }} className="py-2 px-1 text-right border-r border-slate-300 font-mono font-black text-slate-900 tabular-nums text-sm md:text-base">
                     {formatSubLedgerNumber(subLedgerData.closingBalance, subLedgerData.currency, false)}
                   </td>
-                  <td style={{ width: '46%' }} className="py-2 px-3 border-r border-slate-300"></td>
+                  <td style={{ width: dynamicColWidths.remarks }} className="py-2 px-3 border-r border-slate-300"></td>
                 </tr>
               </tbody>
             </table>
@@ -2595,7 +2946,7 @@ export const ReportsView: React.FC = () => {
       </div>
 
       {/* 6. Official Printable Document (Exclusively rendered during Print / PDF generation) */}
-      <div className="hidden print:block space-y-2 text-slate-900 bg-white p-0 w-full">
+      <div className="hidden print:block space-y-2 text-slate-900 bg-white p-0 w-full printable-report-wrapper">
         {isSubLedgerEligible && subLedgerData ? (
           /* ========================================================================= */
           /* SUB LEDGER PRINT DOCUMENT (Matching Screenshot 2)                         */
@@ -2623,44 +2974,44 @@ export const ReportsView: React.FC = () => {
             <div className="overflow-hidden border border-slate-400 rounded-xs w-full">
               <table className="w-full text-left border-collapse text-[10px] table-fixed">
                 <colgroup>
-                  <col style={{ width: '4%' }} />
-                  <col style={{ width: '10%' }} />
-                  <col style={{ width: '15%' }} />
-                  <col style={{ width: '8%' }} />
-                  <col style={{ width: '8%' }} />
-                  <col style={{ width: '9%' }} />
-                  <col style={{ width: '46%' }} />
+                  <col style={{ width: dynamicColWidths.sl }} />
+                  <col style={{ width: dynamicColWidths.date }} />
+                  <col style={{ width: dynamicColWidths.account }} />
+                  <col style={{ width: dynamicColWidths.debit }} />
+                  <col style={{ width: dynamicColWidths.credit }} />
+                  <col style={{ width: dynamicColWidths.balance }} />
+                  <col style={{ width: dynamicColWidths.remarks }} />
                 </colgroup>
                 <thead>
                   {/* Invisible 0-height 7-column sizing row that forces Blink/WebKit print engine to lock column ratios */}
                   <tr style={{ height: 0, lineHeight: 0, padding: 0, margin: 0, border: 'none' }}>
-                    <th style={{ width: '4%', height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
-                    <th style={{ width: '10%', height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
-                    <th style={{ width: '15%', height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
-                    <th style={{ width: '8%', height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
-                    <th style={{ width: '8%', height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
-                    <th style={{ width: '9%', height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
-                    <th style={{ width: '46%', height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
+                    <th style={{ width: dynamicColWidths.sl, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
+                    <th style={{ width: dynamicColWidths.date, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
+                    <th style={{ width: dynamicColWidths.account, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
+                    <th style={{ width: dynamicColWidths.debit, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
+                    <th style={{ width: dynamicColWidths.credit, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
+                    <th style={{ width: dynamicColWidths.balance, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
+                    <th style={{ width: dynamicColWidths.remarks, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
                   </tr>
                   <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[9.5px]">
-                    <th rowSpan={2} style={{ width: '4%' }} className="py-1 px-1 text-center border-r border-slate-400">#</th>
-                    <th rowSpan={2} style={{ width: '10%' }} className="py-1 px-1 text-center border-r border-slate-400 whitespace-nowrap">Date</th>
-                    <th rowSpan={2} style={{ width: '15%' }} className="py-1 px-2 border-r border-slate-400">Account</th>
-                    <th colSpan={3} style={{ width: '25%' }} className="py-1 px-1 text-center border-r border-slate-400 border-b border-slate-400 uppercase tracking-wider text-[9px]">
+                    <th rowSpan={2} style={{ width: dynamicColWidths.sl }} className="py-1 px-1 text-center border-r border-slate-400">#</th>
+                    <th rowSpan={2} style={{ width: dynamicColWidths.date }} className="py-1 px-1 text-center border-r border-slate-400 whitespace-nowrap">Date</th>
+                    <th rowSpan={2} style={{ width: dynamicColWidths.account }} className="py-1 px-2 border-r border-slate-400">Account</th>
+                    <th colSpan={3} style={{ width: dynamicColWidths.baseColSpan }} className="py-1 px-1 text-center border-r border-slate-400 border-b border-slate-400 uppercase tracking-wider text-[9px]">
                       Base ({subLedgerData.currency})
                     </th>
-                    <th rowSpan={2} style={{ width: '46%' }} className="py-1 px-2.5 text-left border-slate-400">Remarks</th>
+                    <th rowSpan={2} style={{ width: dynamicColWidths.remarks }} className="py-1 px-2.5 text-left border-slate-400">Remarks</th>
                   </tr>
                   <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[9px]">
-                    <th style={{ width: '8%' }} className="py-1 px-1 text-right border-r border-slate-400">Debit</th>
-                    <th style={{ width: '8%' }} className="py-1 px-1 text-right border-r border-slate-400">Credit</th>
-                    <th style={{ width: '9%' }} className="py-1 px-1 text-right border-r border-slate-400">Balance</th>
+                    <th style={{ width: dynamicColWidths.debit }} className="py-1 px-1 text-right border-r border-slate-400">Debit</th>
+                    <th style={{ width: dynamicColWidths.credit }} className="py-1 px-1 text-right border-r border-slate-400">Credit</th>
+                    <th style={{ width: dynamicColWidths.balance }} className="py-1 px-1 text-right border-r border-slate-400">Balance</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-300 text-slate-900 text-[10px]">
                   {/* Row 1: Account Banner Row */}
                   <tr className="bg-[#D8EEF8] font-bold text-slate-900 border-b border-slate-300 break-inside-avoid">
-                    <td style={{ width: '4%' }} className="py-1 px-1 text-center border-r border-slate-300 font-mono text-[10px]">1</td>
+                    <td style={{ width: dynamicColWidths.sl }} className="py-1 px-1 text-center border-r border-slate-300 font-mono text-[10px]">1</td>
                     <td colSpan={6} className="py-1 px-2 text-center tracking-wide font-black text-xs text-slate-900 uppercase">
                       {subLedgerData.accountBannerTitle}
                     </td>
@@ -2668,49 +3019,49 @@ export const ReportsView: React.FC = () => {
 
                   {/* Row 2: Opening Balance Row */}
                   <tr className="bg-white font-medium border-b border-slate-200 break-inside-avoid">
-                    <td style={{ width: '4%' }} className="py-1 px-1 text-center border-r border-slate-200 font-mono text-slate-600">2</td>
-                    <td style={{ width: '10%' }} className="py-1 px-1 border-r border-slate-200 text-center font-mono text-slate-400">—</td>
-                    <td style={{ width: '15%' }} className="py-1 px-2 border-r border-slate-200 font-bold italic text-slate-900 truncate">
+                    <td style={{ width: dynamicColWidths.sl }} className="py-1 px-1 text-center border-r border-slate-200 font-mono text-slate-600">2</td>
+                    <td style={{ width: dynamicColWidths.date }} className="py-1 px-1 border-r border-slate-200 text-center font-mono text-slate-400">—</td>
+                    <td style={{ width: dynamicColWidths.account }} className="py-1 px-2 border-r border-slate-200 font-bold italic text-slate-900 truncate">
                       Opening Balance
                     </td>
-                    <td style={{ width: '8%' }} className="py-1 px-1 text-right border-r border-slate-200 font-mono font-bold text-slate-900 tabular-nums text-[10.5px]">
+                    <td style={{ width: dynamicColWidths.debit }} className="py-1 px-1 text-right border-r border-slate-200 font-mono font-bold text-slate-900 tabular-nums text-[10.5px]">
                       {formatSubLedgerNumber(subLedgerData.openingBal, subLedgerData.currency, false)}
                     </td>
-                    <td style={{ width: '8%' }} className="py-1 px-1 text-right border-r border-slate-200 font-mono text-slate-400 tabular-nums text-[10.5px]">
+                    <td style={{ width: dynamicColWidths.credit }} className="py-1 px-1 text-right border-r border-slate-200 font-mono text-slate-400 tabular-nums text-[10.5px]">
                       {subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
                     </td>
-                    <td style={{ width: '9%' }} className="py-1 px-1 text-right border-r border-slate-200 font-mono font-black text-slate-900 tabular-nums text-[11px]">
+                    <td style={{ width: dynamicColWidths.balance }} className="py-1 px-1 text-right border-r border-slate-200 font-mono font-black text-slate-900 tabular-nums text-[11px]">
                       {formatSubLedgerNumber(subLedgerData.openingBal, subLedgerData.currency, false)}
                     </td>
-                    <td style={{ width: '46%' }} className="py-1 px-2.5 text-slate-400 italic text-[9.5px]">—</td>
+                    <td style={{ width: dynamicColWidths.remarks }} className="py-1 px-2.5 text-slate-400 italic text-[9.5px]">—</td>
                   </tr>
 
                   {/* Dynamic In-Period Transactions */}
                   {subLedgerData.rows.map((row) => (
                     <tr key={row.id} className="border-b border-slate-200 break-inside-avoid">
-                      <td style={{ width: '4%' }} className="py-1 px-1 text-center border-r border-slate-200 font-mono text-slate-600 text-[10px]">
+                      <td style={{ width: dynamicColWidths.sl }} className="py-1 px-1 text-center border-r border-slate-200 font-mono text-slate-600 text-[10px]">
                         {row.sl}
                       </td>
-                      <td style={{ width: '10%' }} className="py-1 px-1 border-r border-slate-200 font-mono text-slate-700 whitespace-nowrap text-center text-[9.5px]">
+                      <td style={{ width: dynamicColWidths.date }} className="py-1 px-1 border-r border-slate-200 font-mono text-slate-700 whitespace-nowrap text-center text-[9.5px]">
                         {row.formattedDate}
                       </td>
-                      <td style={{ width: '15%' }} className="py-1 px-2 border-r border-slate-200 font-bold text-slate-900 text-[10px] leading-tight">
+                      <td style={{ width: dynamicColWidths.account }} className="py-1 px-2 border-r border-slate-200 font-bold text-slate-900 text-[10px] leading-tight">
                         {row.account}
                       </td>
-                      <td style={{ width: '8%' }} className="py-1 px-1 text-right border-r border-slate-200 font-mono tabular-nums text-[10.5px] font-bold text-slate-900">
+                      <td style={{ width: dynamicColWidths.debit }} className="py-1 px-1 text-right border-r border-slate-200 font-mono tabular-nums text-[10.5px] font-bold text-slate-900">
                         {row.debit > 0
                           ? formatSubLedgerNumber(row.debit, subLedgerData.currency, false)
                           : subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
                       </td>
-                      <td style={{ width: '8%' }} className="py-1 px-1 text-right border-r border-slate-200 font-mono tabular-nums text-[10.5px] font-bold text-rose-800">
+                      <td style={{ width: dynamicColWidths.credit }} className="py-1 px-1 text-right border-r border-slate-200 font-mono tabular-nums text-[10.5px] font-bold text-rose-800">
                         {row.credit > 0
                           ? formatSubLedgerNumber(row.credit, subLedgerData.currency, true)
                           : subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
                       </td>
-                      <td style={{ width: '9%' }} className="py-1 px-1 text-right border-r border-slate-200 font-mono font-black tabular-nums text-[11px] text-slate-900">
+                      <td style={{ width: dynamicColWidths.balance }} className="py-1 px-1 text-right border-r border-slate-200 font-mono font-black tabular-nums text-[11px] text-slate-900">
                         {formatSubLedgerNumber(row.balance, subLedgerData.currency, false)}
                       </td>
-                      <td style={{ width: '46%' }} className="py-1 px-2.5 text-slate-800 text-[10px] leading-snug break-words">
+                      <td style={{ width: dynamicColWidths.remarks }} className="py-1 px-2.5 text-slate-800 text-[10px] leading-snug break-words">
                         {row.remarks || <span className="text-slate-300 italic">—</span>}
                       </td>
                     </tr>
@@ -2718,25 +3069,25 @@ export const ReportsView: React.FC = () => {
 
                   {/* Summary Footer */}
                   <tr className="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-400 break-inside-avoid">
-                    <td style={{ width: '4%' }} className="py-1.5 px-1 text-center border-r border-slate-300 font-mono"></td>
-                    <td style={{ width: '10%' }} className="py-1.5 px-1 border-r border-slate-300"></td>
-                    <td style={{ width: '15%' }} className="py-1.5 px-2 border-r border-slate-300 font-black uppercase text-[10px]">
+                    <td style={{ width: dynamicColWidths.sl }} className="py-1.5 px-1 text-center border-r border-slate-300 font-mono"></td>
+                    <td style={{ width: dynamicColWidths.date }} className="py-1.5 px-1 border-r border-slate-300"></td>
+                    <td style={{ width: dynamicColWidths.account }} className="py-1.5 px-2 border-r border-slate-300 font-black uppercase text-[10px]">
                       {lang === 'bn' ? 'সর্বমোট সমাপ্তি হিসাব (Total / Closing)' : 'Total / Closing Balance'}
                     </td>
-                    <td style={{ width: '8%' }} className="py-1.5 px-1 text-right border-r border-slate-300 font-mono font-bold text-emerald-900 tabular-nums text-[11px]">
+                    <td style={{ width: dynamicColWidths.debit }} className="py-1.5 px-1 text-right border-r border-slate-300 font-mono font-bold text-emerald-900 tabular-nums text-[11px]">
                       {formatSubLedgerNumber(
                         subLedgerData.openingBal + subLedgerData.totalPeriodDebit,
                         subLedgerData.currency,
                         false
                       )}
                     </td>
-                    <td style={{ width: '8%' }} className="py-1.5 px-1 text-right border-r border-slate-300 font-mono font-bold text-rose-900 tabular-nums text-[11px]">
+                    <td style={{ width: dynamicColWidths.credit }} className="py-1.5 px-1 text-right border-r border-slate-300 font-mono font-bold text-rose-900 tabular-nums text-[11px]">
                       {formatSubLedgerNumber(subLedgerData.totalPeriodCredit, subLedgerData.currency, true)}
                     </td>
-                    <td style={{ width: '9%' }} className="py-1.5 px-1 text-right border-r border-slate-300 font-mono font-black text-slate-900 tabular-nums text-[11.5px]">
+                    <td style={{ width: dynamicColWidths.balance }} className="py-1.5 px-1 text-right border-r border-slate-300 font-mono font-black text-slate-900 tabular-nums text-[11.5px]">
                       {formatSubLedgerNumber(subLedgerData.closingBalance, subLedgerData.currency, false)}
                     </td>
-                    <td style={{ width: '46%' }} className="py-1.5 px-2.5 border-r border-slate-300"></td>
+                    <td style={{ width: dynamicColWidths.remarks }} className="py-1.5 px-2.5 border-r border-slate-300"></td>
                   </tr>
                 </tbody>
               </table>
