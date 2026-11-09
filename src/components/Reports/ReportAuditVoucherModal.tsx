@@ -23,11 +23,13 @@ import {
 } from 'lucide-react';
 import { formatDate, formatCurrency } from '../../utils/formatters';
 import {
-  captureElementAsBlob,
+  VoucherData,
+  drawVoucherCardCanvas,
+  canvasToBlob,
   downloadBlobAsImage,
   copyBlobToClipboard,
-  shareVoucherAsImageToWhatsApp,
 } from '../../utils/voucherImageGenerator';
+import { WhatsAppImageShareModal } from '../Common/WhatsAppImageShareModal';
 
 export interface AuditReportRow {
   id: string;
@@ -67,6 +69,7 @@ export const ReportAuditVoucherModal: React.FC<ReportAuditVoucherModalProps> = (
   const [copied, setCopied] = useState(false);
   const [isProcessingImage, setIsProcessingImage] = useState(false);
   const [imageToast, setImageToast] = useState<string | null>(null);
+  const [isWhatsAppShareModalOpen, setIsWhatsAppShareModalOpen] = useState(false);
   const voucherRef = useRef<HTMLDivElement>(null);
 
   if (!isOpen || !row) return null;
@@ -79,6 +82,23 @@ export const ReportAuditVoucherModal: React.FC<ReportAuditVoucherModalProps> = (
   const handlePrint = () => {
     window.print();
   };
+
+  const getVoucherData = (): VoucherData => ({
+    id: row.id,
+    date: formatDate(row.date, lang),
+    currency: row.currency,
+    amount: row.amount,
+    type: row.type,
+    sectionNameBn: row.sectionNameBn,
+    sectionNameEn: row.sectionNameEn,
+    categoryNameBn: row.categoryNameBn,
+    categoryNameEn: row.categoryNameEn,
+    borrowerName: row.borrowerName,
+    bankName: row.bankName,
+    status: row.status,
+    note: row.note,
+    voucherNo: row.voucherNo,
+  });
 
   const getVoucherText = () => {
     const formattedAmount =
@@ -114,46 +134,20 @@ export const ReportAuditVoucherModal: React.FC<ReportAuditVoucherModalProps> = (
 
   /**
    * Share voucher strictly as an IMAGE to WhatsApp.
+   * Opens the dedicated WhatsApp Image Share dialog with live preview & 1-click copy/send.
    */
-  const handleWhatsAppShare = async () => {
-    if (!voucherRef.current) return;
-    setIsProcessingImage(true);
-    setImageToast(lang === 'bn' ? '📸 ভাউচারের ছবি তৈরি হচ্ছে...' : '📸 Generating voucher image...');
-
-    try {
-      const fileName = `voucher-${row.voucherNo ? row.voucherNo.replace(/[^a-zA-Z0-9_-]/g, '') : row.id.slice(0, 8)}.png`;
-      const result = await shareVoucherAsImageToWhatsApp({
-        element: voucherRef.current,
-        fileName,
-        captionText: `🧾 ভাউচার: #${row.voucherNo || ''} (${row.amount} ${row.currency})`,
-      });
-
-      if (result.method === 'native-share') {
-        setImageToast(lang === 'bn' ? '✓ হোয়াটসঅ্যাপে ছবি পাঠানো হয়েছে!' : '✓ Shared image to WhatsApp!');
-      } else {
-        setImageToast(
-          lang === 'bn'
-            ? '✓ ছবিটি কপি ও ডাউনলোড হয়েছে! হোয়াটসঅ্যাপে পেস্ট (Ctrl+V) করুন।'
-            : '✓ Image copied & downloaded! Paste (Ctrl+V) into WhatsApp.'
-        );
-      }
-    } catch (err) {
-      console.error('WhatsApp image share error:', err);
-      setImageToast(lang === 'bn' ? 'ছবি তৈরিতে সমস্যা হয়েছে' : 'Failed to generate image');
-    } finally {
-      setIsProcessingImage(false);
-      setTimeout(() => setImageToast(null), 4000);
-    }
+  const handleWhatsAppShare = () => {
+    setIsWhatsAppShareModalOpen(true);
   };
 
   /**
-   * Directly download the voucher card as a PNG image.
+   * Directly download the voucher card as a PNG image (Pure Canvas - 100% reliable).
    */
   const handleDownloadImage = async () => {
-    if (!voucherRef.current) return;
     setIsProcessingImage(true);
     try {
-      const blob = await captureElementAsBlob(voucherRef.current);
+      const canvas = drawVoucherCardCanvas(getVoucherData());
+      const blob = await canvasToBlob(canvas);
       const fileName = `voucher-${row.voucherNo ? row.voucherNo.replace(/[^a-zA-Z0-9_-]/g, '') : row.id.slice(0, 8)}.png`;
       downloadBlobAsImage(blob, fileName);
       setImageToast(lang === 'bn' ? '✓ ভাউচার ছবি ডাউনলোড হয়েছে!' : '✓ Image downloaded!');
@@ -167,22 +161,24 @@ export const ReportAuditVoucherModal: React.FC<ReportAuditVoucherModalProps> = (
   };
 
   /**
-   * Copy the voucher PNG image directly to clipboard.
+   * Copy the voucher PNG image directly to clipboard (Pure Canvas - 100% reliable).
    */
   const handleCopyImageToClipboard = async () => {
-    if (!voucherRef.current) return;
     setIsProcessingImage(true);
     try {
-      const blob = await captureElementAsBlob(voucherRef.current);
+      const canvas = drawVoucherCardCanvas(getVoucherData());
+      const blob = await canvasToBlob(canvas);
       const ok = await copyBlobToClipboard(blob);
       if (ok) {
         setImageToast(lang === 'bn' ? '✓ ভাউচার ছবিটি কপি হয়েছে! চ্যাটে পেস্ট (Ctrl+V) করুন।' : '✓ Image copied to clipboard!');
       } else {
-        downloadBlobAsImage(blob, 'voucher.png');
+        const fileName = `voucher-${row.voucherNo ? row.voucherNo.replace(/[^a-zA-Z0-9_-]/g, '') : row.id.slice(0, 8)}.png`;
+        downloadBlobAsImage(blob, fileName);
         setImageToast(lang === 'bn' ? 'ছবিটি ডাউনলোড হয়েছে' : 'Image downloaded');
       }
     } catch (err) {
       console.error(err);
+      setImageToast(lang === 'bn' ? 'ছবি কপি করা যায়নি' : 'Copy failed');
     } finally {
       setIsProcessingImage(false);
       setTimeout(() => setImageToast(null), 3000);
@@ -479,6 +475,14 @@ export const ReportAuditVoucherModal: React.FC<ReportAuditVoucherModalProps> = (
           </button>
         </div>
       </div>
+
+      {/* Dedicated WhatsApp Image Share Dialog */}
+      <WhatsAppImageShareModal
+        isOpen={isWhatsAppShareModalOpen}
+        onClose={() => setIsWhatsAppShareModalOpen(false)}
+        lang={lang}
+        voucherData={getVoucherData()}
+      />
     </div>
   );
 };

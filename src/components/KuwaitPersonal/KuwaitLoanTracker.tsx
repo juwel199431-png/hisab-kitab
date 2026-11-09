@@ -34,6 +34,8 @@ import { formatCurrency, formatDate } from '../../utils/formatters';
 import { exportToCSV } from '../../utils/storage';
 import { KuwaitReceivableBorrower, KuwaitReceivableTransaction } from '../../types/finance';
 import { ReportAuditVoucherModal, AuditReportRow } from '../Reports/ReportAuditVoucherModal';
+import { WhatsAppImageShareModal } from '../Common/WhatsAppImageShareModal';
+import { VoucherData, StatementData } from '../../utils/voucherImageGenerator';
 
 export const KuwaitLoanTracker: React.FC = () => {
   const {
@@ -67,6 +69,11 @@ export const KuwaitLoanTracker: React.FC = () => {
   const [editingTx, setEditingTx] = useState<KuwaitReceivableTransaction | null>(null);
   const [editingBorrower, setEditingBorrower] = useState<KuwaitReceivableBorrower | null>(null);
   const [selectedVoucherRow, setSelectedVoucherRow] = useState<AuditReportRow | null>(null);
+
+  // WhatsApp Image Share Modal State
+  const [sharingStatementData, setSharingStatementData] = useState<StatementData | null>(null);
+  const [sharingTxVoucherData, setSharingTxVoucherData] = useState<VoucherData | null>(null);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   // Form State: New Lend
   const [lendBorrowerMode, setLendBorrowerMode] = useState<'existing' | 'new'>('existing');
@@ -253,24 +260,21 @@ export const KuwaitLoanTracker: React.FC = () => {
     setCollectNote('');
   };
 
-  // WhatsApp Reminder Handler
+  // WhatsApp Reminder Handler (Sends as high-res Image card)
   const handleSendWhatsAppReminder = (borrower: KuwaitReceivableBorrower) => {
     const bal = getBorrowerBalance(borrower.id);
-    const dueInfo = borrower.dueDate
-      ? lang === 'bn'
-        ? `\nনির্ধারিত পরিশোধ তারিখ: ${borrower.dueDate}`
-        : `\nTarget Due Date: ${borrower.dueDate}`
-      : '';
-    const message =
-      lang === 'bn'
-        ? `সালামু আলাইকুম ভাই ${borrower.name}।\nকুয়েত পার্সোনাল লোন হিসাব বিবরণী:\n• মোট লোন গ্রহণ: ${bal.totalLent.toFixed(3)} KD\n• এ পর্যন্ত ফেরত আদায়: ${bal.totalCollected.toFixed(3)} KD\n• বর্তমানে অবশিষ্ট পাওনা: ${bal.remaining.toFixed(3)} KD${dueInfo}\n\nমেহেরবানী করে দ্রুত পাওনা অর্থ পরিশোধ করবেন। জাযাকাল্লাহু খাইরান!`
-        : `Assalamu Alaikum brother ${borrower.name}.\nPersonal Loan Statement Reminder:\n• Total Loan: ${bal.totalLent.toFixed(3)} KD\n• Total Repaid: ${bal.totalCollected.toFixed(3)} KD\n• Remaining Due: ${bal.remaining.toFixed(3)} KD${dueInfo}\n\nPlease arrange repayment at your earliest convenience. Thank you!`;
-
-    const cleanPhone = borrower.phone ? borrower.phone.replace(/[^0-9]/g, '') : '';
-    const url = cleanPhone
-      ? `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(message)}`
-      : `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
-    window.open(url, '_blank');
+    setSharingStatementData({
+      borrowerName: borrower.name,
+      phone: borrower.phone,
+      date: new Date().toLocaleDateString('en-GB'),
+      totalLent: bal.totalLent,
+      totalCollected: bal.totalCollected,
+      remainingDue: bal.remaining,
+      currency: 'KWD',
+      dueDate: borrower.dueDate,
+    });
+    setSharingTxVoucherData(null);
+    setIsShareModalOpen(true);
   };
 
   // Submit Edit Transaction
@@ -930,10 +934,36 @@ export const KuwaitLoanTracker: React.FC = () => {
                               borrowerName: tx.borrowerName,
                             });
                           }}
-                          className="p-1 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-colors cursor-pointer"
-                          title={lang === 'bn' ? 'অডিট স্লিপ দেখুন ও হোয়াটসঅ্যাপে ছবি পাঠান' : 'View slip & share image to WhatsApp'}
+                          className="p-1 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors cursor-pointer"
+                          title={lang === 'bn' ? 'অডিট স্লিপ দেখুন ও প্রিন্ট করুন' : 'View slip & print'}
                         >
                           <Eye className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            const b = borrowers.find((x) => x.id === tx.borrowerId);
+                            setSharingTxVoucherData({
+                              id: tx.id,
+                              date: formatDate(tx.date, lang),
+                              currency: tx.currency,
+                              amount: tx.amount,
+                              type: tx.type === 'lend' ? 'loan' : 'income',
+                              sectionNameBn: 'Personal Receivable Loan (ব্যক্তিগত পাওনা লোন)',
+                              sectionNameEn: 'Personal Receivable Loan',
+                              categoryNameBn: tx.type === 'lend' ? `লোন প্রদান: ${tx.borrowerName}` : `কিস্তি আদায়: ${tx.borrowerName}`,
+                              categoryNameEn: tx.type === 'lend' ? `Lend: ${tx.borrowerName}` : `Collect: ${tx.borrowerName}`,
+                              borrowerName: tx.borrowerName,
+                              voucherNo: tx.voucherNo,
+                              note: tx.note,
+                              recipientPhone: b?.phone,
+                            });
+                            setSharingStatementData(null);
+                            setIsShareModalOpen(true);
+                          }}
+                          className="p-1 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded transition-colors cursor-pointer"
+                          title={lang === 'bn' ? 'হোয়াটসঅ্যাপে ছবি আকারে ভাউচার পাঠান' : 'Send Voucher Image to WhatsApp'}
+                        >
+                          <MessageCircle className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => setEditingTx(tx)}
@@ -1481,6 +1511,16 @@ export const KuwaitLoanTracker: React.FC = () => {
         onClose={() => setSelectedVoucherRow(null)}
         row={selectedVoucherRow}
         lang={lang}
+      />
+
+      {/* Dedicated WhatsApp Image Share Modal */}
+      <WhatsAppImageShareModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        lang={lang}
+        voucherData={sharingTxVoucherData}
+        statementData={sharingStatementData}
+        defaultPhone={sharingStatementData?.phone || sharingTxVoucherData?.recipientPhone}
       />
     </div>
   );
