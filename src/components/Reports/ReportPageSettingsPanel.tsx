@@ -39,6 +39,10 @@ export interface ReportPageSettings {
   isBold: boolean;
   isItalic: boolean;
   rowPadding: 'compact' | 'normal' | 'relaxed';
+  // Letterhead & Background Watermark
+  showLetterhead: boolean;
+  showWatermark: boolean;
+  watermarkOpacity: number; // 0.03, 0.05, 0.08
 }
 
 export const DEFAULT_PAGE_SETTINGS: ReportPageSettings = {
@@ -60,9 +64,12 @@ export const DEFAULT_PAGE_SETTINGS: ReportPageSettings = {
   isBold: false,
   isItalic: false,
   rowPadding: 'normal',
+  showLetterhead: true,
+  showWatermark: true,
+  watermarkOpacity: 0.05,
 };
 
-export const PAGE_SETTINGS_STORAGE_KEY = 'hisab_kitab_report_page_settings_v4';
+export const PAGE_SETTINGS_STORAGE_KEY = 'hisab_kitab_report_page_settings_v5';
 
 export const loadSavedPageSettings = (): ReportPageSettings => {
   try {
@@ -676,6 +683,109 @@ export const ReportPageSettingsPanel: React.FC<ReportPageSettingsPanelProps> = (
                   <Save className="w-3.5 h-3.5 text-emerald-400" />
                   <span>{lang === 'bn' ? 'এই মাপ ও মার্জিন সেভ করুন' : 'Save Dimensions & Margins'}</span>
                 </button>
+              </div>
+            </div>
+
+            {/* Box 5: Letterhead & Aesthetic Background Watermark (Requested by User) */}
+            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs space-y-3 md:col-span-2 lg:col-span-4">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">🏛️</span>
+                  <div>
+                    <span className="text-xs font-bold text-slate-900 block">
+                      {lang === 'bn' ? 'অফিসিয়াল লেটারহেড ও ব্যাকগ্রাউন্ড সিকিউরিটি ডিজাইন' : 'Official Letterhead & Aesthetic Background Design'}
+                    </span>
+                    <span className="text-[10px] text-slate-500">
+                      {lang === 'bn' ? 'প্রিন্ট বা পিডিএফ করার সময় পেজের শীর্ষে আকর্ষণীয় লেটারহেড ও ব্যাকগ্রাউন্ডে ওয়াটারমার্ক শো করবে' : 'Shows official logo letterhead on top and security watermark in background'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    {lang === 'bn' ? 'প্রিন্ট ও PDF রেডি' : 'Print / PDF Ready'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                {/* 1. Letterhead Toggle */}
+                <div className="p-3 rounded-lg border bg-slate-50 border-slate-200 flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-bold text-slate-800 block">
+                      {lang === 'bn' ? 'লেটারহেড (শীর্ষ ব্যানার):' : 'Letterhead (Header):'}
+                    </span>
+                    <span className="text-[10px] text-slate-500">
+                      {lang === 'bn' ? 'লোগো ও অফিসিয়াল নাম' : 'Logo & Official Title'}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onChange({ showLetterhead: !settings.showLetterhead })}
+                    className={`px-3 py-1 text-xs font-bold rounded-lg border transition-all cursor-pointer ${
+                      settings.showLetterhead
+                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
+                        : 'bg-white text-slate-500 border-slate-300'
+                    }`}
+                  >
+                    {settings.showLetterhead ? (lang === 'bn' ? 'চালু (On)' : 'On') : (lang === 'bn' ? 'বন্ধ (Off)' : 'Off')}
+                  </button>
+                </div>
+
+                {/* 2. Watermark Toggle */}
+                <div className="p-3 rounded-lg border bg-slate-50 border-slate-200 flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-bold text-slate-800 block">
+                      {lang === 'bn' ? 'ব্যাকগ্রাউন্ড ওয়াটারমার্ক:' : 'Security Watermark:'}
+                    </span>
+                    <span className="text-[10px] text-slate-500">
+                      {lang === 'bn' ? 'সিকিউরিটি সিল ও প্যাটার্ন' : 'Guilloche Seal Pattern'}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onChange({ showWatermark: !settings.showWatermark })}
+                    className={`px-3 py-1 text-xs font-bold rounded-lg border transition-all cursor-pointer ${
+                      settings.showWatermark
+                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs'
+                        : 'bg-white text-slate-500 border-slate-300'
+                    }`}
+                  >
+                    {settings.showWatermark ? (lang === 'bn' ? 'চালু (On)' : 'On') : (lang === 'bn' ? 'বন্ধ (Off)' : 'Off')}
+                  </button>
+                </div>
+
+                {/* 3. Watermark Opacity Intensity */}
+                <div className="p-3 rounded-lg border bg-slate-50 border-slate-200">
+                  <div className="flex justify-between items-center mb-1.5">
+                    <span className="text-xs font-bold text-slate-800">
+                      {lang === 'bn' ? 'ওয়াটারমার্কের গভীরতা:' : 'Watermark Intensity:'}
+                    </span>
+                    <span className="text-[10px] font-mono text-indigo-700 font-bold">
+                      {settings.watermarkOpacity === 0.03 ? (lang === 'bn' ? 'হালকা (Subtle)' : 'Subtle') : settings.watermarkOpacity === 0.08 ? (lang === 'bn' ? 'স্পষ্ট (Bold)' : 'Bold') : (lang === 'bn' ? 'স্বাভাবিক (Normal)' : 'Normal')}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-1">
+                    {[
+                      { val: 0.03, label: lang === 'bn' ? 'হালকা' : 'Subtle' },
+                      { val: 0.05, label: lang === 'bn' ? 'স্বাভাবিক' : 'Normal' },
+                      { val: 0.08, label: lang === 'bn' ? 'স্পষ্ট' : 'Bold' },
+                    ].map((op) => (
+                      <button
+                        key={op.val}
+                        type="button"
+                        onClick={() => onChange({ watermarkOpacity: op.val })}
+                        className={`py-1 text-[11px] font-medium rounded-md border transition-all cursor-pointer ${
+                          settings.watermarkOpacity === op.val
+                            ? 'bg-slate-900 text-white border-slate-900 font-bold shadow-2xs'
+                            : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
+                        }`}
+                      >
+                        {op.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           </div>

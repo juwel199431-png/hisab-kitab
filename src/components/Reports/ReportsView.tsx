@@ -55,6 +55,10 @@ import {
   loadSavedPageSettings,
   savePageSettingsToStorage,
 } from './ReportPageSettingsPanel';
+import {
+  ReportLetterhead,
+  ReportWatermarkBackground,
+} from './ReportLetterhead';
 
 type AccountFilter =
   | 'all'
@@ -220,12 +224,20 @@ export const ReportsView: React.FC = () => {
           print-color-adjust: exact !important;
         }
         .printable-report-wrapper {
+          position: relative !important;
           zoom: ${pageSettings.scale / 100} !important;
           font-size: ${pageSettings.fontSizePt}pt !important;
           font-family: ${fontFamilyRule} !important;
           font-weight: ${pageSettings.isBold ? '700' : '400'} !important;
           font-style: ${pageSettings.isItalic ? 'italic' : 'normal'} !important;
           width: 100% !important;
+          background: #ffffff !important;
+        }
+        .report-watermark-layer {
+          position: fixed !important;
+          inset: 0 !important;
+          z-index: 0 !important;
+          pointer-events: none !important;
         }
       }
     `;
@@ -1595,7 +1607,7 @@ export const ReportsView: React.FC = () => {
           {/* Paper Mockup Container with exact custom margins */}
           <div className="overflow-x-auto py-6 flex justify-center bg-slate-950/70 rounded-xl p-4">
             <div
-              className="bg-white text-slate-900 shadow-2xl rounded-xs transition-all origin-top border border-slate-300 overflow-hidden"
+              className="bg-white text-slate-900 shadow-2xl rounded-xs transition-all origin-top border border-slate-300 overflow-hidden relative"
               style={{
                 width: pageSettings.orientation === 'portrait' ? '210mm' : '297mm',
                 minHeight: pageSettings.orientation === 'portrait' ? '297mm' : '210mm',
@@ -1607,9 +1619,30 @@ export const ReportsView: React.FC = () => {
                 zoom: pageSettings.scale / 100,
               }}
             >
+              {/* Aesthetic Security Watermark Background */}
+              {pageSettings.showWatermark && (
+                <ReportWatermarkBackground
+                  opacity={pageSettings.watermarkOpacity}
+                  showWatermark={pageSettings.showWatermark}
+                />
+              )}
+
               {/* Report content inside the live paper preview */}
               {isSubLedgerEligible && subLedgerData ? (
-                <div className="space-y-2 font-sans w-full">
+                <div className="space-y-2 font-sans w-full relative z-10">
+                  {/* Official Letterhead */}
+                  {pageSettings.showLetterhead && (
+                    <ReportLetterhead
+                      title={lang === 'bn' ? 'অফিসিয়াল সাব লেজার অডিট স্টেটমেন্ট' : 'Official Sub Ledger Statement'}
+                      subtitle={lang === 'bn' ? 'সংশ্লিষ্ট অ্যাকাউন্টের বিস্তারিত ডেবিট, ক্রেডিট ও ক্লোজিং খতিয়ান' : 'Detailed Debit, Credit & Closing Ledger Statement'}
+                      accountName={subLedgerData.accountBannerTitle}
+                      startDate={startDate}
+                      endDate={endDate}
+                      currency={subLedgerData.currency}
+                      lang={lang}
+                    />
+                  )}
+
                   <div className="flex justify-between items-baseline py-1 border-b border-slate-300">
                     <div className="text-sm font-bold text-[#1E536E]">
                       Sub ledger &nbsp;
@@ -1742,20 +1775,33 @@ export const ReportsView: React.FC = () => {
                   </div>
                 </div>
               ) : (
-                <div className="space-y-3 font-sans w-full">
-                  <div className="border-b-2 border-slate-900 pb-2 flex justify-between items-start">
-                    <div>
-                      <h2 className="text-sm font-bold uppercase tracking-tight text-slate-900">
-                        {lang === 'bn' ? 'হিসাব কিতাব — অফিসিয়াল লেনদেন অডিট ও খতিয়ান রিপোর্ট' : 'Financial Statement & Audit Ledger Report'}
-                      </h2>
-                      <p className="text-[10px] text-slate-600">
-                        {startDate && endDate ? `${formatDate(startDate, lang)} — ${formatDate(endDate, lang)}` : 'All Time'} · {filteredRows.length} Records
-                      </p>
+                <div className="space-y-3 font-sans w-full relative z-10">
+                  {/* Official Letterhead */}
+                  {pageSettings.showLetterhead ? (
+                    <ReportLetterhead
+                      title={lang === 'bn' ? 'হিসাব কিতাব — অফিসিয়াল লেনদেন অডিট ও খতিয়ান রিপোর্ট' : 'Financial Statement & Audit Ledger Report'}
+                      subtitle={lang === 'bn' ? 'ব্যক্তিগত ও কর্মক্ষেত্রের সম্পূর্ণ সমন্বিত হিসাব বিবরণী' : 'Official Financial & Audit Ledger Statement'}
+                      accountName={accountFilter === 'all' ? (lang === 'bn' ? 'সকল হেড (All Accounts)' : 'All Accounts') : accountFilter}
+                      startDate={startDate}
+                      endDate={endDate}
+                      currency={accountFilter === 'bd-bank' ? 'BDT' : 'KWD'}
+                      lang={lang}
+                    />
+                  ) : (
+                    <div className="border-b-2 border-slate-900 pb-2 flex justify-between items-start">
+                      <div>
+                        <h2 className="text-sm font-bold uppercase tracking-tight text-slate-900">
+                          {lang === 'bn' ? 'হিসাব কিতাব — অফিসিয়াল লেনদেন অডিট ও খতিয়ান রিপোর্ট' : 'Financial Statement & Audit Ledger Report'}
+                        </h2>
+                        <p className="text-[10px] text-slate-600">
+                          {startDate && endDate ? `${formatDate(startDate, lang)} — ${formatDate(endDate, lang)}` : 'All Time'} · {filteredRows.length} Records
+                        </p>
+                      </div>
+                      <span className="px-2 py-0.5 bg-slate-100 border border-slate-300 rounded font-bold uppercase text-[9px]">
+                        Verified Audit
+                      </span>
                     </div>
-                    <span className="px-2 py-0.5 bg-slate-100 border border-slate-300 rounded font-bold uppercase text-[9px]">
-                      Verified Audit
-                    </span>
-                  </div>
+                  )}
                   <div className="border border-slate-400 rounded-xs overflow-hidden">
                     <table className="w-full text-left border-collapse text-[10px]">
                       <thead>
@@ -2797,9 +2843,32 @@ export const ReportsView: React.FC = () => {
         {/* Dynamic Display: Sub Ledger View vs Standard List View */}
         {isSubLedgerEligible && viewMode === 'sub-ledger' && subLedgerData ? (
           /* On-screen Sub Ledger (Exact Match to Screenshot 2) */
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto relative">
+            {/* On-Screen Security Watermark */}
+            {pageSettings.showWatermark && (
+              <ReportWatermarkBackground
+                opacity={pageSettings.watermarkOpacity}
+                showWatermark={pageSettings.showWatermark}
+              />
+            )}
+
+            {/* On-Screen Official Letterhead */}
+            {pageSettings.showLetterhead && (
+              <div className="p-4 sm:p-5 pb-2 bg-white border-b border-slate-200 relative z-10">
+                <ReportLetterhead
+                  title={lang === 'bn' ? 'অফিসিয়াল সাব লেজার অডিট স্টেটমেন্ট' : 'Official Sub Ledger Statement'}
+                  subtitle={lang === 'bn' ? 'সংশ্লিষ্ট অ্যাকাউন্টের বিস্তারিত ডেবিট, ক্রেডিট ও ক্লোজিং খতিয়ান' : 'Detailed Debit, Credit & Closing Ledger Statement'}
+                  accountName={subLedgerData.accountBannerTitle}
+                  startDate={startDate}
+                  endDate={endDate}
+                  currency={subLedgerData.currency}
+                  lang={lang}
+                />
+              </div>
+            )}
+
             {/* Sub ledger Title Bar */}
-            <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs relative z-10">
               <div className="font-bold text-[#1E536E] text-sm font-sans flex items-center gap-2">
                 <span>Sub ledger</span>
                 <span className="font-mono text-slate-700 font-semibold text-xs">
@@ -2959,8 +3028,31 @@ export const ReportsView: React.FC = () => {
           </div>
         ) : (
           /* Standard Audit Ledger Table */
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse border border-slate-300 text-xs">
+          <div className="overflow-x-auto relative">
+            {/* On-Screen Security Watermark */}
+            {pageSettings.showWatermark && (
+              <ReportWatermarkBackground
+                opacity={pageSettings.watermarkOpacity}
+                showWatermark={pageSettings.showWatermark}
+              />
+            )}
+
+            {/* On-Screen Official Letterhead */}
+            {pageSettings.showLetterhead && (
+              <div className="p-4 sm:p-5 pb-2 bg-white border-b border-slate-200 relative z-10">
+                <ReportLetterhead
+                  title={lang === 'bn' ? 'হিসাব কিতাব — অফিসিয়াল লেনদেন অডিট ও খতিয়ান রিপোর্ট' : 'Financial Statement & Audit Ledger Report'}
+                  subtitle={lang === 'bn' ? 'ব্যক্তিগত ও কর্মক্ষেত্রের সম্পূর্ণ সমন্বিত হিসাব বিবরণী' : 'Official Financial & Audit Ledger Statement'}
+                  accountName={accountFilter === 'all' ? (lang === 'bn' ? 'সকল হেড (All Accounts)' : 'All Accounts') : accountFilter}
+                  startDate={startDate}
+                  endDate={endDate}
+                  currency={accountFilter === 'bd-bank' ? 'BDT' : 'KWD'}
+                  lang={lang}
+                />
+              </div>
+            )}
+
+            <table className="w-full text-left border-collapse border border-slate-300 text-xs relative z-10">
               <thead>
                 <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[11px]">
                   <th
@@ -3293,12 +3385,33 @@ export const ReportsView: React.FC = () => {
       </div>
 
       {/* 6. Official Printable Document (Exclusively rendered during Print / PDF generation) */}
-      <div className="hidden print:block space-y-2 text-slate-900 bg-white p-0 w-full printable-report-wrapper">
+      <div className="hidden print:block space-y-2 text-slate-900 bg-white p-0 w-full printable-report-wrapper relative">
+        {/* Aesthetic Background Security Watermark Layer for Print & PDF */}
+        {pageSettings.showWatermark && (
+          <ReportWatermarkBackground
+            opacity={pageSettings.watermarkOpacity}
+            showWatermark={pageSettings.showWatermark}
+          />
+        )}
+
         {isSubLedgerEligible && subLedgerData ? (
           /* ========================================================================= */
           /* SUB LEDGER PRINT DOCUMENT (Matching Screenshot 2)                         */
           /* ========================================================================= */
-          <div className="space-y-2 font-sans w-full">
+          <div className="space-y-2 font-sans w-full relative z-10">
+            {/* Official Modern Letterhead */}
+            {pageSettings.showLetterhead && (
+              <ReportLetterhead
+                title={lang === 'bn' ? 'অফিসিয়াল সাব লেজার অডিট স্টেটমেন্ট' : 'Official Sub Ledger Statement'}
+                subtitle={lang === 'bn' ? 'সংশ্লিষ্ট অ্যাকাউন্টের বিস্তারিত ডেবিট, ক্রেডিট ও ক্লোজিং খতিয়ান' : 'Detailed Debit, Credit & Closing Ledger Statement'}
+                accountName={subLedgerData.accountBannerTitle}
+                startDate={startDate}
+                endDate={endDate}
+                currency={subLedgerData.currency}
+                lang={lang}
+              />
+            )}
+
             {/* Top Sub Ledger Title Bar */}
             <div className="flex justify-between items-baseline py-1 border-b border-slate-300">
               <div className="text-base font-bold text-[#1E536E] font-sans">
@@ -3456,41 +3569,53 @@ export const ReportsView: React.FC = () => {
           /* ========================================================================= */
           /* STANDARD FINANCIAL REPORT (Preserved for single-direction heads & 'all')  */
           /* ========================================================================= */
-          <>
+          <div className="space-y-3 font-sans w-full relative z-10">
             {/* Official Header & Letterhead */}
-            <div className="border-b-2 border-slate-900 pb-4 flex justify-between items-start">
-              <div>
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-slate-900 text-white font-bold flex items-center justify-center text-lg">
-                    ৳
+            {pageSettings.showLetterhead ? (
+              <ReportLetterhead
+                title={lang === 'bn' ? 'হিসাব কিতাব — অফিসিয়াল লেনদেন অডিট ও খতিয়ান রিপোর্ট' : 'Financial Statement & Audit Ledger Report'}
+                subtitle={lang === 'bn' ? 'ব্যক্তিগত ও কর্মক্ষেত্রের সম্পূর্ণ সমন্বিত হিসাব বিবরণী' : 'Official Financial & Audit Ledger Statement'}
+                accountName={accountFilter === 'all' ? (lang === 'bn' ? 'সকল হেড (All Accounts)' : 'All Accounts') : accountFilter}
+                startDate={startDate}
+                endDate={endDate}
+                currency={accountFilter === 'bd-bank' ? 'BDT' : 'KWD'}
+                lang={lang}
+              />
+            ) : (
+              <div className="border-b-2 border-slate-900 pb-4 flex justify-between items-start">
+                <div>
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-slate-900 text-white font-bold flex items-center justify-center text-lg">
+                      ৳
+                    </div>
+                    <div>
+                      <h1 className="text-xl font-bold uppercase tracking-tight text-slate-900">
+                        {lang === 'bn' ? 'হিসাব কিতাব — অফিসিয়াল লেনদেন অডিট ও খতিয়ান রিপোর্ট' : 'Financial Statement & Audit Ledger Report'}
+                      </h1>
+                      <p className="text-xs text-slate-600 font-medium">
+                        {lang === 'bn' ? 'ব্যক্তিগত ও কর্মক্ষেত্রের সম্পূর্ণ সমন্বিত হিসাব বিবরণী' : 'Official Financial & Audit Ledger Statement'}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h1 className="text-xl font-bold uppercase tracking-tight text-slate-900">
-                      {lang === 'bn' ? 'হিসাব কিতাব — অফিসিয়াল লেনদেন অডিট ও খতিয়ান রিপোর্ট' : 'Financial Statement & Audit Ledger Report'}
-                    </h1>
-                    <p className="text-xs text-slate-600 font-medium">
-                      {lang === 'bn' ? 'ব্যক্তিগত ও কর্মক্ষেত্রের সম্পূর্ণ সমন্বিত হিসাব বিবরণী' : 'Official Financial & Audit Ledger Statement'}
-                    </p>
+
+                  <div className="mt-3 flex items-center gap-2 text-xs text-slate-700">
+                    <span><strong>{lang === 'bn' ? 'অ্যাকাউন্ট / হেড:' : 'Account:'}</strong> {accountFilter === 'all' ? (lang === 'bn' ? 'সকল হেড (All)' : 'All Accounts') : accountFilter}</span>
+                    <span aria-hidden="true">·</span>
+                    <span><strong>{lang === 'bn' ? 'সময়কাল:' : 'Period:'}</strong> {startDate && endDate ? `${formatDate(startDate, lang)} — ${formatDate(endDate, lang)}` : (lang === 'bn' ? 'সম্পূর্ণ সময়কাল' : 'All Time')}</span>
+                    <span aria-hidden="true">·</span>
+                    <span><strong>{lang === 'bn' ? 'মোট লেনদেন সংখ্যা:' : 'Total Records:'}</strong> {filteredRows.length} {lang === 'bn' ? 'টি' : ''}</span>
                   </div>
                 </div>
 
-                <div className="mt-3 flex items-center gap-2 text-xs text-slate-700">
-                  <span><strong>{lang === 'bn' ? 'অ্যাকাউন্ট / হেড:' : 'Account:'}</strong> {accountFilter === 'all' ? (lang === 'bn' ? 'সকল হেড (All)' : 'All Accounts') : accountFilter}</span>
-                  <span aria-hidden="true">·</span>
-                  <span><strong>{lang === 'bn' ? 'সময়কাল:' : 'Period:'}</strong> {startDate && endDate ? `${formatDate(startDate, lang)} — ${formatDate(endDate, lang)}` : (lang === 'bn' ? 'সম্পূর্ণ সময়কাল' : 'All Time')}</span>
-                  <span aria-hidden="true">·</span>
-                  <span><strong>{lang === 'bn' ? 'মোট লেনদেন সংখ্যা:' : 'Total Records:'}</strong> {filteredRows.length} {lang === 'bn' ? 'টি' : ''}</span>
+                <div className="text-right text-xs text-slate-700">
+                  <span className="inline-block px-3 py-1 bg-slate-100 border border-slate-300 rounded font-bold uppercase tracking-wider text-[10px] mb-1">
+                    Verified Audit Statement
+                  </span>
+                  <p className="font-mono text-[11px]">প্রিন্ট তারিখ: {new Date().toLocaleDateString('en-GB')}</p>
+                  <p className="font-mono text-[10px] text-slate-500">সময়: {new Date().toLocaleTimeString('en-US')}</p>
                 </div>
               </div>
-
-              <div className="text-right text-xs text-slate-700">
-                <span className="inline-block px-3 py-1 bg-slate-100 border border-slate-300 rounded font-bold uppercase tracking-wider text-[10px] mb-1">
-                  Verified Audit Statement
-                </span>
-                <p className="font-mono text-[11px]">প্রিন্ট তারিখ: {new Date().toLocaleDateString('en-GB')}</p>
-                <p className="font-mono text-[10px] text-slate-500">সময়: {new Date().toLocaleTimeString('en-US')}</p>
-              </div>
-            </div>
+            )}
 
             {/* Printable Summary Totals Bar */}
             <div className="grid grid-cols-3 gap-3 p-3.5 bg-slate-50 border border-slate-300 rounded-lg text-center text-xs">
@@ -3609,7 +3734,7 @@ export const ReportsView: React.FC = () => {
                 <p className="text-[10px] text-slate-400 mt-0.5">Authorized Signatory</p>
               </div>
             </div>
-          </>
+          </div>
         )}
       </div>
 
