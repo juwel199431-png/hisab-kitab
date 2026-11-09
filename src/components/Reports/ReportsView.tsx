@@ -53,6 +53,7 @@ import {
   DEFAULT_PAGE_SETTINGS,
   PAGE_SETTINGS_STORAGE_KEY,
   loadSavedPageSettings,
+  savePageSettingsToStorage,
 } from './ReportPageSettingsPanel';
 
 type AccountFilter =
@@ -155,15 +156,15 @@ export const ReportsView: React.FC = () => {
 
   // Dynamic Column Width Proportions for Sub Ledger Table (ensures 100% total)
   const dynamicColWidths = useMemo(() => {
-    const sl = 4;
-    const date = 9;
-    const debit = pageSettings.debitWidth;
-    const credit = pageSettings.creditWidth;
-    const balance = pageSettings.balanceWidth;
-    const remarks = pageSettings.remarksWidth;
+    const sl = pageSettings.slWidth || 4;
+    const date = pageSettings.dateWidth || 12;
+    const debit = pageSettings.debitWidth || 7.5;
+    const credit = pageSettings.creditWidth || 7.5;
+    const balance = pageSettings.balanceWidth || 9;
+    const remarks = pageSettings.remarksWidth || 42;
     // Calculate remaining for account to ensure exact 100%
     const fixedTotal = sl + date + debit + credit + balance + remarks;
-    const account = Math.max(8, Number((100 - fixedTotal).toFixed(1)));
+    const account = Math.max(10, Number((100 - fixedTotal).toFixed(1)));
     const baseColSpanWidth = Number((debit + credit + balance).toFixed(1));
 
     return {
@@ -178,6 +179,19 @@ export const ReportsView: React.FC = () => {
     };
   }, [pageSettings]);
 
+  // Typography helper classes for Sub Ledger
+  const subLedgerFontFamilyClass = useMemo(() => {
+    if (pageSettings.fontFamily === 'mono') return 'font-mono';
+    if (pageSettings.fontFamily === 'serif') return 'font-serif';
+    return 'font-sans';
+  }, [pageSettings.fontFamily]);
+
+  const subLedgerRowPaddingClass = useMemo(() => {
+    if (pageSettings.rowPadding === 'compact') return 'py-1';
+    if (pageSettings.rowPadding === 'relaxed') return 'py-2.5';
+    return 'py-1.5';
+  }, [pageSettings.rowPadding]);
+
   // Inject dynamic print stylesheet to strictly enforce user's manual page margins and orientation
   useEffect(() => {
     const styleId = 'dynamic-custom-report-page-style';
@@ -187,6 +201,13 @@ export const ReportsView: React.FC = () => {
       styleEl.id = styleId;
       document.head.appendChild(styleEl);
     }
+
+    const fontFamilyRule =
+      pageSettings.fontFamily === 'mono'
+        ? '"Courier New", Courier, monospace'
+        : pageSettings.fontFamily === 'serif'
+        ? 'Georgia, Cambria, "Times New Roman", serif'
+        : 'Inter, system-ui, -apple-system, sans-serif';
 
     styleEl.innerHTML = `
       @media print {
@@ -201,6 +222,9 @@ export const ReportsView: React.FC = () => {
         .printable-report-wrapper {
           zoom: ${pageSettings.scale / 100} !important;
           font-size: ${pageSettings.fontSizePt}pt !important;
+          font-family: ${fontFamilyRule} !important;
+          font-weight: ${pageSettings.isBold ? '700' : '400'} !important;
+          font-style: ${pageSettings.isItalic ? 'italic' : 'normal'} !important;
           width: 100% !important;
         }
       }
@@ -1525,6 +1549,7 @@ export const ReportsView: React.FC = () => {
         settings={pageSettings}
         onChange={handleUpdatePageSettings}
         onReset={handleResetPageSettings}
+        onSave={() => savePageSettingsToStorage(pageSettings)}
         isOpen={isPageSettingsOpen}
         onToggle={() => setIsPageSettingsOpen((prev) => !prev)}
         isLivePreview={isLivePaperPreview}
@@ -2790,7 +2815,10 @@ export const ReportsView: React.FC = () => {
               </div>
             </div>
 
-            <table className="w-full text-left border-collapse border border-slate-300 text-xs table-fixed">
+            <table
+              className={`w-full text-left border-collapse border border-slate-300 table-fixed ${subLedgerFontFamilyClass}`}
+              style={{ fontSize: `${pageSettings.fontSizePt}pt` }}
+            >
               <colgroup>
                 <col style={{ width: dynamicColWidths.sl }} />
                 <col style={{ width: dynamicColWidths.date }} />
@@ -2813,7 +2841,7 @@ export const ReportsView: React.FC = () => {
                 </tr>
                 <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[11px]">
                   <th rowSpan={2} style={{ width: dynamicColWidths.sl }} className="py-2 px-1 text-center border-r border-slate-400">#</th>
-                  <th rowSpan={2} style={{ width: dynamicColWidths.date }} className="py-2 px-1 text-center border-r border-slate-400 whitespace-nowrap">Date</th>
+                  <th rowSpan={2} style={{ width: dynamicColWidths.date }} className="py-2 px-1.5 text-center border-r border-slate-400 whitespace-nowrap min-w-[80px]">Date</th>
                   <th rowSpan={2} style={{ width: dynamicColWidths.account }} className="py-2 px-2 border-r border-slate-400">Account</th>
                   <th colSpan={3} style={{ width: dynamicColWidths.baseColSpan }} className="py-1 px-1 text-center border-r border-slate-400 border-b border-slate-400 uppercase tracking-wider text-[10px]">
                     Base ({subLedgerData.currency})
@@ -2826,32 +2854,32 @@ export const ReportsView: React.FC = () => {
                   <th style={{ width: dynamicColWidths.balance }} className="py-1 px-1 text-right border-r border-slate-400">Balance</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200 text-slate-800 text-[11px]">
+              <tbody className="divide-y divide-slate-200 text-slate-800">
                 {/* Row 1: Account Banner Row (SL: 1) */}
                 <tr className="bg-[#D8EEF8] font-bold text-slate-900 border-b border-slate-300">
-                  <td style={{ width: dynamicColWidths.sl }} className="py-1.5 px-1 text-center border-r border-slate-300 font-mono text-xs">1</td>
-                  <td colSpan={6} className="py-1.5 px-3 text-center tracking-wide font-black text-xs md:text-sm text-slate-900 uppercase">
+                  <td style={{ width: dynamicColWidths.sl }} className={`px-1 text-center border-r border-slate-300 font-mono text-xs ${subLedgerRowPaddingClass}`}>1</td>
+                  <td colSpan={6} className={`px-3 text-center tracking-wide font-black text-xs md:text-sm text-slate-900 uppercase ${subLedgerRowPaddingClass}`}>
                     {subLedgerData.accountBannerTitle}
                   </td>
                 </tr>
 
                 {/* Row 2: Opening Balance Row (SL: 2) */}
                 <tr className="bg-white hover:bg-slate-50/80 font-medium border-b border-slate-200">
-                  <td style={{ width: dynamicColWidths.sl }} className="py-1.5 px-1 text-center border-r border-slate-200 font-mono text-slate-500 text-xs">2</td>
-                  <td style={{ width: dynamicColWidths.date }} className="py-1.5 px-1 border-r border-slate-200 text-center font-mono text-slate-400">—</td>
-                  <td style={{ width: dynamicColWidths.account }} className="py-1.5 px-2 border-r border-slate-200 font-bold italic text-slate-900 text-xs truncate">
+                  <td style={{ width: dynamicColWidths.sl }} className={`px-1 text-center border-r border-slate-200 font-mono text-slate-500 text-xs ${subLedgerRowPaddingClass}`}>2</td>
+                  <td style={{ width: dynamicColWidths.date }} className={`px-2 border-r border-slate-200 text-center font-mono text-slate-400 overflow-hidden min-w-[80px] ${subLedgerRowPaddingClass}`}>—</td>
+                  <td style={{ width: dynamicColWidths.account }} className={`px-2 border-r border-slate-200 italic text-slate-900 text-xs truncate ${pageSettings.isBold ? 'font-black' : 'font-bold'} ${pageSettings.isItalic ? 'italic' : ''} ${subLedgerRowPaddingClass}`}>
                     Opening Balance
                   </td>
-                  <td style={{ width: dynamicColWidths.debit }} className="py-1.5 px-1 text-right border-r border-slate-200 font-mono font-bold text-slate-900 tabular-nums text-xs md:text-sm">
+                  <td style={{ width: dynamicColWidths.debit }} className={`px-1.5 text-right border-r border-slate-200 font-mono font-bold text-slate-900 tabular-nums text-xs md:text-sm ${subLedgerRowPaddingClass}`}>
                     {formatSubLedgerNumber(subLedgerData.openingBal, subLedgerData.currency, false)}
                   </td>
-                  <td style={{ width: dynamicColWidths.credit }} className="py-1.5 px-1 text-right border-r border-slate-200 font-mono text-slate-400 tabular-nums text-xs md:text-sm font-semibold">
+                  <td style={{ width: dynamicColWidths.credit }} className={`px-1.5 text-right border-r border-slate-200 font-mono text-slate-400 tabular-nums text-xs md:text-sm font-semibold ${subLedgerRowPaddingClass}`}>
                     {subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
                   </td>
-                  <td style={{ width: dynamicColWidths.balance }} className="py-1.5 px-1 text-right border-r border-slate-200 font-mono font-black text-slate-900 tabular-nums text-xs md:text-sm">
+                  <td style={{ width: dynamicColWidths.balance }} className={`px-1.5 text-right border-r border-slate-200 font-mono font-black text-slate-900 tabular-nums text-xs md:text-sm ${subLedgerRowPaddingClass}`}>
                     {formatSubLedgerNumber(subLedgerData.openingBal, subLedgerData.currency, false)}
                   </td>
-                  <td style={{ width: dynamicColWidths.remarks }} className="py-1.5 px-3 text-slate-400 italic text-xs">—</td>
+                  <td style={{ width: dynamicColWidths.remarks }} className={`px-3 text-slate-400 italic text-xs ${subLedgerRowPaddingClass}`}>—</td>
                 </tr>
 
                 {/* Rows 3+: Dynamic In-Period Transactions */}
@@ -2875,29 +2903,29 @@ export const ReportsView: React.FC = () => {
                       }}
                       className="hover:bg-cyan-50/40 transition-colors cursor-pointer border-b border-slate-100"
                     >
-                      <td style={{ width: dynamicColWidths.sl }} className="py-1.5 px-1 text-center border-r border-slate-200 font-mono text-slate-600 text-xs">
+                      <td style={{ width: dynamicColWidths.sl }} className={`px-1 text-center border-r border-slate-200 font-mono text-slate-600 text-xs ${subLedgerRowPaddingClass}`}>
                         {row.sl}
                       </td>
-                      <td style={{ width: dynamicColWidths.date }} className="py-1.5 px-1 border-r border-slate-200 font-mono text-slate-700 whitespace-nowrap text-center text-xs">
+                      <td style={{ width: dynamicColWidths.date }} className={`px-2 border-r border-slate-200 font-mono text-slate-700 whitespace-nowrap text-center text-xs overflow-hidden min-w-[85px] ${subLedgerRowPaddingClass}`}>
                         {row.formattedDate}
                       </td>
-                      <td style={{ width: dynamicColWidths.account }} className="py-1.5 px-2 border-r border-slate-200 font-bold text-slate-900 text-xs leading-snug">
+                      <td style={{ width: dynamicColWidths.account }} className={`px-2 border-r border-slate-200 text-slate-900 text-xs leading-snug break-words ${pageSettings.isBold ? 'font-black' : 'font-bold'} ${pageSettings.isItalic ? 'italic' : ''} ${subLedgerRowPaddingClass}`}>
                         {row.account}
                       </td>
-                      <td style={{ width: dynamicColWidths.debit }} className="py-1.5 px-1 text-right border-r border-slate-200 font-mono tabular-nums text-xs md:text-sm font-bold text-slate-900">
+                      <td style={{ width: dynamicColWidths.debit }} className={`px-1.5 text-right border-r border-slate-200 font-mono tabular-nums text-xs md:text-sm ${pageSettings.isBold ? 'font-black' : 'font-bold'} text-slate-900 ${subLedgerRowPaddingClass}`}>
                         {row.debit > 0
                           ? formatSubLedgerNumber(row.debit, subLedgerData.currency, false)
                           : subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
                       </td>
-                      <td style={{ width: dynamicColWidths.credit }} className="py-1.5 px-1 text-right border-r border-slate-200 font-mono tabular-nums text-xs md:text-sm font-bold text-rose-700">
+                      <td style={{ width: dynamicColWidths.credit }} className={`px-1.5 text-right border-r border-slate-200 font-mono tabular-nums text-xs md:text-sm ${pageSettings.isBold ? 'font-black' : 'font-bold'} text-rose-700 ${subLedgerRowPaddingClass}`}>
                         {row.credit > 0
                           ? formatSubLedgerNumber(row.credit, subLedgerData.currency, true)
                           : subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
                       </td>
-                      <td style={{ width: dynamicColWidths.balance }} className="py-1.5 px-1 text-right border-r border-slate-200 font-mono font-black tabular-nums text-xs md:text-sm text-slate-900">
+                      <td style={{ width: dynamicColWidths.balance }} className={`px-1.5 text-right border-r border-slate-200 font-mono font-black tabular-nums text-xs md:text-sm text-slate-900 ${subLedgerRowPaddingClass}`}>
                         {formatSubLedgerNumber(row.balance, subLedgerData.currency, false)}
                       </td>
-                      <td style={{ width: dynamicColWidths.remarks }} className="py-1.5 px-3 text-slate-700 text-xs leading-snug break-words" title={row.remarks}>
+                      <td style={{ width: dynamicColWidths.remarks }} className={`px-3 text-slate-700 text-xs leading-snug break-words ${pageSettings.isItalic ? 'italic' : ''} ${subLedgerRowPaddingClass}`} title={row.remarks}>
                         {row.remarks || <span className="text-slate-300 italic">—</span>}
                       </td>
                     </tr>
@@ -3361,18 +3389,18 @@ export const ReportsView: React.FC = () => {
                       <td style={{ width: dynamicColWidths.sl }} className="py-1 px-1 text-center border-r border-slate-200 font-mono text-slate-600 text-[10px]">
                         {row.sl}
                       </td>
-                      <td style={{ width: dynamicColWidths.date }} className="py-1 px-1 border-r border-slate-200 font-mono text-slate-700 whitespace-nowrap text-center text-[9.5px]">
+                      <td style={{ width: dynamicColWidths.date }} className="py-1 px-1.5 border-r border-slate-200 font-mono text-slate-700 whitespace-nowrap text-center text-[9.5px] overflow-hidden min-w-[80px]">
                         {row.formattedDate}
                       </td>
-                      <td style={{ width: dynamicColWidths.account }} className="py-1 px-2 border-r border-slate-200 font-bold text-slate-900 text-[10px] leading-tight">
+                      <td style={{ width: dynamicColWidths.account }} className={`py-1 px-2 border-r border-slate-200 text-slate-900 text-[10px] leading-tight break-words ${pageSettings.isBold ? 'font-black' : 'font-bold'} ${pageSettings.isItalic ? 'italic' : ''}`}>
                         {row.account}
                       </td>
-                      <td style={{ width: dynamicColWidths.debit }} className="py-1 px-1 text-right border-r border-slate-200 font-mono tabular-nums text-[10.5px] font-bold text-slate-900">
+                      <td style={{ width: dynamicColWidths.debit }} className={`py-1 px-1 text-right border-r border-slate-200 font-mono tabular-nums text-[10.5px] ${pageSettings.isBold ? 'font-black' : 'font-bold'} text-slate-900`}>
                         {row.debit > 0
                           ? formatSubLedgerNumber(row.debit, subLedgerData.currency, false)
                           : subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
                       </td>
-                      <td style={{ width: dynamicColWidths.credit }} className="py-1 px-1 text-right border-r border-slate-200 font-mono tabular-nums text-[10.5px] font-bold text-rose-800">
+                      <td style={{ width: dynamicColWidths.credit }} className={`py-1 px-1 text-right border-r border-slate-200 font-mono tabular-nums text-[10.5px] ${pageSettings.isBold ? 'font-black' : 'font-bold'} text-rose-800`}>
                         {row.credit > 0
                           ? formatSubLedgerNumber(row.credit, subLedgerData.currency, true)
                           : subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
@@ -3380,7 +3408,7 @@ export const ReportsView: React.FC = () => {
                       <td style={{ width: dynamicColWidths.balance }} className="py-1 px-1 text-right border-r border-slate-200 font-mono font-black tabular-nums text-[11px] text-slate-900">
                         {formatSubLedgerNumber(row.balance, subLedgerData.currency, false)}
                       </td>
-                      <td style={{ width: dynamicColWidths.remarks }} className="py-1 px-2.5 text-slate-800 text-[10px] leading-snug break-words">
+                      <td style={{ width: dynamicColWidths.remarks }} className={`py-1 px-2.5 text-slate-800 text-[10px] leading-snug break-words ${pageSettings.isItalic ? 'italic' : ''}`}>
                         {row.remarks || <span className="text-slate-300 italic">—</span>}
                       </td>
                     </tr>

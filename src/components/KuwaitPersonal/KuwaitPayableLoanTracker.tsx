@@ -28,10 +28,12 @@ import {
   ArrowDownLeft,
   ArrowUpRight,
   MessageCircle,
+  Eye,
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import { exportToCSV } from '../../utils/storage';
 import { KuwaitPayableLender, KuwaitPayableTransaction } from '../../types/finance';
+import { ReportAuditVoucherModal, AuditReportRow } from '../Reports/ReportAuditVoucherModal';
 
 export const KuwaitPayableLoanTracker: React.FC = () => {
   const {
@@ -65,6 +67,7 @@ export const KuwaitPayableLoanTracker: React.FC = () => {
   // Edit State
   const [editingTx, setEditingTx] = useState<KuwaitPayableTransaction | null>(null);
   const [editingLender, setEditingLender] = useState<KuwaitPayableLender | null>(null);
+  const [selectedVoucherRow, setSelectedVoucherRow] = useState<AuditReportRow | null>(null);
 
   // Form State: New Borrow
   const [borrowLenderMode, setBorrowLenderMode] = useState<'existing' | 'new'>('existing');
@@ -904,6 +907,32 @@ export const KuwaitPayableLoanTracker: React.FC = () => {
                         <div className="flex items-center justify-center gap-1.5">
                           <button
                             type="button"
+                            onClick={() => {
+                              setSelectedVoucherRow({
+                                id: tx.id,
+                                sourceType: 'kuwait-payable',
+                                date: tx.date,
+                                section: 'kuwait-payable',
+                                sectionNameBn: 'Personal Payable Loan (ব্যক্তিগত দেনা লোন)',
+                                sectionNameEn: 'Personal Payable Loan',
+                                type: tx.type === 'borrow' ? 'income' : 'expense',
+                                categoryNameBn: tx.type === 'borrow' ? `লোন গ্রহণ: ${tx.lenderName}` : `লোন পরিশোধ: ${tx.lenderName}`,
+                                categoryNameEn: tx.type === 'borrow' ? `Borrow Loan: ${tx.lenderName}` : `Repay Loan: ${tx.lenderName}`,
+                                amount: tx.amount,
+                                currency: tx.currency,
+                                note: tx.note,
+                                voucherNo: tx.voucherNo,
+                                borrowerId: tx.lenderId,
+                                borrowerName: tx.lenderName,
+                              });
+                            }}
+                            className="p-1 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-colors cursor-pointer"
+                            title={lang === 'bn' ? 'অডিট স্লিপ দেখুন ও হোয়াটসঅ্যাপে ছবি পাঠান' : 'View slip & share image to WhatsApp'}
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => setEditingTx(tx)}
                             className="p-1 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors cursor-pointer"
                             title={lang === 'bn' ? 'সংশোধন / এডিট' : 'Edit'}
@@ -1466,6 +1495,14 @@ export const KuwaitPayableLoanTracker: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Voucher Slip Modal with WhatsApp Image Sharing */}
+      <ReportAuditVoucherModal
+        isOpen={!!selectedVoucherRow}
+        onClose={() => setSelectedVoucherRow(null)}
+        row={selectedVoucherRow}
+        lang={lang}
+      />
     </div>
   );
 };

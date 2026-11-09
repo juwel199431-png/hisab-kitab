@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   X,
   Printer,
@@ -17,8 +17,17 @@ import {
   Share2,
   Copy,
   Check,
+  Download,
+  Image as ImageIcon,
+  Sparkles,
 } from 'lucide-react';
 import { formatDate, formatCurrency } from '../../utils/formatters';
+import {
+  captureElementAsBlob,
+  downloadBlobAsImage,
+  copyBlobToClipboard,
+  shareVoucherAsImageToWhatsApp,
+} from '../../utils/voucherImageGenerator';
 
 export interface AuditReportRow {
   id: string;
@@ -56,6 +65,9 @@ export const ReportAuditVoucherModal: React.FC<ReportAuditVoucherModalProps> = (
   onEdit,
 }) => {
   const [copied, setCopied] = useState(false);
+  const [isProcessingImage, setIsProcessingImage] = useState(false);
+  const [imageToast, setImageToast] = useState<string | null>(null);
+  const voucherRef = useRef<HTMLDivElement>(null);
 
   if (!isOpen || !row) return null;
 
@@ -100,13 +112,84 @@ export const ReportAuditVoucherModal: React.FC<ReportAuditVoucherModalProps> = (
     );
   };
 
-  const handleWhatsAppShare = () => {
-    const text = getVoucherText();
-    const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
-    window.open(url, '_blank');
+  /**
+   * Share voucher strictly as an IMAGE to WhatsApp.
+   */
+  const handleWhatsAppShare = async () => {
+    if (!voucherRef.current) return;
+    setIsProcessingImage(true);
+    setImageToast(lang === 'bn' ? '📸 ভাউচারের ছবি তৈরি হচ্ছে...' : '📸 Generating voucher image...');
+
+    try {
+      const fileName = `voucher-${row.voucherNo ? row.voucherNo.replace(/[^a-zA-Z0-9_-]/g, '') : row.id.slice(0, 8)}.png`;
+      const result = await shareVoucherAsImageToWhatsApp({
+        element: voucherRef.current,
+        fileName,
+        captionText: `🧾 ভাউচার: #${row.voucherNo || ''} (${row.amount} ${row.currency})`,
+      });
+
+      if (result.method === 'native-share') {
+        setImageToast(lang === 'bn' ? '✓ হোয়াটসঅ্যাপে ছবি পাঠানো হয়েছে!' : '✓ Shared image to WhatsApp!');
+      } else {
+        setImageToast(
+          lang === 'bn'
+            ? '✓ ছবিটি কপি ও ডাউনলোড হয়েছে! হোয়াটসঅ্যাপে পেস্ট (Ctrl+V) করুন।'
+            : '✓ Image copied & downloaded! Paste (Ctrl+V) into WhatsApp.'
+        );
+      }
+    } catch (err) {
+      console.error('WhatsApp image share error:', err);
+      setImageToast(lang === 'bn' ? 'ছবি তৈরিতে সমস্যা হয়েছে' : 'Failed to generate image');
+    } finally {
+      setIsProcessingImage(false);
+      setTimeout(() => setImageToast(null), 4000);
+    }
   };
 
-  const handleCopySlip = async () => {
+  /**
+   * Directly download the voucher card as a PNG image.
+   */
+  const handleDownloadImage = async () => {
+    if (!voucherRef.current) return;
+    setIsProcessingImage(true);
+    try {
+      const blob = await captureElementAsBlob(voucherRef.current);
+      const fileName = `voucher-${row.voucherNo ? row.voucherNo.replace(/[^a-zA-Z0-9_-]/g, '') : row.id.slice(0, 8)}.png`;
+      downloadBlobAsImage(blob, fileName);
+      setImageToast(lang === 'bn' ? '✓ ভাউচার ছবি ডাউনলোড হয়েছে!' : '✓ Image downloaded!');
+    } catch (err) {
+      console.error(err);
+      setImageToast(lang === 'bn' ? 'ছবি ডাউনলোড করা যায়নি' : 'Download failed');
+    } finally {
+      setIsProcessingImage(false);
+      setTimeout(() => setImageToast(null), 3000);
+    }
+  };
+
+  /**
+   * Copy the voucher PNG image directly to clipboard.
+   */
+  const handleCopyImageToClipboard = async () => {
+    if (!voucherRef.current) return;
+    setIsProcessingImage(true);
+    try {
+      const blob = await captureElementAsBlob(voucherRef.current);
+      const ok = await copyBlobToClipboard(blob);
+      if (ok) {
+        setImageToast(lang === 'bn' ? '✓ ভাউচার ছবিটি কপি হয়েছে! চ্যাটে পেস্ট (Ctrl+V) করুন।' : '✓ Image copied to clipboard!');
+      } else {
+        downloadBlobAsImage(blob, 'voucher.png');
+        setImageToast(lang === 'bn' ? 'ছবিটি ডাউনলোড হয়েছে' : 'Image downloaded');
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsProcessingImage(false);
+      setTimeout(() => setImageToast(null), 3000);
+    }
+  };
+
+  const handleCopySlipText = async () => {
     const text = getVoucherText();
     try {
       await navigator.clipboard.writeText(text);
@@ -131,26 +214,44 @@ export const ReportAuditVoucherModal: React.FC<ReportAuditVoucherModalProps> = (
           </div>
 
           <div className="flex items-center gap-1.5 flex-wrap justify-end">
-            {/* WhatsApp Share Button */}
+            {/* WhatsApp Share as Image Button */}
             <button
               type="button"
               onClick={handleWhatsAppShare}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold text-emerald-300 hover:text-white bg-emerald-600/30 hover:bg-emerald-600/50 border border-emerald-500/40 rounded-lg transition-colors cursor-pointer"
-              title={lang === 'bn' ? 'হোয়াটসঅ্যাপে রসিদ শেয়ার করুন' : 'Share on WhatsApp'}
+              disabled={isProcessingImage}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 border border-emerald-500 rounded-lg transition-all cursor-pointer shadow-xs disabled:opacity-50"
+              title={lang === 'bn' ? 'হোয়াটসঅ্যাপে এই ভাউচারটি ছবি আকারে পাঠান' : 'Share voucher as IMAGE to WhatsApp'}
             >
               <Share2 className="w-3.5 h-3.5" />
-              <span>{lang === 'bn' ? 'WhatsApp' : 'WhatsApp'}</span>
+              <span>
+                {isProcessingImage
+                  ? lang === 'bn' ? 'ছবি তৈরি হচ্ছে...' : 'Processing...'
+                  : lang === 'bn' ? 'WhatsApp (ছবি)' : 'WhatsApp (Image)'}
+              </span>
             </button>
 
-            {/* Copy Slip Button */}
+            {/* Download Voucher Image Button */}
             <button
               type="button"
-              onClick={handleCopySlip}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold text-amber-300 hover:text-white bg-amber-600/25 hover:bg-amber-600/40 border border-amber-500/40 rounded-lg transition-colors cursor-pointer"
-              title={lang === 'bn' ? 'রসিদ কপি করুন' : 'Copy Voucher'}
+              onClick={handleDownloadImage}
+              disabled={isProcessingImage}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold text-cyan-200 hover:text-white bg-cyan-600/30 hover:bg-cyan-600/50 border border-cyan-500/40 rounded-lg transition-colors cursor-pointer"
+              title={lang === 'bn' ? 'ভাউচারের ছবি ডাউনলোড করুন' : 'Download Voucher Image'}
             >
-              {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-              <span>{copied ? (lang === 'bn' ? 'কপি হয়েছে' : 'Copied') : (lang === 'bn' ? 'কপি স্লিপ' : 'Copy')}</span>
+              <ImageIcon className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{lang === 'bn' ? 'ছবি সেভ' : 'Save Image'}</span>
+            </button>
+
+            {/* Copy Voucher Image to Clipboard */}
+            <button
+              type="button"
+              onClick={handleCopyImageToClipboard}
+              disabled={isProcessingImage}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold text-amber-300 hover:text-white bg-amber-600/25 hover:bg-amber-600/40 border border-amber-500/40 rounded-lg transition-colors cursor-pointer"
+              title={lang === 'bn' ? 'ভাউচারের ছবিটি ক্লিপবোর্ডে কপি করুন (যাতে যেকোনো চ্যাটে পেস্ট করা যায়)' : 'Copy Image to Clipboard'}
+            >
+              <Copy className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{lang === 'bn' ? 'ছবি কপি' : 'Copy Image'}</span>
             </button>
 
             {onEdit && (
@@ -178,52 +279,69 @@ export const ReportAuditVoucherModal: React.FC<ReportAuditVoucherModalProps> = (
 
             <button
               onClick={onClose}
-              className="text-slate-400 hover:text-white p-1 rounded-md transition-colors"
+              className="text-slate-400 hover:text-white p-1 rounded-md transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
         </div>
 
-        {/* Printable Voucher Content */}
-        <div className="p-6 sm:p-8 space-y-6 text-slate-800 bg-white overflow-y-auto">
+        {/* Dynamic Image Toast Feedback */}
+        {imageToast && (
+          <div className="px-4 py-2 bg-emerald-600 text-white text-xs font-bold text-center flex items-center justify-center gap-2 animate-in fade-in shadow-inner">
+            <Sparkles className="w-3.5 h-3.5 animate-spin" />
+            <span>{imageToast}</span>
+          </div>
+        )}
+
+        {/* Printable Voucher Content (Captured as High-Res Image for WhatsApp) */}
+        <div
+          ref={voucherRef}
+          className="p-6 sm:p-8 space-y-6 text-slate-800 bg-white overflow-y-auto"
+          style={{ minWidth: '340px' }}
+        >
           {/* Header */}
           <div className="border-b border-slate-200 pb-4 flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-bold text-slate-900">
-                {lang === 'bn' ? 'ব্যক্তিগত ও ব্যবসায়িক হিসাব বিবরণী' : 'Finance Ledger Audit'}
-              </h2>
-              <p className="text-xs text-slate-500">
-                {lang === 'bn' ? 'স্মার্ট ফাইন্যান্স ট্র্যাকার ভাউচার' : 'Smart Finance Tracker Voucher'}
+              <div className="flex items-center gap-2 mb-0.5">
+                <span className="text-sm font-black uppercase text-indigo-900 tracking-wider">
+                  {lang === 'bn' ? 'হিসাব কিতাব অডিট ভাউচার' : 'Hisab Kitab Voucher'}
+                </span>
+                <span className="px-1.5 py-0.2 rounded text-[9px] font-bold uppercase bg-emerald-100 text-emerald-800 border border-emerald-300">
+                  Verified
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 font-medium">
+                {lang === 'bn' ? 'অফিসিয়াল লেনদেন ও হিসাব স্লিপ' : 'Official Transaction & Audit Slip'}
               </p>
             </div>
             <div className="text-right">
-              <span className="text-xs font-mono font-bold text-slate-600 block">
+              <span className="text-xs font-mono font-bold text-slate-700 block">
                 {formatDate(row.date, lang)}
               </span>
               <span className="text-[10px] text-slate-400 font-mono">
-                ID: {row.id.substring(0, 12)}
+                {row.voucherNo ? `#${row.voucherNo}` : `ID: ${row.id.substring(0, 10)}`}
               </span>
             </div>
           </div>
 
           {/* Amount Showcase Banner */}
           <div
-            className={`p-4 rounded-xl border flex items-center justify-between ${
+            className={`p-4 rounded-xl border flex items-center justify-between shadow-xs ${
               isIncome
-                ? 'bg-emerald-50/70 border-emerald-200'
+                ? 'bg-emerald-50/80 border-emerald-300'
                 : isExpense
-                ? 'bg-rose-50/70 border-rose-200'
+                ? 'bg-rose-50/80 border-rose-300'
                 : isLoan
-                ? 'bg-indigo-50/70 border-indigo-200'
-                : 'bg-blue-50/70 border-blue-200'
+                ? 'bg-indigo-50/80 border-indigo-300'
+                : 'bg-blue-50/80 border-blue-300'
             }`}
           >
             <div>
-              <span className="text-xs font-semibold text-slate-600 block">
+              <span className="text-xs font-bold text-slate-700 block uppercase tracking-wider">
                 {lang === 'bn' ? 'লেনদেনের পরিমাণ' : 'Transaction Amount'}
               </span>
-              <span className="text-[11px] text-slate-500 font-medium">
+              <span className="text-[11px] text-slate-500 font-medium mt-0.5 block">
                 {isIncome
                   ? lang === 'bn' ? 'তহবিলে প্রাপ্তি / জমা' : 'Inflow / Deposit'
                   : isExpense
@@ -235,7 +353,7 @@ export const ReportAuditVoucherModal: React.FC<ReportAuditVoucherModalProps> = (
             </div>
             <div className="text-right">
               <span
-                className={`text-2xl font-bold font-mono ${
+                className={`text-2xl font-black font-mono tracking-tight ${
                   isIncome
                     ? 'text-emerald-700'
                     : isExpense
@@ -264,43 +382,39 @@ export const ReportAuditVoucherModal: React.FC<ReportAuditVoucherModalProps> = (
 
             <div className="flex justify-between py-2 border-b border-slate-100">
               <span className="text-slate-500">{lang === 'bn' ? 'খাত / ক্যাটাগরি:' : 'Category:'}</span>
-              <span className="font-semibold text-slate-900">
+              <span className="font-bold text-slate-900">
                 {lang === 'bn' ? row.categoryNameBn : row.categoryNameEn}
               </span>
             </div>
 
-            {row.bankName && (
-              <div className="flex justify-between py-2 border-b border-slate-100">
-                <span className="text-slate-500">{lang === 'bn' ? 'সংশ্লিষ্ট ব্যাংক:' : 'Bank:'}</span>
-                <span className="font-medium text-slate-800">{row.bankName}</span>
+            {row.borrowerName && (
+              <div className="flex justify-between py-2 border-b border-slate-100 bg-indigo-50/50 px-2 rounded-lg">
+                <span className="text-indigo-900 font-semibold">{lang === 'bn' ? 'গ্রহীতা (Borrower):' : 'Borrower:'}</span>
+                <span className="font-bold text-indigo-950 font-mono">{row.borrowerName}</span>
               </div>
             )}
 
-            {row.borrowerName && (
+            {row.bankName && (
               <div className="flex justify-between py-2 border-b border-slate-100">
-                <span className="text-slate-500">{lang === 'bn' ? 'গ্রহীতার নাম (লোন):' : 'Borrower:'}</span>
-                <span className="font-bold text-indigo-900">{row.borrowerName}</span>
+                <span className="text-slate-500">{lang === 'bn' ? 'সংশ্লিষ্ট ব্যাংক:' : 'Bank:'}</span>
+                <span className="font-semibold text-slate-800">🏦 {row.bankName}</span>
               </div>
             )}
 
             {row.status && (
               <div className="flex justify-between py-2 border-b border-slate-100">
-                <span className="text-slate-500">{lang === 'bn' ? 'পরিশোধ স্ট্যাটাস:' : 'Payment Status:'}</span>
-                <span
-                  className={`font-bold inline-flex items-center gap-1 ${
-                    row.status === 'paid' ? 'text-emerald-700' : 'text-amber-700'
-                  }`}
-                >
+                <span className="text-slate-500">{lang === 'bn' ? 'স্ট্যাটাস:' : 'Status:'}</span>
+                <span className="font-semibold">
                   {row.status === 'paid' ? (
-                    <>
+                    <span className="inline-flex items-center gap-1 text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
                       <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>{lang === 'bn' ? 'পরিশোধিত / আদায় সম্পন্ন (Paid)' : 'Paid'}</span>
-                    </>
+                      <span>{lang === 'bn' ? 'পরিশোধিত (Paid)' : 'Paid'}</span>
+                    </span>
                   ) : (
-                    <>
+                    <span className="inline-flex items-center gap-1 text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
                       <Clock className="w-3.5 h-3.5" />
                       <span>{lang === 'bn' ? 'বাকি / অপরিশোধিত (Unpaid)' : 'Unpaid'}</span>
-                    </>
+                    </span>
                   )}
                 </span>
               </div>
@@ -309,28 +423,27 @@ export const ReportAuditVoucherModal: React.FC<ReportAuditVoucherModalProps> = (
             {row.voucherNo && (
               <div className="flex justify-between py-2 border-b border-slate-100">
                 <span className="text-slate-500">{lang === 'bn' ? 'ভাউচার / ইনভয়েস নং:' : 'Voucher No:'}</span>
-                <span className="font-mono font-bold text-indigo-700">{row.voucherNo}</span>
+                <span className="font-mono font-bold text-indigo-700">#{row.voucherNo}</span>
               </div>
             )}
 
             {row.note && (
               <div className="py-2">
                 <span className="text-slate-500 block mb-1">{lang === 'bn' ? 'মন্তব্য / নোট:' : 'Note:'}</span>
-                <p className="p-2.5 bg-slate-50 rounded-lg text-slate-700 text-xs border border-slate-200">
+                <p className="p-2.5 bg-slate-50 rounded-lg text-slate-800 text-xs border border-slate-200 leading-relaxed font-medium">
                   {row.note}
                 </p>
               </div>
             )}
           </div>
 
-          <div className="pt-4 border-t border-slate-200 text-center text-[11px] text-slate-400">
-            {lang === 'bn'
-              ? 'এই তথ্যটি সরাসরি আপনার সিস্টেমে সংরক্ষিত ডাটাবেজ থেকে তৈরি করা হয়েছে।'
-              : 'Automatically generated from system audit logs.'}
+          <div className="pt-4 border-t border-slate-200 flex items-center justify-between text-[11px] text-slate-400">
+            <span>হিসাব কিতাব স্মার্ট ফাইন্যান্স</span>
+            <span className="font-mono">Verified Transaction</span>
           </div>
         </div>
 
-        {/* Footer */}
+        {/* Modal Bottom Controls */}
         <div className="px-6 py-3 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between no-print gap-2">
           <div className="flex items-center gap-2">
             {onEdit && (
@@ -349,11 +462,12 @@ export const ReportAuditVoucherModal: React.FC<ReportAuditVoucherModalProps> = (
 
             <button
               type="button"
-              onClick={handleWhatsAppShare}
-              className="sm:hidden inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700 rounded-lg"
+              onClick={handleCopySlipText}
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 border border-slate-300 rounded-lg cursor-pointer"
+              title={lang === 'bn' ? 'টেক্সট কপি' : 'Copy Text'}
             >
-              <Share2 className="w-3.5 h-3.5" />
-              <span>WhatsApp</span>
+              <Copy className="w-3.5 h-3.5" />
+              <span>{copied ? (lang === 'bn' ? 'কপি হয়েছে' : 'Copied') : (lang === 'bn' ? 'টেক্সট কপি' : 'Text')}</span>
             </button>
           </div>
 

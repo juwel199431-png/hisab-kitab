@@ -28,10 +28,12 @@ import {
   ArrowDownLeft,
   ArrowUpRight,
   MessageCircle,
+  Eye,
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import { exportToCSV } from '../../utils/storage';
 import { KuwaitReceivableBorrower, KuwaitReceivableTransaction } from '../../types/finance';
+import { ReportAuditVoucherModal, AuditReportRow } from '../Reports/ReportAuditVoucherModal';
 
 export const KuwaitLoanTracker: React.FC = () => {
   const {
@@ -64,6 +66,7 @@ export const KuwaitLoanTracker: React.FC = () => {
   // Edit State
   const [editingTx, setEditingTx] = useState<KuwaitReceivableTransaction | null>(null);
   const [editingBorrower, setEditingBorrower] = useState<KuwaitReceivableBorrower | null>(null);
+  const [selectedVoucherRow, setSelectedVoucherRow] = useState<AuditReportRow | null>(null);
 
   // Form State: New Lend
   const [lendBorrowerMode, setLendBorrowerMode] = useState<'existing' | 'new'>('existing');
@@ -908,8 +911,33 @@ export const KuwaitLoanTracker: React.FC = () => {
                     <td className="py-2.5 px-3.5 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-1.5">
                         <button
+                          onClick={() => {
+                            setSelectedVoucherRow({
+                              id: tx.id,
+                              sourceType: 'kuwait-receivable',
+                              date: tx.date,
+                              section: 'kuwait-loan',
+                              sectionNameBn: 'Personal Receivable Loan (ব্যক্তিগত পাওনা লোন)',
+                              sectionNameEn: 'Personal Receivable Loan',
+                              type: tx.type === 'lend' ? 'loan' : 'income',
+                              categoryNameBn: tx.type === 'lend' ? `লোন প্রদান: ${tx.borrowerName}` : `কিস্তি আদায়: ${tx.borrowerName}`,
+                              categoryNameEn: tx.type === 'lend' ? `Lend Loan: ${tx.borrowerName}` : `Collect: ${tx.borrowerName}`,
+                              amount: tx.amount,
+                              currency: tx.currency,
+                              note: tx.note,
+                              voucherNo: tx.voucherNo,
+                              borrowerId: tx.borrowerId,
+                              borrowerName: tx.borrowerName,
+                            });
+                          }}
+                          className="p-1 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-colors cursor-pointer"
+                          title={lang === 'bn' ? 'অডিট স্লিপ দেখুন ও হোয়াটসঅ্যাপে ছবি পাঠান' : 'View slip & share image to WhatsApp'}
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </button>
+                        <button
                           onClick={() => setEditingTx(tx)}
-                          className="p-1 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded"
+                          className="p-1 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded cursor-pointer"
                           title={lang === 'bn' ? 'সংশোধন / এডিট' : 'Edit'}
                         >
                           <Edit2 className="w-3.5 h-3.5" />
@@ -920,7 +948,7 @@ export const KuwaitLoanTracker: React.FC = () => {
                               deleteKuwaitReceivableTransaction(tx.id);
                             }
                           }}
-                          className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded"
+                          className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded cursor-pointer"
                           title={lang === 'bn' ? 'মুছে ফেলুন' : 'Delete'}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -1446,6 +1474,14 @@ export const KuwaitLoanTracker: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Voucher Slip Modal with WhatsApp Image Sharing */}
+      <ReportAuditVoucherModal
+        isOpen={!!selectedVoucherRow}
+        onClose={() => setSelectedVoucherRow(null)}
+        row={selectedVoucherRow}
+        lang={lang}
+      />
     </div>
   );
 };
