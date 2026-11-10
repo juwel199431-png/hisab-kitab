@@ -55,21 +55,21 @@ export const DEFAULT_PAGE_SETTINGS: ReportPageSettings = {
   fontSizePt: 9.5,
   slWidth: 4,
   dateWidth: 12,
-  accountWidth: 17,
-  remarksWidth: 42,
-  debitWidth: 7.5,
-  creditWidth: 7.5,
-  balanceWidth: 9,
+  accountWidth: 16,
+  remarksWidth: 37,
+  debitWidth: 10,
+  creditWidth: 10,
+  balanceWidth: 11,
   fontFamily: 'system',
   isBold: false,
   isItalic: false,
   rowPadding: 'normal',
   showLetterhead: true,
   showWatermark: true,
-  watermarkOpacity: 0.05,
+  watermarkOpacity: 0.15,
 };
 
-export const PAGE_SETTINGS_STORAGE_KEY = 'hisab_kitab_report_page_settings_v5';
+export const PAGE_SETTINGS_STORAGE_KEY = 'hisab_kitab_report_page_settings_v6';
 
 export const loadSavedPageSettings = (): ReportPageSettings => {
   try {
