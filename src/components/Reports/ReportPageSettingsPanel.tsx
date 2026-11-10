@@ -66,10 +66,10 @@ export const DEFAULT_PAGE_SETTINGS: ReportPageSettings = {
   rowPadding: 'normal',
   showLetterhead: true,
   showWatermark: true,
-  watermarkOpacity: 0.15,
+  watermarkOpacity: 0.22,
 };
 
-export const PAGE_SETTINGS_STORAGE_KEY = 'hisab_kitab_report_page_settings_v6';
+export const PAGE_SETTINGS_STORAGE_KEY = 'hisab_kitab_report_page_settings_v7';
 
 export const loadSavedPageSettings = (): ReportPageSettings => {
   try {

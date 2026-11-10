@@ -218,7 +218,10 @@ export const ReportsView: React.FC = () => {
       @media print {
         @page {
           size: A4 ${pageSettings.orientation} !important;
-          margin: ${pageSettings.marginTop}mm ${pageSettings.marginRight}mm ${pageSettings.marginBottom}mm ${pageSettings.marginLeft}mm !important;
+          margin-top: ${pageSettings.showLetterhead ? 30 : Math.max(pageSettings.marginTop, 8)}mm !important;
+          margin-bottom: ${pageSettings.showLetterhead ? 18 : Math.max(pageSettings.marginBottom, 8)}mm !important;
+          margin-left: ${pageSettings.marginLeft}mm !important;
+          margin-right: ${pageSettings.marginRight}mm !important;
         }
         * {
           -webkit-print-color-adjust: exact !important;
@@ -228,6 +231,8 @@ export const ReportsView: React.FC = () => {
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
           background: #ffffff !important;
+          margin: 0 !important;
+          padding: 0 !important;
         }
         .printable-report-wrapper {
           position: relative !important;
@@ -237,46 +242,61 @@ export const ReportsView: React.FC = () => {
           font-weight: ${pageSettings.isBold ? '700' : '400'} !important;
           font-style: ${pageSettings.isItalic ? 'italic' : 'normal'} !important;
           width: 100% !important;
-          min-height: calc(297mm - ${pageSettings.marginTop + pageSettings.marginBottom}mm) !important;
           background: transparent !important;
-          display: flex !important;
-          flex-direction: column !important;
-          justify-content: space-between !important;
         }
-        .report-watermark-layer {
+        .print-fixed-watermark {
           display: block !important;
-          position: absolute !important;
-          inset: 0 !important;
-          width: 100% !important;
-          height: 100% !important;
-          z-index: 0 !important;
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          width: 100vw !important;
+          height: 100vh !important;
+          z-index: -10 !important;
           pointer-events: none !important;
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
         }
-        .report-watermark-layer svg {
+        .print-fixed-header {
           display: block !important;
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          right: 0 !important;
+          width: 100% !important;
+          height: 28mm !important;
+          z-index: 1000 !important;
+          background: transparent !important;
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
         }
-        .printable-report-wrapper table tbody tr.bg-white {
-          background-color: rgba(255, 255, 255, 0.88) !important;
-        }
-        .printable-report-wrapper table tbody tr:not(.bg-white) {
+        .print-fixed-footer {
+          display: block !important;
+          position: fixed !important;
+          bottom: 0 !important;
+          left: 0 !important;
+          right: 0 !important;
+          width: 100% !important;
+          height: 14mm !important;
+          z-index: 1000 !important;
+          background: transparent !important;
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
         }
-        .report-content-body {
-          flex: 1 0 auto !important;
+        .print-report-content {
           position: relative !important;
           z-index: 10 !important;
+          width: 100% !important;
+          background: transparent !important;
         }
-        .report-footer-pinned {
-          margin-top: auto !important;
-          position: relative !important;
-          z-index: 10 !important;
-          break-inside: avoid !important;
-          page-break-inside: avoid !important;
+        .print-report-content table {
+          background: transparent !important;
+        }
+        .print-report-content table tbody tr.bg-white {
+          background-color: rgba(255, 255, 255, 0.84) !important;
+        }
+        .print-report-content table tbody tr:not(.bg-white) {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
         }
       }
     `;
@@ -3441,32 +3461,38 @@ export const ReportsView: React.FC = () => {
       </div>
 
       {/* 6. Official Printable Document (Exclusively rendered during Print / PDF generation) */}
-      <div className="hidden print:block space-y-2 text-slate-900 bg-white p-0 w-full printable-report-wrapper relative">
-        {/* Aesthetic Background Security Watermark Layer for Print & PDF */}
+      <div className="hidden print:block text-slate-900 bg-white p-0 w-full printable-report-wrapper relative">
+        {/* Fixed Watermark Background on EVERY page */}
         {pageSettings.showWatermark && (
-          <ReportWatermarkBackground
-            opacity={pageSettings.watermarkOpacity}
-            showWatermark={pageSettings.showWatermark}
-          />
+          <div className="print-fixed-watermark">
+            <ReportWatermarkBackground
+              opacity={pageSettings.watermarkOpacity}
+              showWatermark={pageSettings.showWatermark}
+            />
+          </div>
         )}
 
-        {isSubLedgerEligible && subLedgerData ? (
-          /* ========================================================================= */
-          /* SUB LEDGER PRINT DOCUMENT (Matching Screenshot 2)                         */
-          /* ========================================================================= */
-          <div className="space-y-2 font-sans w-full relative z-10 flex flex-col justify-between min-h-[calc(297mm-8mm)]">
-            {/* Official Modern Letterhead */}
-            {pageSettings.showLetterhead && (
-              <ReportLetterhead
-                title={lang === 'bn' ? 'অফিসিয়াল সাব লেজার অডিট স্টেটমেন্ট' : 'Official Sub Ledger Statement'}
-                subtitle={lang === 'bn' ? 'সংশ্লিষ্ট অ্যাকাউন্টের বিস্তারিত ডেবিট, ক্রেডিট ও ক্লোজিং খতিয়ান' : 'Detailed Debit, Credit & Closing Ledger Statement'}
-                accountName={subLedgerData.accountBannerTitle}
-                startDate={startDate}
-                endDate={endDate}
-                currency={subLedgerData.currency}
-                lang={lang}
-              />
-            )}
+        {/* Fixed Running Header (Letterhead) on EVERY printed page */}
+        {pageSettings.showLetterhead && (
+          <div className="print-fixed-header">
+            <ReportLetterhead />
+          </div>
+        )}
+
+        {/* Fixed Running Footer on EVERY printed page */}
+        {pageSettings.showLetterhead && (
+          <div className="print-fixed-footer">
+            <ReportOfficialFooter />
+          </div>
+        )}
+
+        {/* Report Content Body: flows naturally across pages between top margin & bottom margin */}
+        <div className="print-report-content w-full">
+          {isSubLedgerEligible && subLedgerData ? (
+            /* ========================================================================= */
+            /* SUB LEDGER PRINT DOCUMENT (Matching Screenshot 2)                         */
+            /* ========================================================================= */
+            <div className="space-y-2 font-sans w-full">
 
             {/* Top Sub Ledger Title Bar */}
             <div className="flex justify-between items-baseline py-1 border-b border-slate-300">
@@ -3606,41 +3632,25 @@ export const ReportsView: React.FC = () => {
               </table>
             </div>
 
-            {/* Official Signatures & Verification (Compact to prevent spilling to next page) */}
-            <div className="pt-3 pb-1 flex justify-between items-center text-xs text-slate-600 break-inside-avoid">
-              <div className="text-center">
-                <div className="border-t border-slate-400 w-44 pt-1 font-semibold">হিসাব প্রস্তুতকারকের স্বাক্ষর</div>
-                <p className="text-[10px] text-slate-400 mt-0.5">Prepared By</p>
-              </div>
-              <div className="text-center">
-                <div className="border-t border-slate-400 w-44 pt-1 font-semibold">অনুমোদনকারী / পরিচালক</div>
-                <p className="text-[10px] text-slate-400 mt-0.5">Authorized Signatory</p>
+              {/* Official Signatures & Verification (Compact to prevent spilling to next page) */}
+              <div className="pt-3 pb-1 flex justify-between items-center text-xs text-slate-600 break-inside-avoid">
+                <div className="text-center">
+                  <div className="border-t border-slate-400 w-44 pt-1 font-semibold">হিসাব প্রস্তুতকারকের স্বাক্ষর</div>
+                  <p className="text-[10px] text-slate-400 mt-0.5">Prepared By</p>
+                </div>
+                <div className="text-center">
+                  <div className="border-t border-slate-400 w-44 pt-1 font-semibold">অনুমোদনকারী / পরিচালক</div>
+                  <p className="text-[10px] text-slate-400 mt-0.5">Authorized Signatory</p>
+                </div>
               </div>
             </div>
-
-            {/* Official Footer matching Screenshot (Pinned to bottom of the single page report) */}
-            {pageSettings.showLetterhead && (
-              <ReportOfficialFooter className="report-footer-pinned mt-auto break-inside-avoid" />
-            )}
-          </div>
-        ) : (
-          /* ========================================================================= */
-          /* STANDARD FINANCIAL REPORT (Preserved for single-direction heads & 'all')  */
-          /* ========================================================================= */
-          <div className="space-y-3 font-sans w-full relative z-10 flex flex-col justify-between min-h-[calc(297mm-8mm)]">
-            {/* Official Header & Letterhead */}
-            {pageSettings.showLetterhead ? (
-              <ReportLetterhead
-                title={lang === 'bn' ? 'হিসাব কিতাব — অফিসিয়াল লেনদেন অডিট ও খতিয়ান রিপোর্ট' : 'Financial Statement & Audit Ledger Report'}
-                subtitle={lang === 'bn' ? 'ব্যক্তিগত ও কর্মক্ষেত্রের সম্পূর্ণ সমন্বিত হিসাব বিবরণী' : 'Official Financial & Audit Ledger Statement'}
-                accountName={accountFilter === 'all' ? (lang === 'bn' ? 'সকল হেড (All Accounts)' : 'All Accounts') : accountFilter}
-                startDate={startDate}
-                endDate={endDate}
-                currency={accountFilter === 'bd-bank' ? 'BDT' : 'KWD'}
-                lang={lang}
-              />
-            ) : (
-              <div className="border-b-2 border-slate-900 pb-4 flex justify-between items-start">
+          ) : (
+            /* ========================================================================= */
+            /* STANDARD FINANCIAL REPORT (Preserved for single-direction heads & 'all')  */
+            /* ========================================================================= */
+            <div className="space-y-3 font-sans w-full">
+              {!pageSettings.showLetterhead && (
+                <div className="border-b-2 border-slate-900 pb-4 flex justify-between items-start">
                 <div>
                   <div className="flex items-center gap-2.5">
                     <div className="w-9 h-9 rounded-xl bg-slate-900 text-white font-bold flex items-center justify-center text-lg">
@@ -3793,12 +3803,9 @@ export const ReportsView: React.FC = () => {
               </div>
             </div>
 
-            {/* Official Footer matching Screenshot (Pinned to bottom of the single page report) */}
-            {pageSettings.showLetterhead && (
-              <ReportOfficialFooter className="report-footer-pinned mt-auto break-inside-avoid" />
-            )}
-          </div>
-        )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* 7. Transaction Audit Voucher Slip Modal */}
