@@ -163,13 +163,13 @@ export const ReportsView: React.FC = () => {
   const dynamicColWidths = useMemo(() => {
     const sl = pageSettings.slWidth || 4;
     const date = pageSettings.dateWidth || 12;
-    const debit = pageSettings.debitWidth || 7.5;
-    const credit = pageSettings.creditWidth || 7.5;
-    const balance = pageSettings.balanceWidth || 9;
-    const remarks = pageSettings.remarksWidth || 42;
-    // Calculate remaining for account to ensure exact 100%
-    const fixedTotal = sl + date + debit + credit + balance + remarks;
-    const account = Math.max(10, Number((100 - fixedTotal).toFixed(1)));
+    const debit = pageSettings.debitWidth || 8;
+    const credit = pageSettings.creditWidth || 8;
+    const balance = pageSettings.balanceWidth || 9.5;
+    const account = pageSettings.accountWidth || 17;
+    // Calculate remarks as whatever remains to make exactly 100%
+    const fixedTotal = sl + date + debit + credit + balance + account;
+    const remarks = Math.max(20, Number((100 - fixedTotal).toFixed(1)));
     const baseColSpanWidth = Number((debit + credit + balance).toFixed(1));
 
     return {
@@ -218,10 +218,10 @@ export const ReportsView: React.FC = () => {
       @media print {
         @page {
           size: A4 ${pageSettings.orientation} !important;
-          margin-top: ${pageSettings.showLetterhead ? 30 : Math.max(pageSettings.marginTop, 8)}mm !important;
-          margin-bottom: ${pageSettings.showLetterhead ? 18 : Math.max(pageSettings.marginBottom, 8)}mm !important;
-          margin-left: ${pageSettings.marginLeft}mm !important;
-          margin-right: ${pageSettings.marginRight}mm !important;
+          margin-top: ${Math.max(pageSettings.marginTop, 4)}mm !important;
+          margin-bottom: ${Math.max(pageSettings.marginBottom, 4)}mm !important;
+          margin-left: ${Math.max(pageSettings.marginLeft, 4)}mm !important;
+          margin-right: ${Math.max(pageSettings.marginRight, 4)}mm !important;
         }
         * {
           -webkit-print-color-adjust: exact !important;
@@ -256,18 +256,22 @@ export const ReportsView: React.FC = () => {
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
         }
-        .print-fixed-header {
-          display: block !important;
-          position: fixed !important;
-          top: 0 !important;
-          left: 0 !important;
-          right: 0 !important;
+        .print-master-table {
           width: 100% !important;
-          height: 28mm !important;
-          z-index: 1000 !important;
+          border-collapse: collapse !important;
+          border: none !important;
+          margin: 0 !important;
+          padding: 0 !important;
           background: transparent !important;
-          -webkit-print-color-adjust: exact !important;
-          print-color-adjust: exact !important;
+        }
+        .print-master-header {
+          display: table-header-group !important;
+        }
+        .print-master-body {
+          display: table-row-group !important;
+        }
+        .print-master-footer {
+          display: table-footer-group !important;
         }
         .print-fixed-footer {
           display: block !important;
@@ -276,7 +280,7 @@ export const ReportsView: React.FC = () => {
           left: 0 !important;
           right: 0 !important;
           width: 100% !important;
-          height: 14mm !important;
+          height: 12mm !important;
           z-index: 1000 !important;
           background: transparent !important;
           -webkit-print-color-adjust: exact !important;
@@ -1762,7 +1766,7 @@ export const ReportsView: React.FC = () => {
                         <tr className="bg-white font-medium border-b border-slate-200">
                           <td style={{ width: dynamicColWidths.sl }} className="py-1 px-1 text-center border-r border-slate-200 font-mono text-slate-600">2</td>
                           <td style={{ width: dynamicColWidths.date }} className="py-1 px-1 border-r border-slate-200 text-center font-mono text-slate-400">—</td>
-                          <td style={{ width: dynamicColWidths.account }} className="py-1 px-2 border-r border-slate-200 font-bold italic text-slate-900 truncate">
+                          <td style={{ width: dynamicColWidths.account }} className="py-1 px-2 border-r border-slate-200 font-bold italic text-slate-900 whitespace-nowrap">
                             Opening Balance
                           </td>
                           <td style={{ width: dynamicColWidths.debit }} className="py-1 px-1 text-right border-r border-slate-200 font-mono font-bold text-slate-900 tabular-nums text-[10.5px]">
@@ -3002,7 +3006,7 @@ export const ReportsView: React.FC = () => {
                 <tr className="bg-white hover:bg-slate-50/80 font-medium border-b border-slate-200">
                   <td style={{ width: dynamicColWidths.sl }} className={`px-1 text-center border-r border-slate-200 font-mono text-slate-500 text-xs ${subLedgerRowPaddingClass}`}>2</td>
                   <td style={{ width: dynamicColWidths.date }} className={`px-2 border-r border-slate-200 text-center font-mono text-slate-400 overflow-hidden min-w-[80px] ${subLedgerRowPaddingClass}`}>—</td>
-                  <td style={{ width: dynamicColWidths.account }} className={`px-2 border-r border-slate-200 italic text-slate-900 text-xs truncate ${pageSettings.isBold ? 'font-black' : 'font-bold'} ${pageSettings.isItalic ? 'italic' : ''} ${subLedgerRowPaddingClass}`}>
+                  <td style={{ width: dynamicColWidths.account }} className={`px-2 border-r border-slate-200 italic text-slate-900 text-xs whitespace-nowrap ${pageSettings.isBold ? 'font-black' : 'font-bold'} ${pageSettings.isItalic ? 'italic' : ''} ${subLedgerRowPaddingClass}`}>
                     Opening Balance
                   </td>
                   <td style={{ width: dynamicColWidths.debit }} className={`px-1.5 text-right border-r border-slate-200 font-mono font-bold text-slate-900 tabular-nums text-xs md:text-sm ${subLedgerRowPaddingClass}`}>
@@ -3472,22 +3476,22 @@ export const ReportsView: React.FC = () => {
           </div>
         )}
 
-        {/* Fixed Running Header (Letterhead) on EVERY printed page */}
-        {pageSettings.showLetterhead && (
-          <div className="print-fixed-header">
-            <ReportLetterhead />
-          </div>
-        )}
+        {/* Master Print Table Architecture: Native browser pagination guarantees NO overlap! */}
+        <table className="w-full border-none p-0 m-0 border-collapse print-master-table">
+          {pageSettings.showLetterhead && (
+            <thead className="print-master-header" style={{ display: 'table-header-group' }}>
+              <tr>
+                <td className="border-none p-0 pb-3" style={{ border: 'none', padding: '0 0 10px 0' }}>
+                  <ReportLetterhead />
+                </td>
+              </tr>
+            </thead>
+          )}
 
-        {/* Fixed Running Footer on EVERY printed page */}
-        {pageSettings.showLetterhead && (
-          <div className="print-fixed-footer">
-            <ReportOfficialFooter />
-          </div>
-        )}
-
-        {/* Report Content Body: flows naturally across pages between top margin & bottom margin */}
-        <div className="print-report-content w-full">
+          <tbody className="print-master-body">
+            <tr>
+              <td className="border-none p-0" style={{ border: 'none', padding: '0' }}>
+                <div className="print-report-content w-full">
           {isSubLedgerEligible && subLedgerData ? (
             /* ========================================================================= */
             /* SUB LEDGER PRINT DOCUMENT (Matching Screenshot 2)                         */
@@ -3560,7 +3564,7 @@ export const ReportsView: React.FC = () => {
                   <tr className="bg-white font-medium border-b border-slate-200 break-inside-avoid">
                     <td style={{ width: dynamicColWidths.sl }} className="py-1 px-1 text-center border-r border-slate-200 font-mono text-slate-600">2</td>
                     <td style={{ width: dynamicColWidths.date }} className="py-1 px-1 border-r border-slate-200 text-center font-mono text-slate-400">—</td>
-                    <td style={{ width: dynamicColWidths.account }} className="py-1 px-2 border-r border-slate-200 font-bold italic text-slate-900 truncate">
+                    <td style={{ width: dynamicColWidths.account }} className="py-1 px-2 border-r border-slate-200 font-bold italic text-slate-900 whitespace-nowrap">
                       Opening Balance
                     </td>
                     <td style={{ width: dynamicColWidths.debit }} className="py-1 px-1 text-right border-r border-slate-200 font-mono font-bold text-slate-900 tabular-nums text-[10.5px]">
@@ -3802,10 +3806,30 @@ export const ReportsView: React.FC = () => {
                 <p className="text-[10px] text-slate-400 mt-0.5">Authorized Signatory</p>
               </div>
             </div>
-
             </div>
           )}
-        </div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+
+          {pageSettings.showLetterhead && (
+            <tfoot className="print-master-footer" style={{ display: 'table-footer-group' }}>
+              <tr>
+                <td className="border-none p-0" style={{ border: 'none', padding: '0', height: '14mm' }}>
+                  <div style={{ height: '14mm', visibility: 'hidden' }} />
+                </td>
+              </tr>
+            </tfoot>
+          )}
+        </table>
+
+        {/* Fixed Running Footer on EVERY printed page pinned to bottom */}
+        {pageSettings.showLetterhead && (
+          <div className="print-fixed-footer">
+            <ReportOfficialFooter />
+          </div>
+        )}
       </div>
 
       {/* 7. Transaction Audit Voucher Slip Modal */}
