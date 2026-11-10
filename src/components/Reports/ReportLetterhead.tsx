@@ -1,6 +1,5 @@
 import React from 'react';
-import { ShieldCheck, Award, Calendar, FileText } from 'lucide-react';
-import { formatDate } from '../../utils/formatters';
+import { Mail, Phone, MapPin } from 'lucide-react';
 
 interface ReportLetterheadProps {
   title?: string;
@@ -15,12 +14,12 @@ interface ReportLetterheadProps {
 }
 
 /**
- * Modern, aesthetic, official letterhead for Financial Reports, Sub Ledgers, and Audits.
- * Suitable for both on-screen display and PDF/Print generation.
+ * Modern, aesthetic letterhead matching the user's exact specification:
+ * - Left: Hisab Kitab [PRO] logo lockup with "• Personal & Work Finance"
+ * - Right: Contact & location card with Juwel199431@gmail.com, +96569031679, Fahaheel, Al Ahmedi, Kuwait
+ * - Green separator line + report context metadata
  */
 export const ReportLetterhead: React.FC<ReportLetterheadProps> = ({
-  title,
-  subtitle,
   accountName,
   startDate,
   endDate,
@@ -30,141 +29,98 @@ export const ReportLetterhead: React.FC<ReportLetterheadProps> = ({
   className = '',
 }) => {
   const currentDate = new Date().toLocaleDateString('en-GB');
-  const currentTime = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const currentTime = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
   const generatedRef = docRef || `HK-${new Date().getFullYear()}-${Math.abs((startDate || '').charCodeAt(0) * 31 + (endDate || '').length * 17) % 9000 + 1000}`;
 
   return (
-    <div className={`w-full pb-3 mb-3 border-b-2 border-slate-800 ${className}`}>
-      {/* Top Main Letterhead Row */}
-      <div className="flex justify-between items-start gap-4">
-        {/* Left: Modern Logo & Company Branding */}
-        <div className="flex items-start gap-3.5">
-          {/* Aesthetic Dual-Tone Monogram Logo */}
-          <div className="relative shrink-0 mt-0.5">
-            <div className="w-12 h-12 rounded-xl bg-linear-to-br from-slate-900 via-indigo-950 to-slate-900 p-0.5 shadow-md flex items-center justify-center border border-indigo-400/40">
-              <svg
-                viewBox="0 0 48 48"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-10 h-10"
-              >
-                {/* Outer Hexagon Shield */}
-                <polygon
-                  points="24,3 43,13 43,35 24,45 5,35 5,13"
-                  fill="url(#shieldGrad)"
-                  stroke="#F59E0B"
-                  strokeWidth="1.2"
-                />
-                {/* Inner Balance & Ledger Lines */}
-                <path
-                  d="M24 10 V38 M14 18 H34 M11 26 L17 18 L23 26 Z M25 26 L31 18 L37 26 Z"
-                  stroke="#E0E7FF"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <circle cx="24" cy="18" r="2.5" fill="#10B981" />
-                <defs>
-                  <linearGradient id="shieldGrad" x1="5" y1="3" x2="43" y2="45" gradientUnits="userSpaceOnUse">
-                    <stop stopColor="#1E1B4B" />
-                    <stop offset="0.5" stopColor="#0F172A" />
-                    <stop offset="1" stopColor="#1E293B" />
-                  </linearGradient>
-                </defs>
-              </svg>
-            </div>
-            {/* Small Gold Verified Star */}
-            <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-amber-500 border border-white flex items-center justify-center shadow-xs">
-              <span className="text-[8px] text-white font-black">★</span>
-            </div>
+    <div className={`w-full pb-2 mb-3 ${className}`}>
+      {/* Top Main Letterhead Row (Exact Match to Screenshot) */}
+      <div className="flex justify-between items-center gap-4">
+        {/* Left: Brand Identity */}
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#064e3b] via-[#044e42] to-[#022c22] p-2 flex items-center justify-center shadow-md border border-emerald-500/30 shrink-0">
+            <svg viewBox="0 0 32 32" fill="none" className="w-7 h-7">
+              <rect x="3" y="6" width="26" height="20" rx="4" stroke="#34d399" strokeWidth="2" fill="#064e3b" />
+              <path d="M3 12 H29" stroke="#34d399" strokeWidth="1.5" />
+              <rect x="7" y="16" width="10" height="2" rx="1" fill="#a7f3d0" />
+              <rect x="7" y="20" width="6" height="2" rx="1" fill="#a7f3d0" />
+              <circle cx="22" cy="18" r="3" fill="#fbbf24" />
+            </svg>
           </div>
 
-          {/* Brand & System Names */}
           <div>
-            <div className="flex items-baseline gap-2">
-              <h1 className="text-lg md:text-xl font-black text-slate-900 tracking-tight font-sans">
-                {lang === 'bn' ? 'হিসাব কিতাব' : 'HISAB KITAB'}
-              </h1>
-              <span className="text-[11px] font-bold font-mono tracking-widest text-indigo-700 uppercase">
-                Finance & Audit System
+            <div className="flex items-center gap-2">
+              <span className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight font-sans">
+                Hisab Kitab
+              </span>
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300">
+                PRO
               </span>
             </div>
-
-            <p className="text-xs font-semibold text-slate-700 leading-snug mt-0.5">
-              {title || (lang === 'bn' ? 'অফিসিয়াল আর্থিক অডিট ও সমন্বিত খতিয়ান বিবরণী' : 'Official Financial Statement & Audit Ledger')}
-            </p>
-
-            <p className="text-[10px] text-slate-500 leading-normal">
-              {subtitle || (lang === 'bn' ? 'ব্যক্তিগত ও কর্মক্ষেত্রের নির্ভুল সমন্বিত হিসাব সংরক্ষণ শাখা' : 'Integrated Personal & Corporate Accounts Registry')}
-            </p>
+            <div className="flex items-center gap-1.5 text-xs text-slate-600 font-medium mt-0.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
+              <span>Personal &amp; Work Finance</span>
+            </div>
           </div>
         </div>
 
-        {/* Right: Official Verification & Document Reference Block */}
-        <div className="text-right shrink-0">
-          {/* Official Stamp Badge */}
-          <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-300 text-emerald-800 text-[10px] font-black uppercase tracking-wider mb-1 shadow-2xs">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Official Audited Document</span>
+        {/* Right: Contact & Location Info Card */}
+        <div className="bg-white/95 rounded-xl border border-slate-200/90 shadow-2xs px-3.5 py-2 text-right space-y-1 shrink-0">
+          <div className="flex items-center justify-end gap-1.5 text-xs font-mono font-medium text-slate-700">
+            <span className="text-slate-800">Juwel199431@gmail.com</span>
+            <Mail className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
           </div>
-
-          <div className="text-[10.5px] font-mono text-slate-700 space-y-0.5">
-            <div>
-              <span className="text-slate-400 font-sans">রেফারেন্স নং:</span>{' '}
-              <strong className="text-indigo-950 font-bold">{generatedRef}</strong>
-            </div>
-            <div>
-              <span className="text-slate-400 font-sans">ইস্যুর তারিখ:</span>{' '}
-              <span className="text-slate-900 font-semibold">{currentDate} [{currentTime}]</span>
-            </div>
-            <div>
-              <span className="text-slate-400 font-sans">কারেন্সি বেস:</span>{' '}
-              <strong className="text-emerald-700 font-bold">{currency === 'KWD' ? 'KWD (কুয়েতি দিনার)' : 'BDT (বাংলাদেশী টাকা)'}</strong>
-            </div>
+          <div className="flex items-center justify-end gap-1.5 text-xs font-mono font-bold text-slate-900">
+            <span>+96569031679</span>
+            <Phone className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+          </div>
+          <div className="flex items-center justify-end gap-1.5 text-[11px] font-medium text-slate-600">
+            <span>Fahaheel, Al Ahmedi, Kuwait</span>
+            <MapPin className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
           </div>
         </div>
       </div>
 
-      {/* Decorative Tri-Color Accent Ribbon */}
-      <div className="mt-2.5 h-1 w-full rounded-full bg-linear-to-r from-slate-900 via-indigo-600 via-emerald-500 to-amber-500" />
+      {/* Horizontal Divider Line in vibrant emerald (#10b981) */}
+      <div className="h-[2px] w-full bg-emerald-500 mt-3 mb-2 rounded-full" />
 
-      {/* Sub-Header Context Strip (Account Name, Date Range) */}
-      {(accountName || startDate || endDate) && (
-        <div className="mt-1.5 pt-1 flex flex-wrap items-center justify-between text-[11px] text-slate-700">
-          <div className="flex items-center gap-2">
-            {accountName && (
-              <span className="font-semibold text-slate-900">
-                <span className="text-slate-500 font-normal">{lang === 'bn' ? 'অ্যাকাউন্ট / হেড:' : 'Account:'}</span>{' '}
-                <span className="font-bold text-indigo-900">{accountName}</span>
-              </span>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2 font-mono text-[10.5px] text-slate-600">
+      {/* Report Context Strip */}
+      <div className="flex flex-wrap items-center justify-between text-xs text-slate-700 px-1 pt-0.5">
+        <div className="flex items-center gap-2">
+          {accountName && (
             <span>
-              <span className="text-slate-500 font-sans">{lang === 'bn' ? 'হিসাব সময়কাল:' : 'Period:'}</span>{' '}
-              <strong className="text-slate-900">{startDate ? startDate.replace(/-/g, '/') : '2026/01/01'} to {endDate ? endDate.replace(/-/g, '/') : currentDate}</strong>
+              <span className="text-slate-500 font-normal">{lang === 'bn' ? 'অ্যাকাউন্ট:' : 'Account:'}</span>{' '}
+              <strong className="text-slate-900 font-bold">{accountName}</strong>
             </span>
-          </div>
+          )}
+          {accountName && <span className="text-slate-300">·</span>}
+          <span>
+            <span className="text-slate-500 font-normal">{lang === 'bn' ? 'সময়কাল:' : 'Period:'}</span>{' '}
+            <strong className="text-slate-900 font-mono text-[11px]">
+              {startDate ? startDate.replace(/-/g, '/') : '2026/01/01'} to {endDate ? endDate.replace(/-/g, '/') : currentDate}
+            </strong>
+          </span>
         </div>
-      )}
+
+        <div className="flex items-center gap-2 font-mono text-[11px] text-slate-600">
+          <span>Ref: <strong className="text-emerald-800">{generatedRef}</strong></span>
+          <span className="text-slate-300">·</span>
+          <span>Base: <strong className="text-slate-900">{currency}</strong></span>
+          <span className="text-slate-300">·</span>
+          <span className="text-slate-500">{currentDate} [{currentTime}]</span>
+        </div>
+      </div>
     </div>
   );
 };
 
 interface ReportWatermarkBackgroundProps {
-  text?: string;
   opacity?: number;
   showWatermark?: boolean;
 }
 
-/**
- * Modern aesthetic financial security watermark and background guilloche emblem.
- * Displays subtly on-screen and prints cleanly behind the financial statement table.
- */
 export const ReportWatermarkBackground: React.FC<ReportWatermarkBackgroundProps> = ({
-  text = 'HISAB KITAB OFFICIAL FINANCIAL RECORD • VERIFIED & AUDITED',
-  opacity = 0.045,
+  opacity = 0.08,
   showWatermark = true,
 }) => {
   if (!showWatermark) return null;
@@ -178,81 +134,104 @@ export const ReportWatermarkBackground: React.FC<ReportWatermarkBackgroundProps>
         printColorAdjust: 'exact',
       }}
     >
-      {/* 1. Large Central Circular Security Emblem (Guilloche Style) */}
-      <div
-        className="absolute inset-0 flex items-center justify-center"
-        style={{ opacity }}
+      {/* 1. Subtle Cyan/Teal Grid Paper Pattern */}
+      <svg
+        className="absolute inset-0 w-full h-full"
+        xmlns="http://www.w3.org/2000/svg"
+        style={{ opacity: opacity * 0.9 }}
       >
-        <svg
-          viewBox="0 0 600 600"
-          className="w-[500px] h-[500px] text-slate-900 fill-none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          {/* Concentric Guilloche Rings */}
-          <circle cx="300" cy="300" r="280" stroke="currentColor" strokeWidth="2" strokeDasharray="6 4" />
-          <circle cx="300" cy="300" r="268" stroke="currentColor" strokeWidth="1" />
-          <circle cx="300" cy="300" r="220" stroke="currentColor" strokeWidth="1.5" />
-          <circle cx="300" cy="300" r="208" stroke="currentColor" strokeWidth="0.8" strokeDasharray="3 3" />
-          <circle cx="300" cy="300" r="140" stroke="currentColor" strokeWidth="2" />
-          <circle cx="300" cy="300" r="130" stroke="currentColor" strokeWidth="1" />
-
-          {/* Curved Circular Text Path */}
-          <path
-            id="watermarkTextPath"
-            d="M 120,300 A 180,180 0 1,1 480,300 A 180,180 0 1,1 120,300"
-            fill="none"
-          />
-          <text fontSize="14" fontWeight="bold" letterSpacing="3.5" fill="currentColor">
-            <textPath href="#watermarkTextPath" startOffset="0%">
-              ★ HISAB KITAB OFFICIAL FINANCIAL RECORD ★ VERIFIED & AUDITED STATEMENT ★
-            </textPath>
-          </text>
-
-          {/* Inner Heraldic Shield & Scales Emblem */}
-          <g transform="translate(240, 240)">
-            <polygon
-              points="60,10 108,35 108,85 60,110 12,85 12,35"
-              stroke="currentColor"
-              strokeWidth="2.5"
-            />
+        <defs>
+          <pattern
+            id="reportGridPattern"
+            width="28"
+            height="28"
+            patternUnits="userSpaceOnUse"
+          >
             <path
-              d="M60 25 V95 M35 45 H85 M28 65 L43 45 L58 65 Z M62 65 L77 45 L92 65 Z"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <circle cx="60" cy="45" r="4" fill="currentColor" />
-          </g>
-
-          {/* Geometric Starburst Radial Rays */}
-          {[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map((deg) => (
-            <line
-              key={deg}
-              x1="300"
-              y1="300"
-              x2={300 + 260 * Math.cos((deg * Math.PI) / 180)}
-              y2={300 + 260 * Math.sin((deg * Math.PI) / 180)}
-              stroke="currentColor"
+              d="M 28 0 L 0 0 0 28"
+              fill="none"
+              stroke="#0d9488"
               strokeWidth="0.5"
-              strokeDasharray="2 6"
+              strokeOpacity="0.45"
             />
-          ))}
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#reportGridPattern)" />
+      </svg>
+
+      {/* 2. Concentric Radar Rings in Top-Right */}
+      <div
+        className="absolute top-16 right-24 pointer-events-none"
+        style={{ opacity: opacity * 1.5 }}
+      >
+        <svg width="340" height="340" viewBox="0 0 340 340" fill="none">
+          <circle cx="170" cy="170" r="150" stroke="#10b981" strokeWidth="1" strokeDasharray="4 6" />
+          <circle cx="170" cy="170" r="110" stroke="#10b981" strokeWidth="0.8" />
+          <circle cx="170" cy="170" r="70" stroke="#10b981" strokeWidth="0.8" strokeDasharray="3 4" />
+          <circle cx="170" cy="170" r="30" stroke="#10b981" strokeWidth="1" />
         </svg>
       </div>
 
-      {/* 2. Four-Corner Security Ornamental Filigree Brackets */}
-      <div className="absolute top-2 left-2 w-8 h-8 border-t-2 border-l-2 border-slate-400" style={{ opacity: opacity * 2.5 }} />
-      <div className="absolute top-2 right-2 w-8 h-8 border-t-2 border-r-2 border-slate-400" style={{ opacity: opacity * 2.5 }} />
-      <div className="absolute bottom-2 left-2 w-8 h-8 border-b-2 border-l-2 border-slate-400" style={{ opacity: opacity * 2.5 }} />
-      <div className="absolute bottom-2 right-2 w-8 h-8 border-b-2 border-r-2 border-slate-400" style={{ opacity: opacity * 2.5 }} />
-
-      {/* 3. Subtle Micro-text Security Border along edges */}
+      {/* 3. Rising Financial Wave Curve with Soft Mint Gradient Fill */}
       <div
-        className="absolute bottom-1 inset-x-8 text-center text-[7.5px] font-mono tracking-widest text-slate-400 uppercase"
-        style={{ opacity: opacity * 3 }}
+        className="absolute bottom-0 inset-x-0 h-[65%] pointer-events-none"
+        style={{ opacity: opacity * 2.2 }}
       >
-        — HISAB KITAB FINANCIAL SYSTEM • AUTHENTIC AUDITED DOCUMENT • TAMPER PROTECTED —
+        <svg
+          viewBox="0 0 1000 500"
+          preserveAspectRatio="none"
+          className="w-full h-full"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <defs>
+            <linearGradient id="waveMintGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#34d399" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#6ee7b7" stopOpacity="0.25" />
+              <stop offset="100%" stopColor="#a7f3d0" stopOpacity="0.05" />
+            </linearGradient>
+          </defs>
+
+          <path
+            d="M 0 420 C 180 370, 320 400, 480 390 C 650 380, 780 280, 880 210 C 940 170, 980 200, 1000 230 L 1000 500 L 0 500 Z"
+            fill="url(#waveMintGrad)"
+          />
+          <path
+            d="M 0 420 C 180 370, 320 400, 480 390 C 650 380, 780 280, 880 210 C 940 170, 980 200, 1000 230"
+            stroke="#10b981"
+            strokeWidth="2.5"
+            strokeOpacity="0.7"
+          />
+
+          <circle cx="370" cy="392" r="4.5" fill="#10b981" />
+          <circle cx="750" cy="295" r="4.5" fill="#10b981" />
+          <circle cx="880" cy="210" r="5" fill="#059669" />
+        </svg>
+      </div>
+    </div>
+  );
+};
+
+export const ReportOfficialFooter: React.FC<{ className?: string }> = ({ className = '' }) => {
+  return (
+    <div className={`w-full bg-[#031525] text-white border-t-2 border-emerald-500 px-6 py-3 flex items-center justify-between mt-6 ${className}`}>
+      {/* Left: App Branding */}
+      <div className="flex items-center gap-2.5">
+        <div className="w-5 h-5 rounded-md bg-emerald-600/30 border border-emerald-400/40 flex items-center justify-center p-0.5">
+          <div className="w-2.5 h-2.5 rounded-xs bg-emerald-400" />
+        </div>
+        <div>
+          <span className="text-xs font-bold text-white block leading-tight">Hisab Kitab</span>
+          <span className="text-[9px] font-black text-emerald-400 tracking-widest uppercase block mt-0.5">
+            SMART FINANCE MANAGEMENT
+          </span>
+        </div>
+      </div>
+
+      {/* Right: Location & Copyright */}
+      <div className="text-right">
+        <span className="text-xs font-bold text-white block leading-tight">Fahaheel, Al Ahmedi, Kuwait</span>
+        <span className="text-[10px] text-slate-400 block mt-0.5 font-medium">© 2026 Hisab Kitab.</span>
       </div>
     </div>
   );

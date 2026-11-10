@@ -58,6 +58,7 @@ import {
 import {
   ReportLetterhead,
   ReportWatermarkBackground,
+  ReportOfficialFooter,
 } from './ReportLetterhead';
 
 type AccountFilter =
@@ -1773,6 +1774,11 @@ export const ReportsView: React.FC = () => {
                       </tbody>
                     </table>
                   </div>
+
+                  {/* Official Footer matching Screenshot */}
+                  {pageSettings.showLetterhead && (
+                    <ReportOfficialFooter className="mt-4 rounded-b-lg overflow-hidden shadow-xs" />
+                  )}
                 </div>
               ) : (
                 <div className="space-y-3 font-sans w-full relative z-10">
@@ -1832,6 +1838,11 @@ export const ReportsView: React.FC = () => {
                       </tbody>
                     </table>
                   </div>
+
+                  {/* Official Footer matching Screenshot */}
+                  {pageSettings.showLetterhead && (
+                    <ReportOfficialFooter className="mt-4 rounded-b-lg overflow-hidden shadow-xs" />
+                  )}
                 </div>
               )}
             </div>
@@ -3025,6 +3036,11 @@ export const ReportsView: React.FC = () => {
                 </tr>
               </tbody>
             </table>
+
+            {/* On-Screen Official Footer */}
+            {pageSettings.showLetterhead && (
+              <ReportOfficialFooter className="mt-0" />
+            )}
           </div>
         ) : (
           /* Standard Audit Ledger Table */
@@ -3349,6 +3365,11 @@ export const ReportsView: React.FC = () => {
                 )}
               </tbody>
             </table>
+
+            {/* On-Screen Official Footer */}
+            {pageSettings.showLetterhead && (
+              <ReportOfficialFooter className="mt-0" />
+            )}
           </div>
         )}
 
@@ -3564,6 +3585,9 @@ export const ReportsView: React.FC = () => {
                 <p className="text-[10px] text-slate-400 mt-0.5">Authorized Signatory</p>
               </div>
             </div>
+
+            {/* Official Footer matching Screenshot */}
+            <ReportOfficialFooter className="break-inside-avoid" />
           </div>
         ) : (
           /* ========================================================================= */
@@ -3734,6 +3758,9 @@ export const ReportsView: React.FC = () => {
                 <p className="text-[10px] text-slate-400 mt-0.5">Authorized Signatory</p>
               </div>
             </div>
+
+            {/* Official Footer matching Screenshot */}
+            <ReportOfficialFooter className="break-inside-avoid" />
           </div>
         )}
       </div>
