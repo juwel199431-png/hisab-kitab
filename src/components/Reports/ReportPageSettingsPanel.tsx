@@ -16,7 +16,9 @@ import {
   Type,
   AlignLeft,
   Calendar,
+  Camera,
 } from 'lucide-react';
+import { LogoType } from './ReportLogoModal';
 
 export interface ReportPageSettings {
   marginTop: number; // in mm
@@ -43,6 +45,12 @@ export interface ReportPageSettings {
   showLetterhead: boolean;
   showWatermark: boolean;
   watermarkOpacity: number; // 0.03, 0.05, 0.08
+  // Logo & Branding Customization
+  logoType?: LogoType;
+  customLogoUrl?: string;
+  companyName?: string;
+  companyTagline?: string;
+  companyBadge?: string;
 }
 
 export const DEFAULT_PAGE_SETTINGS: ReportPageSettings = {
@@ -67,6 +75,11 @@ export const DEFAULT_PAGE_SETTINGS: ReportPageSettings = {
   showLetterhead: true,
   showWatermark: true,
   watermarkOpacity: 0.22,
+  logoType: 'default',
+  customLogoUrl: '',
+  companyName: 'Hisab Kitab',
+  companyTagline: 'Personal & Work Finance',
+  companyBadge: 'PRO',
 };
 
 export const PAGE_SETTINGS_STORAGE_KEY = 'hisab_kitab_report_page_settings_v7';
@@ -105,6 +118,7 @@ interface ReportPageSettingsPanelProps {
   onToggleLivePreview: () => void;
   onPrint: () => void;
   lang: 'bn' | 'en';
+  onOpenLogoModal?: () => void;
 }
 
 export const ReportPageSettingsPanel: React.FC<ReportPageSettingsPanelProps> = ({
@@ -119,6 +133,7 @@ export const ReportPageSettingsPanel: React.FC<ReportPageSettingsPanelProps> = (
   onToggleLivePreview,
   onPrint,
   lang,
+  onOpenLogoModal,
 }) => {
   const [saveToast, setSaveToast] = useState(false);
 
@@ -785,6 +800,39 @@ export const ReportPageSettingsPanel: React.FC<ReportPageSettingsPanelProps> = (
                       </button>
                     ))}
                   </div>
+                </div>
+
+                {/* 4. Logo & Branding Customization Button */}
+                <div className="sm:col-span-3 pt-3 mt-1 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 bg-white p-3 rounded-lg border border-slate-100">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold text-xs border border-indigo-200 shadow-2xs">
+                      <Camera className="w-4 h-4 text-indigo-600" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-slate-800">
+                          {settings.companyName || 'Hisab Kitab'}
+                        </span>
+                        <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-100 text-slate-600 border border-slate-200">
+                          {settings.logoType === 'custom' ? (lang === 'bn' ? 'কাস্টম লোগো' : 'Custom') : (settings.logoType || 'default')}
+                        </span>
+                      </div>
+                      <p className="text-[10.5px] text-slate-500">
+                        {settings.companyTagline || 'Personal & Work Finance'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {onOpenLogoModal && (
+                    <button
+                      type="button"
+                      onClick={onOpenLogoModal}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-xs transition-colors cursor-pointer"
+                    >
+                      <Camera className="w-3.5 h-3.5 text-white" />
+                      <span>{lang === 'bn' ? 'লোগো পরিবর্তন করুন' : 'Change Logo'}</span>
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

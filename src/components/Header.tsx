@@ -17,6 +17,7 @@ import {
   Bell,
   Lock,
   ShieldCheck,
+  Sparkles,
 } from 'lucide-react';
 import { AccountSection } from '../types/finance';
 
@@ -48,6 +49,7 @@ export const Header: React.FC = () => {
     lockApp,
     isCloudSynced,
     forcePushToCloud,
+    openAIAssistantWithTab,
   } = useFinance();
 
   const [justSynced, setJustSynced] = useState(false);
@@ -184,6 +186,16 @@ export const Header: React.FC = () => {
 
         {/* Right Side: Clean, Structured & De-cluttered Control Center */}
         <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+          {/* AI Smart Assistant Trigger Button */}
+          <button
+            onClick={() => openAIAssistantWithTab('voice')}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl transition-all border shadow-xs whitespace-nowrap cursor-pointer bg-gradient-to-r from-indigo-600 via-purple-600 to-emerald-600 hover:from-indigo-700 hover:to-emerald-700 text-white border-indigo-300/40 hover:scale-[1.03] hover:shadow-indigo-500/25 active:scale-95"
+            title={lang === 'bn' ? 'এআই স্মার্ট সহকারী (ভয়েস এন্ট্রি, রসিদ স্ক্যান, এসএমএস ও হিসাব পরামর্শ)' : 'AI Smart Assistant (Voice entry, receipt scanner, SMS & insights)'}
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
+            <span>{lang === 'bn' ? 'AI সহকারী' : 'AI Assistant'}</span>
+          </button>
+
           {/* 1. Live Real-time Cloud Sync Indicator */}
           <button
             onClick={handleSyncClick}

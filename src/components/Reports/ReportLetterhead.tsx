@@ -1,5 +1,6 @@
 import React from 'react';
-import { Mail, Phone, MapPin } from 'lucide-react';
+import { Mail, Phone, MapPin, Camera } from 'lucide-react';
+import { renderReportLogoIcon, LogoType } from './ReportLogoModal';
 
 interface ReportLetterheadProps {
   title?: string;
@@ -11,63 +12,74 @@ interface ReportLetterheadProps {
   lang?: 'bn' | 'en';
   docRef?: string;
   className?: string;
+  logoType?: LogoType;
+  customLogoUrl?: string;
+  companyName?: string;
+  companyTagline?: string;
+  companyBadge?: string;
+  onOpenLogoModal?: () => void;
 }
 
 /**
  * Modern, aesthetic letterhead matching user's exact specification:
- * - Left: Hisab Kitab [PRO] logo lockup with "• Personal & Work Finance"
+ * - Left: Customizable Logo lockup with brand name, badge, and tagline
  * - Right: Contact & location card with modern colored badges for Email, Phone, and Address (Icons BEFORE text)
  * - Green separator line rendered via vector SVG (guaranteed to render in PDF & print)
  * - Completely uncluttered, no duplicate headers
  */
 export const ReportLetterhead: React.FC<ReportLetterheadProps> = ({
   className = '',
+  lang = 'bn',
+  logoType = 'default',
+  customLogoUrl,
+  companyName = 'Hisab Kitab',
+  companyTagline = 'Personal & Work Finance',
+  companyBadge = 'PRO',
+  onOpenLogoModal,
 }) => {
   return (
     <div className={`w-full pb-1 ${className}`}>
       {/* Top Main Letterhead Row */}
       <div className="flex justify-between items-center gap-4">
         {/* Left: Brand Identity */}
-        <div className="flex items-center gap-3">
-          <div
-            className="w-12 h-12 rounded-xl p-2 flex items-center justify-center shadow-md shrink-0"
-            style={{
-              background: 'linear-gradient(135deg, #064e3b 0%, #044e42 50%, #022c22 100%)',
-              border: '1px solid rgba(16, 185, 129, 0.4)',
-              WebkitPrintColorAdjust: 'exact',
-              printColorAdjust: 'exact',
-            }}
-          >
-            <svg viewBox="0 0 32 32" fill="none" className="w-7 h-7">
-              <rect x="3" y="6" width="26" height="20" rx="4" stroke="#34d399" strokeWidth="2" fill="#064e3b" />
-              <path d="M3 12 H29" stroke="#34d399" strokeWidth="1.5" />
-              <rect x="7" y="16" width="10" height="2" rx="1" fill="#a7f3d0" />
-              <rect x="7" y="20" width="6" height="2" rx="1" fill="#a7f3d0" />
-              <circle cx="22" cy="18" r="3" fill="#fbbf24" />
-            </svg>
+        <div className="flex items-center gap-3 relative group">
+          <div className="relative">
+            {renderReportLogoIcon(logoType, customLogoUrl, 'w-12 h-12')}
+            {onOpenLogoModal && (
+              <button
+                type="button"
+                onClick={onOpenLogoModal}
+                className="no-print absolute -bottom-1 -right-1 bg-white hover:bg-emerald-50 text-emerald-700 p-1 rounded-full shadow-md border border-slate-200 transition-all cursor-pointer group-hover:scale-110"
+                title={lang === 'bn' ? 'লোগো পরিবর্তন করুন' : 'Change Logo'}
+              >
+                <Camera className="w-3 h-3 text-emerald-600" />
+              </button>
+            )}
           </div>
 
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight font-sans">
-                Hisab Kitab
+                {companyName || 'Hisab Kitab'}
               </span>
-              <span
-                className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider"
-                style={{
-                  backgroundColor: '#d1fae5',
-                  color: '#065f46',
-                  border: '1px solid #a7f3d0',
-                  WebkitPrintColorAdjust: 'exact',
-                  printColorAdjust: 'exact',
-                }}
-              >
-                PRO
-              </span>
+              {(companyBadge || 'PRO') && (
+                <span
+                  className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider"
+                  style={{
+                    backgroundColor: '#d1fae5',
+                    color: '#065f46',
+                    border: '1px solid #a7f3d0',
+                    WebkitPrintColorAdjust: 'exact',
+                    printColorAdjust: 'exact',
+                  }}
+                >
+                  {companyBadge || 'PRO'}
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-1.5 text-xs text-slate-600 font-medium mt-0.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
-              <span>Personal &amp; Work Finance</span>
+              <span>{companyTagline || 'Personal & Work Finance'}</span>
             </div>
           </div>
         </div>
@@ -186,9 +198,12 @@ export const ReportWatermarkBackground: React.FC<ReportWatermarkBackgroundProps>
 
   return (
     <div
-      className="pointer-events-none select-none absolute inset-0 w-full h-full overflow-hidden z-0 report-watermark-layer"
+      className="pointer-events-none select-none absolute inset-0 w-full h-full overflow-hidden z-0 report-watermark-layer report-background-image"
       aria-hidden="true"
       style={{
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
         WebkitPrintColorAdjust: 'exact',
         printColorAdjust: 'exact',
         zIndex: 0,

@@ -39,6 +39,7 @@ import {
   ShieldCheck,
   ShoppingBag,
   Banknote,
+  Camera,
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import { exportToCSV } from '../../utils/storage';
@@ -60,6 +61,7 @@ import {
   ReportWatermarkBackground,
   ReportOfficialFooter,
 } from './ReportLetterhead';
+import { ReportLogoModal, LogoSettings } from './ReportLogoModal';
 
 type AccountFilter =
   | 'all'
@@ -135,6 +137,18 @@ export const ReportsView: React.FC = () => {
   const [pageSettings, setPageSettings] = useState<ReportPageSettings>(loadSavedPageSettings);
   const [isPageSettingsOpen, setIsPageSettingsOpen] = useState(false);
   const [isLivePaperPreview, setIsLivePaperPreview] = useState(false);
+  const [isLogoModalOpen, setIsLogoModalOpen] = useState(false);
+
+  // Logo settings update handler
+  const handleSaveLogoSettings = (logoUpdates: LogoSettings) => {
+    handleUpdatePageSettings({
+      logoType: logoUpdates.logoType,
+      customLogoUrl: logoUpdates.customLogoUrl,
+      companyName: logoUpdates.companyName,
+      companyTagline: logoUpdates.companyTagline,
+      companyBadge: logoUpdates.companyBadge,
+    });
+  };
 
   // Update page settings handler with local storage persistence
   const handleUpdatePageSettings = (updates: Partial<ReportPageSettings>) => {
@@ -253,8 +267,17 @@ export const ReportsView: React.FC = () => {
           height: 100vh !important;
           z-index: -10 !important;
           pointer-events: none !important;
+          background-size: cover !important;
+          background-position: center !important;
+          background-repeat: no-repeat !important;
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
+        }
+        .report-watermark-layer,
+        .report-background-image {
+          background-size: cover !important;
+          background-position: center !important;
+          background-repeat: no-repeat !important;
         }
         .print-master-table {
           width: 100% !important;
@@ -1511,6 +1534,16 @@ export const ReportsView: React.FC = () => {
           <div className="flex items-center gap-2 flex-wrap">
             <button
               type="button"
+              onClick={() => setIsLogoModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl transition-all shadow-2xs cursor-pointer border bg-white text-slate-800 border-slate-300 hover:bg-slate-50 hover:text-indigo-700"
+              title={lang === 'bn' ? 'রিপোর্টের লোগো ও ব্র্যান্ডিং পরিবর্তন করুন' : 'Change Report Logo & Branding'}
+            >
+              <Camera className="w-3.5 h-3.5 text-indigo-600" />
+              <span>{lang === 'bn' ? 'লোগো পরিবর্তন' : 'Change Logo'}</span>
+            </button>
+
+            <button
+              type="button"
               onClick={() => setIsPageSettingsOpen((prev) => !prev)}
               className={`inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl transition-all shadow-2xs cursor-pointer border ${
                 isPageSettingsOpen
@@ -1631,6 +1664,7 @@ export const ReportsView: React.FC = () => {
         onToggleLivePreview={() => setIsLivePaperPreview((prev) => !prev)}
         onPrint={() => window.print()}
         lang={lang}
+        onOpenLogoModal={() => setIsLogoModalOpen(true)}
       />
 
       {/* Live Paper Preview Canvas (When user clicks 'লাইভ প্রিভিউ দেখুন') */}
@@ -1703,6 +1737,12 @@ export const ReportsView: React.FC = () => {
                       endDate={endDate}
                       currency={subLedgerData.currency}
                       lang={lang}
+                      logoType={pageSettings.logoType}
+                      customLogoUrl={pageSettings.customLogoUrl}
+                      companyName={pageSettings.companyName}
+                      companyTagline={pageSettings.companyTagline}
+                      companyBadge={pageSettings.companyBadge}
+                      onOpenLogoModal={() => setIsLogoModalOpen(true)}
                     />
                   )}
 
@@ -1851,6 +1891,12 @@ export const ReportsView: React.FC = () => {
                       endDate={endDate}
                       currency={accountFilter === 'bd-bank' ? 'BDT' : 'KWD'}
                       lang={lang}
+                      logoType={pageSettings.logoType}
+                      customLogoUrl={pageSettings.customLogoUrl}
+                      companyName={pageSettings.companyName}
+                      companyTagline={pageSettings.companyTagline}
+                      companyBadge={pageSettings.companyBadge}
+                      onOpenLogoModal={() => setIsLogoModalOpen(true)}
                     />
                   ) : (
                     <div className="border-b-2 border-slate-900 pb-2 flex justify-between items-start">
@@ -2933,6 +2979,12 @@ export const ReportsView: React.FC = () => {
                   endDate={endDate}
                   currency={subLedgerData.currency}
                   lang={lang}
+                  logoType={pageSettings.logoType}
+                  customLogoUrl={pageSettings.customLogoUrl}
+                  companyName={pageSettings.companyName}
+                  companyTagline={pageSettings.companyTagline}
+                  companyBadge={pageSettings.companyBadge}
+                  onOpenLogoModal={() => setIsLogoModalOpen(true)}
                 />
               </div>
             )}
@@ -3123,6 +3175,12 @@ export const ReportsView: React.FC = () => {
                   endDate={endDate}
                   currency={accountFilter === 'bd-bank' ? 'BDT' : 'KWD'}
                   lang={lang}
+                  logoType={pageSettings.logoType}
+                  customLogoUrl={pageSettings.customLogoUrl}
+                  companyName={pageSettings.companyName}
+                  companyTagline={pageSettings.companyTagline}
+                  companyBadge={pageSettings.companyBadge}
+                  onOpenLogoModal={() => setIsLogoModalOpen(true)}
                 />
               </div>
             )}
@@ -3482,7 +3540,14 @@ export const ReportsView: React.FC = () => {
             <thead className="print-master-header" style={{ display: 'table-header-group' }}>
               <tr>
                 <td className="border-none p-0 pb-3" style={{ border: 'none', padding: '0 0 10px 0' }}>
-                  <ReportLetterhead />
+                  <ReportLetterhead
+                    logoType={pageSettings.logoType}
+                    customLogoUrl={pageSettings.customLogoUrl}
+                    companyName={pageSettings.companyName}
+                    companyTagline={pageSettings.companyTagline}
+                    companyBadge={pageSettings.companyBadge}
+                    lang={lang}
+                  />
                 </td>
               </tr>
             </thead>
@@ -3846,6 +3911,21 @@ export const ReportsView: React.FC = () => {
         isOpen={!!editTarget}
         onClose={() => setEditTarget(null)}
         target={editTarget}
+      />
+
+      {/* 9. Report Logo & Branding Customization Modal */}
+      <ReportLogoModal
+        isOpen={isLogoModalOpen}
+        onClose={() => setIsLogoModalOpen(false)}
+        lang={lang}
+        currentSettings={{
+          logoType: pageSettings.logoType || 'default',
+          customLogoUrl: pageSettings.customLogoUrl,
+          companyName: pageSettings.companyName,
+          companyTagline: pageSettings.companyTagline,
+          companyBadge: pageSettings.companyBadge,
+        }}
+        onSave={handleSaveLogoSettings}
       />
     </div>
   );
