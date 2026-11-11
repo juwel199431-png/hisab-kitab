@@ -106,19 +106,42 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       if (SpeechRecognition) {
         const recognition = new SpeechRecognition();
-        recognition.continuous = false;
+        recognition.continuous = true;
         recognition.interimResults = true;
         recognition.lang = 'bn-BD';
 
         recognition.onresult = (event: any) => {
-          const current = event.resultIndex;
-          const transcript = event.results[current][0].transcript;
-          setVoiceInputText(transcript);
+          let fullTranscript = '';
+          for (let i = 0; i < event.results.length; i++) {
+            fullTranscript += event.results[i][0].transcript + ' ';
+          }
+          if (fullTranscript.trim()) {
+            setVoiceInputText(fullTranscript.trim());
+          }
         };
 
         recognition.onerror = (event: any) => {
           console.warn('Speech recognition error:', event.error);
           setIsRecording(false);
+          if (event.error === 'not-allowed') {
+            setVoiceError(
+              lang === 'bn'
+                ? '⚠️ মাইক্রোফোনের অনুমতি পাওয়া যায়নি। ব্রাউজারের অ্যাড্রেস বারের তালা/মাইক্রোফোন আইকনে ক্লিক করে "Allow" করুন, অথবা নিচের বক্সে লিখুন।'
+                : 'Microphone permission denied. Please allow microphone in browser address bar.'
+            );
+          } else if (event.error === 'no-speech') {
+            setVoiceError(
+              lang === 'bn'
+                ? 'কোনো কথা শুনতে পাওয়া যায়নি। আবার মাইক্রোফোনে ক্লিক করে স্পষ্টভাবে বলুন।'
+                : 'No speech detected. Please click the mic and try again.'
+            );
+          } else if (event.error === 'network') {
+            setVoiceError(
+              lang === 'bn'
+                ? 'ইন্টারনেট সমস্যা বা ভয়েস সার্ভার সাড়া দিচ্ছে না। অনুগ্রহ করে সরাসরি টাইপ করুন।'
+                : 'Network error with speech recognition. Please type below.'
+            );
+          }
         };
 
         recognition.onend = () => {
@@ -128,7 +151,7 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
         recognitionRef.current = recognition;
       }
     }
-  }, []);
+  }, [lang]);
 
   useEffect(() => {
     chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -136,24 +159,57 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
 
   if (!isOpen) return null;
 
-  // Toggle voice recording
-  const handleToggleVoice = () => {
-    if (!recognitionRef.current) {
-      setVoiceError(lang === 'bn' ? 'আপনার ব্রাউজারে স্পিচ রিকগনিশন সাপোর্ট নেই, অনুগ্রহ করে টাইপ করুন।' : 'Speech recognition not supported in this browser, please type.');
+  // Toggle voice recording with permission prompt
+  const handleToggleVoice = async () => {
+    setVoiceError('');
+
+    if (isRecording) {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch (_) {}
+      }
+      setIsRecording(false);
       return;
     }
 
-    if (isRecording) {
-      recognitionRef.current.stop();
-      setIsRecording(false);
-    } else {
-      setVoiceError('');
-      try {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setVoiceError(
+        lang === 'bn'
+          ? 'এই ব্রাউজারে স্বয়ংক্রিয় ভয়েস রিকগনিশন সাপোর্ট নেই। অনুগ্রহ করে নিচে টাইপ করুন অথবা নমুনা বাটনে ক্লিক করুন।'
+          : 'Speech recognition not supported in this browser. Please type below.'
+      );
+      return;
+    }
+
+    try {
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+      }
+    } catch (permErr: any) {
+      console.warn('Mic permission error:', permErr);
+      setVoiceError(
+        lang === 'bn'
+          ? '⚠️ ব্রাউজার মাইক্রোফোন ব্যবহারের অনুমতি দেয়নি। ব্রাউজারের অ্যাড্রেস বারে ক্লিক করে মাইক্রোফোন "Allow" করুন।'
+          : 'Microphone permission denied. Please allow microphone in browser.'
+      );
+      return;
+    }
+
+    try {
+      if (recognitionRef.current) {
         recognitionRef.current.start();
         setIsRecording(true);
-      } catch (err) {
-        console.warn('Recognition start error:', err);
       }
+    } catch (err: any) {
+      console.warn('Recognition start error:', err);
+      setIsRecording(false);
+      setVoiceError(
+        lang === 'bn'
+          ? 'ভয়েস চালু করতে সমস্যা হয়েছে। দয়া করে আবার ক্লিক করুন বা নিচে টাইপ করুন।'
+          : 'Could not start voice recognition. Please try typing.'
+      );
     }
   };
 

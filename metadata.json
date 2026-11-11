@@ -1,6 +1,9 @@
 {
   "name": "Hisab Kitab (হিসাব কিতাব) - Finance Manager",
   "description": "দৈনন্দিন আয়-ব্যয়, বাংলাদেশের ব্যাংকের হিসাব বিবরনী, ডিপিএস, ইন্সুরেন্স এবং কুয়েত ব্যক্তিগত ও বসের বেতন খরচের নির্ভুল হিসাব ও পিডিএফ রিপোর্ট।",
-  "requestFramePermissions": [],
+  "requestFramePermissions": [
+    "microphone",
+    "camera"
+  ],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
