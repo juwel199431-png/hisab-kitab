@@ -201,21 +201,17 @@ export const renderReportLogoIcon = (
     default:
       return (
         <div
-          className={`${sizeClass} rounded-xl p-2 flex items-center justify-center shadow-md shrink-0`}
+          className={`${sizeClass} rounded-xl p-0.5 flex items-center justify-center shadow-md shrink-0 bg-white border border-emerald-500/30 overflow-hidden`}
           style={{
-            background: 'linear-gradient(135deg, #064e3b 0%, #044e42 50%, #022c22 100%)',
-            border: '1px solid rgba(16, 185, 129, 0.4)',
             WebkitPrintColorAdjust: 'exact',
             printColorAdjust: 'exact',
           }}
         >
-          <svg viewBox="0 0 32 32" fill="none" className="w-7 h-7">
-            <rect x="3" y="6" width="26" height="20" rx="4" stroke="#34d399" strokeWidth="2" fill="#064e3b" />
-            <path d="M3 12 H29" stroke="#34d399" strokeWidth="1.5" />
-            <rect x="7" y="16" width="10" height="2" rx="1" fill="#a7f3d0" />
-            <rect x="7" y="20" width="6" height="2" rx="1" fill="#a7f3d0" />
-            <circle cx="22" cy="18" r="3" fill="#fbbf24" />
-          </svg>
+          <img
+            src="/assets/aistudio/Hisabify_Personal_Finance_Logo_dcec8d4f.png"
+            alt="Official Hisabify Report Logo"
+            className="w-full h-full object-contain rounded-lg"
+          />
         </div>
       );
   }
@@ -224,11 +220,11 @@ export const renderReportLogoIcon = (
 const PRESET_OPTIONS: { id: LogoType; nameBn: string; nameEn: string; descBn: string; descEn: string; icon: any }[] = [
   {
     id: 'default',
-    nameBn: 'ক্লাসিক গ্রিন লেজার (Classic Ledger)',
-    nameEn: 'Classic Ledger & Wallet',
-    descBn: 'ঐতিহ্যবাহী পান্না সবুজ আর্থিক খতিয়ান ও গোল্ডেন কয়েন',
-    descEn: 'Traditional emerald ledger and gold coin',
-    icon: Briefcase,
+    nameBn: 'অফিসিয়াল লোগো (Hisabify Official)',
+    nameEn: 'Official Brand Logo',
+    descBn: 'আপনার প্রদত্ত মূল আকর্ষণীয় অফিসিয়াল ব্র্যান্ড লোগো',
+    descEn: 'Official uploaded brand logo (Hisabify)',
+    icon: Sparkles,
   },
   {
     id: 'gold-shield',

@@ -114,15 +114,24 @@ const MainAppContent: React.FC = () => {
       {/* Quiet Footer */}
       <footer className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-6 mt-auto text-xs text-slate-500 dark:text-slate-400 no-print transition-colors duration-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div>
-            <p className="font-semibold text-slate-700 dark:text-slate-200">
-              {lang === 'bn' ? 'হিসাব কিতাব - ব্যক্তিগত ও কর্মক্ষেত্রের নির্ভুল হিসাবরক্ষক' : 'Hisab Kitab Finance Manager'}
-            </p>
-            <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
-              {lang === 'bn'
-                ? 'অফলাইন ও স্বয়ংক্রিয় লোকাল সেভ। ডাটা স্থায়ীভাবে সুরক্ষিত রাখতে ড্রাইভ ব্যাকআপ নিন।'
-                : 'Offline-first personal financial manager with cloud backup.'}
-            </p>
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg border border-emerald-500/30 overflow-hidden bg-white dark:bg-slate-800 p-0.5 shrink-0 shadow-2xs">
+              <img
+                src="/assets/aistudio/Hisabify_Personal_Finance_Logo_dcec8d4f.png"
+                alt="Hisabify Logo"
+                className="w-full h-full object-contain rounded-md"
+              />
+            </div>
+            <div>
+              <p className="font-semibold text-slate-700 dark:text-slate-200">
+                {lang === 'bn' ? 'হিসাব কিতাব - ব্যক্তিগত ও কর্মক্ষেত্রের নির্ভুল হিসাবরক্ষক' : 'Hisab Kitab Finance Manager'}
+              </p>
+              <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
+                {lang === 'bn'
+                  ? 'অফলাইন ও স্বয়ংক্রিয় লোকাল সেভ। ডাটা স্থায়ীভাবে সুরক্ষিত রাখতে ড্রাইভ ব্যাকআপ নিন।'
+                  : 'Offline-first personal financial manager with cloud backup.'}
+              </p>
+            </div>
           </div>
 
           <div className="flex items-center gap-4 text-xs">

@@ -1404,10 +1404,8 @@ export const ReportsView: React.FC = () => {
       labelBn: 'সকল হেড (All)',
       labelEn: 'All Accounts',
       icon: Sparkles,
-      activeGradient: 'from-slate-900 via-indigo-950 to-slate-900 shadow-indigo-900/30',
-      idleBg: 'bg-slate-100 text-slate-700 hover:bg-slate-200/80 border-slate-200',
-      badgeActive: 'bg-white/20 text-white',
-      badgeIdle: 'bg-slate-200 text-slate-700',
+      iconColor: 'text-indigo-600 dark:text-indigo-400',
+      activeGradient: 'from-slate-900 via-slate-850 to-indigo-950 text-white shadow-md shadow-slate-950/20 border-slate-700',
       count: unifiedData.length,
     },
     {
@@ -1415,54 +1413,44 @@ export const ReportsView: React.FC = () => {
       labelBn: 'বাংলাদেশ ব্যাংকিং',
       labelEn: 'BD Banking',
       icon: Landmark,
-      activeGradient: 'from-emerald-600 via-teal-700 to-emerald-800 shadow-emerald-600/30',
-      idleBg: 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border-emerald-200',
-      badgeActive: 'bg-white/20 text-white',
-      badgeIdle: 'bg-emerald-200/70 text-emerald-900',
+      iconColor: 'text-emerald-600 dark:text-emerald-400',
+      activeGradient: 'from-emerald-600 to-teal-800 text-white shadow-md shadow-emerald-700/25 border-emerald-600',
       count: unifiedData.filter((r) => r.section === 'bd-bank').length,
     },
     {
       id: 'boss-salary' as AccountFilter,
-      labelBn: 'শাকের ভাই এর বেতন ও খরচ',
+      labelBn: 'শাকের ভাই এর বেতন',
       labelEn: 'Shaker Bhai Salary',
       icon: Briefcase,
-      activeGradient: 'from-amber-500 via-orange-600 to-amber-700 shadow-amber-500/30',
-      idleBg: 'bg-amber-50 text-amber-900 hover:bg-amber-100 border-amber-200',
-      badgeActive: 'bg-white/20 text-white',
-      badgeIdle: 'bg-amber-200/70 text-amber-950',
+      iconColor: 'text-amber-600 dark:text-amber-400',
+      activeGradient: 'from-amber-600 to-orange-700 text-white shadow-md shadow-amber-600/25 border-amber-600',
       count: unifiedData.filter((r) => r.section === 'boss-salary').length,
     },
     {
       id: 'kuwait-personal' as AccountFilter,
-      labelBn: 'কুয়েত পার্সোনাল — দৈনিক খরচ',
+      labelBn: 'কুয়েত পার্সোনাল হিসাব',
       labelEn: 'Kuwait Daily Living',
       icon: Wallet,
-      activeGradient: 'from-rose-500 via-pink-600 to-rose-700 shadow-rose-500/30',
-      idleBg: 'bg-rose-50 text-rose-800 hover:bg-rose-100 border-rose-200',
-      badgeActive: 'bg-white/20 text-white',
-      badgeIdle: 'bg-rose-200/70 text-rose-950',
+      iconColor: 'text-rose-600 dark:text-rose-400',
+      activeGradient: 'from-rose-600 to-pink-700 text-white shadow-md shadow-rose-600/25 border-rose-600',
       count: unifiedData.filter((r) => r.section === 'kuwait-personal').length,
     },
     {
       id: 'kuwait-loan' as AccountFilter,
-      labelBn: 'Personal Receivable Loan (পাওনা)',
+      labelBn: 'ব্যক্তিগত পাওনা লোন',
       labelEn: 'Receivable Loan',
       icon: HandCoins,
-      activeGradient: 'from-blue-600 via-indigo-700 to-blue-800 shadow-blue-600/30',
-      idleBg: 'bg-blue-50 text-blue-800 hover:bg-blue-100 border-blue-200',
-      badgeActive: 'bg-white/20 text-white',
-      badgeIdle: 'bg-blue-200/70 text-blue-950',
+      iconColor: 'text-blue-600 dark:text-blue-400',
+      activeGradient: 'from-blue-600 to-indigo-700 text-white shadow-md shadow-blue-600/25 border-blue-600',
       count: unifiedData.filter((r) => r.section === 'kuwait-loan').length,
     },
     {
       id: 'kuwait-payable' as AccountFilter,
-      labelBn: 'Personal Payable Loan (দেনা)',
+      labelBn: 'ব্যক্তিগত দেনা লোন',
       labelEn: 'Payable Loan',
       icon: CreditCard,
-      activeGradient: 'from-purple-600 via-pink-600 to-purple-800 shadow-purple-600/30',
-      idleBg: 'bg-purple-50 text-purple-800 hover:bg-purple-100 border-purple-200',
-      badgeActive: 'bg-white/20 text-white',
-      badgeIdle: 'bg-purple-200/70 text-purple-950',
+      iconColor: 'text-purple-600 dark:text-purple-400',
+      activeGradient: 'from-purple-600 to-violet-800 text-white shadow-md shadow-purple-600/25 border-purple-600',
       count: unifiedData.filter((r) => r.section === 'kuwait-payable').length,
     },
     {
@@ -1470,10 +1458,8 @@ export const ReportsView: React.FC = () => {
       labelBn: 'ইমদাদ ভাই এর হিসাব',
       labelEn: 'Emdad Bhai',
       icon: UserCheck,
-      activeGradient: 'from-orange-500 via-amber-600 to-orange-700 shadow-orange-500/30',
-      idleBg: 'bg-orange-50 text-orange-900 hover:bg-orange-100 border-orange-200',
-      badgeActive: 'bg-white/20 text-white',
-      badgeIdle: 'bg-orange-200/70 text-orange-950',
+      iconColor: 'text-orange-600 dark:text-orange-400',
+      activeGradient: 'from-orange-600 to-amber-700 text-white shadow-md shadow-orange-600/25 border-orange-600',
       count: unifiedData.filter((r) => r.section === 'emdad-expense').length,
     },
     {
@@ -1481,10 +1467,8 @@ export const ReportsView: React.FC = () => {
       labelBn: 'কুয়েত অতিরিক্ত আয়',
       labelEn: 'Extra Income',
       icon: TrendingUp,
-      activeGradient: 'from-cyan-600 via-sky-700 to-blue-800 shadow-cyan-600/30',
-      idleBg: 'bg-cyan-50 text-cyan-900 hover:bg-cyan-100 border-cyan-200',
-      badgeActive: 'bg-white/20 text-white',
-      badgeIdle: 'bg-cyan-200/70 text-cyan-950',
+      iconColor: 'text-teal-600 dark:text-teal-400',
+      activeGradient: 'from-teal-600 to-cyan-700 text-white shadow-md shadow-teal-600/25 border-teal-600',
       count: unifiedData.filter((r) => r.section === 'kuwait-extra-income').length,
     },
     {
@@ -1492,10 +1476,8 @@ export const ReportsView: React.FC = () => {
       labelBn: 'ডিপিএস ও ইন্সুরেন্স',
       labelEn: 'DPS & Insurance',
       icon: PiggyBank,
-      activeGradient: 'from-violet-600 via-purple-700 to-indigo-900 shadow-violet-600/30',
-      idleBg: 'bg-violet-50 text-violet-800 hover:bg-violet-100 border-violet-200',
-      badgeActive: 'bg-white/20 text-white',
-      badgeIdle: 'bg-violet-200/70 text-violet-950',
+      iconColor: 'text-violet-600 dark:text-violet-400',
+      activeGradient: 'from-violet-600 to-purple-800 text-white shadow-md shadow-violet-600/25 border-violet-600',
       count: (data.savingsAccounts || []).length,
     },
   ];
@@ -1955,36 +1937,183 @@ export const ReportsView: React.FC = () => {
         </div>
       )}
 
-      {/* 3. Structured Filter Panel (Clean, Uncluttered, Functional) */}
-      <div className="bg-white rounded-2xl p-5 border border-slate-200/90 shadow-xs space-y-4 no-print">
-        {/* Account Scope Segmented Pills */}
+      {/* 3. Executive Filter & Command Deck (Structured, High-Contrast, Professional) */}
+      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden no-print space-y-4 p-4 sm:p-5">
+        {/* Top Deck: Header + Live Indicator + Integrated Period Segmented Control */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-linear-to-tr from-slate-900 to-indigo-900 text-white flex items-center justify-center shadow-xs">
+              <Filter className="w-4 h-4 text-indigo-200" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-sm font-bold text-slate-900 tracking-tight">
+                  {lang === 'bn' ? 'অ্যাকাউন্ট অডিট ও লেজার ফিল্টার' : 'Account Audit & Ledger Filters'}
+                </h2>
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  {lang === 'bn' ? `মোট ${filteredRows.length}টি রেকর্ড সক্রিয়` : `${filteredRows.length} records active`}
+                </span>
+                {activeFiltersCount > 0 && (
+                  <span className="text-[11px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full">
+                    {lang === 'bn' ? `${activeFiltersCount}টি ফিল্টার প্রয়োগিত` : `${activeFiltersCount} filters applied`}
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                {lang === 'bn'
+                  ? 'যেকোনো খতিয়ান কার্ডে ক্লিক করে নির্দিষ্ট অ্যাকাউন্টের সম্পূর্ণ অডিট ও হিসাব দেখুন'
+                  : 'Click any account card below to view detailed ledger audit and statements'}
+              </p>
+            </div>
+          </div>
+
+          {/* Integrated Modern Period Selector */}
+          <div className="flex items-center gap-2 self-start lg:self-auto">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider hidden sm:inline-flex items-center gap-1">
+              <Calendar className="w-3.5 h-3.5 text-slate-400" />
+              <span>{lang === 'bn' ? 'সময়কাল:' : 'Period:'}</span>
+            </span>
+            <div className="inline-flex p-1 bg-slate-100 rounded-xl border border-slate-200/80">
+              {[
+                { id: 'this-month', labelBn: 'চলতি মাস', labelEn: 'This Month' },
+                { id: 'last-month', labelBn: 'গত মাস', labelEn: 'Last Month' },
+                { id: 'last-30', labelBn: '৩০ দিন', labelEn: '30 Days' },
+                { id: 'all', labelBn: 'সব সময়', labelEn: 'All Time' },
+                { id: 'custom', labelBn: 'কাস্টম', labelEn: 'Custom' },
+              ].map((p) => {
+                const isSelected = datePreset === p.id;
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() => handlePresetChange(p.id as any)}
+                    className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                      isSelected
+                        ? 'bg-white text-indigo-700 shadow-xs border border-slate-200/60'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                    }`}
+                  >
+                    {lang === 'bn' ? p.labelBn : p.labelEn}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Collapsible Custom Date Range Picker */}
+        {datePreset === 'custom' && (
+          <div className="p-3 bg-linear-to-r from-indigo-50/80 via-purple-50/50 to-indigo-50/80 rounded-xl border border-indigo-100 flex flex-wrap items-center justify-between gap-3 animate-fade-in">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center">
+                <Calendar className="w-3.5 h-3.5" />
+              </div>
+              <div>
+                <span className="text-xs font-bold text-indigo-950 block">
+                  {lang === 'bn' ? 'নির্দিষ্ট তারিখ পরিসীমা নির্বাচন' : 'Custom Date Range Selection'}
+                </span>
+                <span className="text-[11px] text-indigo-700/80">
+                  {lang === 'bn' ? 'শুরু ও শেষের তারিখ নির্ধারণ করে অডিট করুন' : 'Specify start and end dates for reporting'}
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-1.5 text-xs bg-white px-2.5 py-1.5 rounded-lg border border-indigo-200 shadow-2xs">
+                <span className="text-[11px] font-bold text-slate-500">{lang === 'bn' ? 'শুরু:' : 'From:'}</span>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => {
+                    setStartDate(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="text-xs font-semibold text-slate-800 bg-transparent focus:outline-hidden cursor-pointer"
+                />
+              </div>
+              <span className="text-indigo-400 font-bold">—</span>
+              <div className="flex items-center gap-1.5 text-xs bg-white px-2.5 py-1.5 rounded-lg border border-indigo-200 shadow-2xs">
+                <span className="text-[11px] font-bold text-slate-500">{lang === 'bn' ? 'শেষ:' : 'To:'}</span>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => {
+                    setEndDate(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="text-xs font-semibold text-slate-800 bg-transparent focus:outline-hidden cursor-pointer"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Account Scope Grid (9 Executive High-Contrast Cards) */}
         <div>
-          <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-2">
-            {lang === 'bn' ? 'অ্যাকাউন্ট / হেড নির্বাচন (Account Scope)' : 'Account Scope'}
-          </span>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+              <Layers className="w-3.5 h-3.5 text-slate-400" />
+              <span>{lang === 'bn' ? 'অ্যাকাউন্ট হেড নির্বাচন (Account Scope)' : 'Account Scope'}</span>
+            </span>
+            <span className="text-[11px] text-slate-400 font-medium">
+              {lang === 'bn' ? 'মোট ৯টি মূল লেজার খাত' : '9 core ledger heads'}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 xl:grid-cols-9 gap-2">
             {HEAD_SCOPE_LIST.map((acc) => {
               const isActive = accountFilter === acc.id;
               const Icon = acc.icon;
               return (
                 <button
                   key={acc.id}
+                  type="button"
                   onClick={() => handleSelectAccountFilter(acc.id)}
-                  className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 border shadow-2xs ${
+                  className={`group relative flex flex-col justify-between p-2.5 rounded-xl border transition-all text-left cursor-pointer min-h-[76px] ${
                     isActive
-                      ? `bg-linear-to-r ${acc.activeGradient} border-transparent scale-[1.02]`
-                      : `${acc.idleBg} hover:scale-[1.01]`
+                      ? `bg-linear-to-br ${acc.activeGradient} shadow-md scale-[1.02] ring-2 ring-indigo-500/20`
+                      : 'bg-slate-50/90 hover:bg-white border-slate-200/90 hover:border-slate-300 hover:shadow-2xs text-slate-700'
                   }`}
                 >
-                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : ''}`} />
-                  <span>{lang === 'bn' ? acc.labelBn : acc.labelEn}</span>
-                  <span
-                    className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full font-bold ml-0.5 ${
-                      isActive ? acc.badgeActive : acc.badgeIdle
-                    }`}
-                  >
-                    {acc.count}
-                  </span>
+                  {/* Top Bar: Icon + Count Badge */}
+                  <div className="flex items-center justify-between w-full mb-1">
+                    <div
+                      className={`w-6 h-6 rounded-lg flex items-center justify-center transition-transform group-hover:scale-110 ${
+                        isActive
+                          ? 'bg-white/20 text-white'
+                          : `bg-white shadow-2xs border border-slate-200/70 ${acc.iconColor}`
+                      }`}
+                    >
+                      <Icon className="w-3.5 h-3.5" />
+                    </div>
+                    <span
+                      className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-md ${
+                        isActive
+                          ? 'bg-white/25 text-white border border-white/30'
+                          : 'bg-slate-200/80 text-slate-700'
+                      }`}
+                    >
+                      {acc.count}
+                    </span>
+                  </div>
+
+                  {/* Account Name Typography */}
+                  <div className="space-y-0.5 min-w-0">
+                    <div
+                      className={`text-[11px] font-bold leading-tight line-clamp-1 ${
+                        isActive ? 'text-white' : 'text-slate-800'
+                      }`}
+                      title={lang === 'bn' ? acc.labelBn : acc.labelEn}
+                    >
+                      {lang === 'bn' ? acc.labelBn : acc.labelEn}
+                    </div>
+                    <div
+                      className={`text-[9.5px] leading-tight truncate ${
+                        isActive ? 'text-white/80' : 'text-slate-400'
+                      }`}
+                    >
+                      {lang === 'bn' ? acc.labelEn : acc.labelBn}
+                    </div>
+                  </div>
                 </button>
               );
             })}
@@ -1993,19 +2122,21 @@ export const ReportsView: React.FC = () => {
 
         {/* Bank Selection Filter specifically for BD Banking */}
         {accountFilter === 'bd-bank' && (
-          <div className="pt-3 border-t border-slate-100 flex items-center flex-wrap gap-2 animate-fade-in">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mr-1">
-              {lang === 'bn' ? 'ব্যাংক হিসাব নির্বাচন:' : 'Select Bank:'}
-            </span>
+          <div className="p-3 bg-linear-to-r from-emerald-50/80 to-teal-50/80 rounded-xl border border-emerald-200/80 flex items-center flex-wrap gap-2 animate-fade-in">
+            <div className="flex items-center gap-1.5 mr-1 text-emerald-950 font-bold text-xs">
+              <Landmark className="w-4 h-4 text-emerald-600" />
+              <span>{lang === 'bn' ? 'ব্যাংক হিসাব নির্বাচন:' : 'Select Bank Account:'}</span>
+            </div>
             <button
+              type="button"
               onClick={() => {
                 setSelectedBankId('all');
                 setCurrentPage(1);
               }}
-              className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+              className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                 selectedBankId === 'all'
-                  ? 'bg-emerald-700 text-white shadow-2xs font-bold'
-                  : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200'
+                  ? 'bg-emerald-700 text-white shadow-2xs'
+                  : 'bg-white text-emerald-900 hover:bg-emerald-100 border border-emerald-300/80 shadow-2xs'
               }`}
             >
               {lang === 'bn' ? 'সকল ব্যাংক (All Banks)' : 'All Banks'}
@@ -2015,17 +2146,28 @@ export const ReportsView: React.FC = () => {
               return (
                 <button
                   key={b.id}
+                  type="button"
                   onClick={() => {
                     setSelectedBankId(b.id);
                     setCurrentPage(1);
                   }}
-                  className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+                  className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
                     isSelected
-                      ? 'bg-emerald-700 text-white shadow-2xs font-bold'
-                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200/80 border border-slate-200'
+                      ? 'bg-emerald-700 text-white shadow-2xs'
+                      : 'bg-white text-slate-700 hover:bg-emerald-50 border border-emerald-200 shadow-2xs'
                   }`}
                 >
-                  🏦 {b.name} {b.accountNumber ? `(${b.accountNumber})` : ''}
+                  <span>🏦</span>
+                  <span>{b.name}</span>
+                  {b.accountNumber && (
+                    <span
+                      className={`text-[10px] font-mono px-1 rounded ${
+                        isSelected ? 'bg-emerald-800 text-emerald-100' : 'bg-slate-100 text-slate-500'
+                      }`}
+                    >
+                      {b.accountNumber}
+                    </span>
+                  )}
                 </button>
               );
             })}
@@ -2034,20 +2176,19 @@ export const ReportsView: React.FC = () => {
 
         {/* Borrower Selection Filter specifically for Personal Receivable Loans */}
         {accountFilter === 'kuwait-loan' && (
-          <div className="pt-3 border-t border-slate-100 flex items-center flex-wrap gap-2 animate-fade-in">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mr-1 flex items-center gap-1.5">
-              <UserCheck className="w-3.5 h-3.5 text-blue-600" />
-              <span>{lang === 'bn' ? 'গ্রহীতার নাম ফিল্টার:' : 'Filter by Borrower:'}</span>
-            </span>
+          <div className="p-3 bg-linear-to-r from-blue-50/80 to-indigo-50/80 rounded-xl border border-blue-200/80 flex items-center flex-wrap gap-2 animate-fade-in">
+            <div className="flex items-center gap-1.5 mr-1 text-blue-950 font-bold text-xs">
+              <HandCoins className="w-4 h-4 text-blue-600" />
+              <span>{lang === 'bn' ? 'লোন গ্রহীতা ফিল্টার:' : 'Filter by Borrower:'}</span>
+            </div>
 
-            {/* Dropdown matching Receivable Loans Audit Ledger in screenshot */}
             <select
               value={borrowerFilter}
               onChange={(e) => {
                 setBorrowerFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="px-2.5 py-1 text-xs border border-blue-300 rounded-lg bg-blue-50/80 font-bold text-blue-900 focus:outline-hidden focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-2xs"
+              className="px-2.5 py-1 text-xs border border-blue-300 rounded-lg bg-white font-bold text-blue-900 focus:outline-hidden focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-2xs"
             >
               <option value="all">{lang === 'bn' ? 'সকল গ্রহীতা (All Borrowers)' : 'All Borrowers'}</option>
               {availableBorrowers.map((b) => (
@@ -2057,7 +2198,6 @@ export const ReportsView: React.FC = () => {
               ))}
             </select>
 
-            {/* Quick Pills for each borrower */}
             <div className="flex items-center gap-1.5 flex-wrap ml-1">
               <button
                 type="button"
@@ -2065,10 +2205,10 @@ export const ReportsView: React.FC = () => {
                   setBorrowerFilter('all');
                   setCurrentPage(1);
                 }}
-                className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+                className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                   borrowerFilter === 'all'
-                    ? 'bg-blue-600 text-white font-bold shadow-2xs'
-                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200/80 border border-slate-200'
+                    ? 'bg-blue-600 text-white shadow-2xs'
+                    : 'bg-white text-slate-700 hover:bg-blue-50 border border-blue-200 shadow-2xs'
                 }`}
               >
                 {lang === 'bn' ? 'সকল গ্রহীতা' : 'All Borrowers'}
@@ -2083,10 +2223,10 @@ export const ReportsView: React.FC = () => {
                       setBorrowerFilter(b.id);
                       setCurrentPage(1);
                     }}
-                    className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
+                    className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
                       isSelected
-                        ? 'bg-blue-600 text-white font-bold shadow-2xs'
-                        : 'bg-blue-50/70 text-blue-900 hover:bg-blue-100 border border-blue-200'
+                        ? 'bg-blue-600 text-white shadow-2xs'
+                        : 'bg-white text-blue-900 hover:bg-blue-50 border border-blue-200 shadow-2xs'
                     }`}
                   >
                     <span>👤</span>
@@ -2098,91 +2238,42 @@ export const ReportsView: React.FC = () => {
           </div>
         )}
 
-        {/* Date Presets and Custom Range */}
-        <div className="pt-3 border-t border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-xs font-semibold text-slate-500 mr-1 flex items-center gap-1">
-              <Calendar className="w-3.5 h-3.5 text-slate-400" />
-              <span>{lang === 'bn' ? 'সময়কাল:' : 'Period:'}</span>
-            </span>
-            {[
-              { id: 'this-month', labelBn: 'চলতি মাস', labelEn: 'This Month' },
-              { id: 'last-month', labelBn: 'গত মাস', labelEn: 'Last Month' },
-              { id: 'last-30', labelBn: 'শেষ ৩০ দিন', labelEn: 'Last 30 Days' },
-              { id: 'all', labelBn: 'সম্পূর্ণ সময়', labelEn: 'All Time' },
-              { id: 'custom', labelBn: 'নির্দিষ্ট তারিখ (Custom)', labelEn: 'Custom Range' },
-            ].map((p) => {
-              const isSelected = datePreset === p.id;
-              return (
-                <button
-                  key={p.id}
-                  onClick={() => handlePresetChange(p.id as any)}
-                  className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
-                    isSelected
-                      ? 'bg-indigo-600 text-white shadow-2xs'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200/80'
-                  }`}
-                >
-                  {lang === 'bn' ? p.labelBn : p.labelEn}
-                </button>
-              );
-            })}
-          </div>
+        {/* Footer Bar: Detailed Field Filters Toggle + Reset Controls */}
+        <div className="pt-3 border-t border-slate-100 flex items-center justify-between flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200/80 transition-colors cursor-pointer shadow-2xs"
+          >
+            <SlidersHorizontal className="w-3.5 h-3.5 text-indigo-600" />
+            <span>{lang === 'bn' ? 'ক্যাটাগরি, ধরণ ও স্ট্যাটাস ফিল্টার' : 'Detailed Field Filters'}</span>
+            {showAdvancedFilters ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          </button>
 
-          {/* Random Date Pickers: অমুক তারিখ থেকে তমুক তারিখ */}
-          {datePreset === 'custom' && (
-            <div className="flex flex-wrap items-center gap-2 bg-indigo-50/70 p-2 rounded-xl border border-indigo-100">
-              <div className="flex items-center gap-1.5 text-xs">
-                <span className="text-[11px] font-semibold text-indigo-900">
-                  {lang === 'bn' ? 'শুরু:' : 'From:'}
-                </span>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => {
-                    setStartDate(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  className="px-2 py-1 text-xs border border-indigo-200 rounded-lg bg-white font-medium text-slate-800"
-                />
-              </div>
-              <span className="text-indigo-400 font-bold">—</span>
-              <div className="flex items-center gap-1.5 text-xs">
-                <span className="text-[11px] font-semibold text-indigo-900">
-                  {lang === 'bn' ? 'শেষ:' : 'To:'}
-                </span>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => {
-                    setEndDate(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  className="px-2 py-1 text-xs border border-indigo-200 rounded-lg bg-white font-medium text-slate-800"
-                />
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Secondary Detailed Filters (Collapsible / Clean Bar) */}
-        <div className="pt-3 border-t border-slate-100">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
-            >
-              <SlidersHorizontal className="w-3.5 h-3.5" />
-              <span>{lang === 'bn' ? 'ক্যাটাগরি, ধরণ ও স্ট্যাটাস ফিল্টার' : 'Detailed Field Filters'}</span>
-              {showAdvancedFilters ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-            </button>
-
+          <div className="flex items-center gap-3">
             {activeFiltersCount > 0 && (
-              <span className="text-[11px] text-slate-500 font-medium">
-                {lang === 'bn' ? `মোট ${filteredRows.length}টি রেকর্ড পাওয়া গেছে` : `${filteredRows.length} records found`}
-              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setCategoryFilter('all');
+                  setTypeFilter('all');
+                  setStatusFilter('all');
+                  setBorrowerFilter('all');
+                  setSelectedBankId('all');
+                  setSearchQuery('');
+                  setCurrentPage(1);
+                }}
+                className="text-xs font-bold text-rose-600 hover:text-rose-700 cursor-pointer flex items-center gap-1 hover:underline"
+              >
+                <X className="w-3.5 h-3.5" />
+                <span>{lang === 'bn' ? 'সব ফিল্টার রিসেট' : 'Reset All Filters'}</span>
+              </button>
             )}
+            <span className="text-[11px] text-slate-500 font-medium font-mono">
+              {lang === 'bn' ? `${filteredRows.length}টি রেকর্ড প্রদর্শিত` : `${filteredRows.length} records shown`}
+            </span>
           </div>
+        </div>
 
           {showAdvancedFilters && (
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 pt-3 mt-2 border-t border-slate-100">
@@ -2287,7 +2378,6 @@ export const ReportsView: React.FC = () => {
               </div>
             </div>
           )}
-        </div>
       </div>
 
       {/* 3. Dedicated Cute & Colorful Head Showcase Banner */}

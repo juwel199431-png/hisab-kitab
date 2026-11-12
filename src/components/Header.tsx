@@ -158,15 +158,12 @@ export const Header: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between gap-4">
         {/* Modern Brand Identity */}
         <div className="flex items-center gap-3 shrink-0">
-          <div className="relative w-10 h-10 rounded-xl bg-linear-to-br from-emerald-600 via-teal-700 to-cyan-900 flex items-center justify-center text-white shadow-md shadow-emerald-900/20 border border-emerald-400/30 overflow-hidden shrink-0">
-            {/* Custom Modern Fintech Monogram SVG */}
-            <svg className="w-6 h-6 text-white drop-shadow-xs" viewBox="0 0 24 24" fill="none">
-              <rect x="3" y="4" width="18" height="16" rx="4" stroke="currentColor" strokeWidth="1.8" />
-              <path d="M7 8.5H14" stroke="#34D399" strokeWidth="2" strokeLinecap="round" />
-              <path d="M7 12H12" stroke="#FBBF24" strokeWidth="2" strokeLinecap="round" />
-              <path d="M7 15.5H10" stroke="#38BDF8" strokeWidth="2" strokeLinecap="round" />
-              <circle cx="16.5" cy="13.5" r="2.5" fill="#10B981" stroke="#FFFFFF" strokeWidth="1.2" />
-            </svg>
+          <div className="relative w-11 h-11 rounded-xl shadow-md border border-emerald-500/30 overflow-hidden shrink-0 bg-white dark:bg-slate-800 p-0.5">
+            <img
+              src="/assets/aistudio/Hisabify_Personal_Finance_Logo_dcec8d4f.png"
+              alt="Hisabify Official Logo"
+              className="w-full h-full object-contain rounded-lg"
+            />
           </div>
           <div>
             <div className="flex items-center gap-1.5">

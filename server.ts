@@ -168,18 +168,20 @@ Output JSON schema: { section, type, amount (number), currency, date (YYYY-MM-DD
           },
         });
 
-        // 4-second timeout race
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('AI timeout')), 4000)
+        // 10-second timeout race
+        const timeoutPromise = new Promise((resolve) =>
+          setTimeout(() => resolve(null), 10000)
         );
 
         const response: any = await Promise.race([geminiPromise, timeoutPromise]);
-        const parsed = JSON.parse(response.text || '{}');
-        if (parsed && parsed.amount !== undefined) {
-          return res.json({ success: true, data: parsed, engine: 'gemini' });
+        if (response && response.text) {
+          const parsed = JSON.parse(response.text || '{}');
+          if (parsed && parsed.amount !== undefined) {
+            return res.json({ success: true, data: parsed, engine: 'gemini' });
+          }
         }
-      } catch (aiErr) {
-        console.warn('Gemini parser timed out or failed, falling back to local engine:', aiErr);
+      } catch (_) {
+        // Fallback to local engine silently
       }
     }
 
@@ -338,17 +340,19 @@ app.post('/api/ai/parse-sms', async (req: Request, res: Response) => {
           },
         });
 
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('AI timeout')), 4000)
+        const timeoutPromise = new Promise((resolve) =>
+          setTimeout(() => resolve(null), 10000)
         );
 
         const response: any = await Promise.race([geminiPromise, timeoutPromise]);
-        const parsed = JSON.parse(response.text || '{}');
-        if (parsed && parsed.amount !== undefined) {
-          return res.json({ success: true, data: parsed, engine: 'gemini' });
+        if (response && response.text) {
+          const parsed = JSON.parse(response.text || '{}');
+          if (parsed && parsed.amount !== undefined) {
+            return res.json({ success: true, data: parsed, engine: 'gemini' });
+          }
         }
-      } catch (aiErr) {
-        console.warn('Gemini SMS parse fallback:', aiErr);
+      } catch (_) {
+        // Fallback to local SMS parser silently
       }
     }
 
@@ -427,16 +431,16 @@ Instructions:
           contents: prompt,
         });
 
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('AI timeout')), 4000)
+        const timeoutPromise = new Promise((resolve) =>
+          setTimeout(() => resolve(null), 10000)
         );
 
         const response: any = await Promise.race([geminiPromise, timeoutPromise]);
         if (response && response.text) {
           return res.json({ success: true, answer: response.text, engine: 'gemini' });
         }
-      } catch (aiErr) {
-        console.warn('Gemini Q&A fallback triggered:', aiErr);
+      } catch (_) {
+        // Fallback to local Q&A engine silently
       }
     }
 
@@ -516,16 +520,16 @@ Professional, encouraging, structured.`;
           contents: prompt,
         });
 
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('AI timeout')), 4000)
+        const timeoutPromise = new Promise((resolve) =>
+          setTimeout(() => resolve(null), 10000)
         );
 
         const response: any = await Promise.race([geminiPromise, timeoutPromise]);
         if (response && response.text) {
           return res.json({ success: true, insights: response.text, engine: 'gemini' });
         }
-      } catch (aiErr) {
-        console.warn('Gemini insights fallback triggered:', aiErr);
+      } catch (_) {
+        // Fallback to local insights silently
       }
     }
 
