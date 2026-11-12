@@ -24,6 +24,7 @@ import { UniversalSearchModal } from './components/Common/UniversalSearchModal';
 import { PinLockScreen } from './components/Security/PinLockScreen';
 import { SecurityPinModal } from './components/Security/SecurityPinModal';
 import { AIAssistantModal } from './components/AI/AIAssistantModal';
+import { WelcomeIntroScreen } from './components/Common/WelcomeIntroScreen';
 import { Plus, Tags, CloudUpload, Sparkles } from 'lucide-react';
 
 const MainAppContent: React.FC = () => {
@@ -41,6 +42,8 @@ const MainAppContent: React.FC = () => {
     setIsAIAssistantOpen,
     aiAssistantInitialTab,
     openAIAssistantWithTab,
+    isWelcomeIntroOpen,
+    setIsWelcomeIntroOpen,
   } = useFinance();
 
   return (
@@ -110,6 +113,11 @@ const MainAppContent: React.FC = () => {
       />
       <SecurityPinModal />
       <OfflineIndicator lang={lang} />
+      <WelcomeIntroScreen
+        isOpen={isWelcomeIntroOpen}
+        onClose={() => setIsWelcomeIntroOpen(false)}
+        lang={lang}
+      />
 
       {/* Quiet Footer */}
       <footer className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-6 mt-auto text-xs text-slate-500 dark:text-slate-400 no-print transition-colors duration-200">

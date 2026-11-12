@@ -76,6 +76,8 @@ interface FinanceContextType {
   setIsAIAssistantOpen: (open: boolean) => void;
   aiAssistantInitialTab: 'voice' | 'receipt' | 'sms' | 'qa' | 'insights';
   openAIAssistantWithTab: (tab: 'voice' | 'receipt' | 'sms' | 'qa' | 'insights') => void;
+  isWelcomeIntroOpen: boolean;
+  setIsWelcomeIntroOpen: (open: boolean) => void;
 
   // Calculators
   getBankBalance: (bankId: string) => number;
@@ -262,6 +264,26 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const openAIAssistantWithTab = (tab: 'voice' | 'receipt' | 'sms' | 'qa' | 'insights') => {
     setAiAssistantInitialTab(tab);
     setIsAIAssistantOpen(true);
+  };
+
+  // Welcome Video / Slide Intro State (auto-plays on new session or manual trigger)
+  const [isWelcomeIntroOpen, setIsWelcomeIntroOpenState] = useState<boolean>(() => {
+    try {
+      return sessionStorage.getItem('hisabkitab_welcome_intro_shown') !== 'true';
+    } catch {
+      return true;
+    }
+  });
+
+  const setIsWelcomeIntroOpen = (open: boolean) => {
+    if (!open) {
+      try {
+        sessionStorage.setItem('hisabkitab_welcome_intro_shown', 'true');
+      } catch {
+        // Ignore storage errors
+      }
+    }
+    setIsWelcomeIntroOpenState(open);
   };
 
   // Privacy & Dark Theme state
@@ -1511,6 +1533,8 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         isCloudSynced,
         lastCloudSyncTime,
         forcePushToCloud,
+        isWelcomeIntroOpen,
+        setIsWelcomeIntroOpen,
       }}
     >
       {children}

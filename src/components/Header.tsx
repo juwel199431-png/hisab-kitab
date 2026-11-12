@@ -20,6 +20,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { AccountSection } from '../types/finance';
+import { LiveGreetingClock } from './Common/LiveGreetingClock';
 
 export const Header: React.FC = () => {
   const {
@@ -50,6 +51,7 @@ export const Header: React.FC = () => {
     isCloudSynced,
     forcePushToCloud,
     openAIAssistantWithTab,
+    setIsWelcomeIntroOpen,
   } = useFinance();
 
   const [justSynced, setJustSynced] = useState(false);
@@ -181,8 +183,24 @@ export const Header: React.FC = () => {
           </div>
         </div>
 
+        {/* Live Timing & Time-Based Greeting in Top Corner */}
+        <div className="hidden lg:flex items-center justify-center">
+          <LiveGreetingClock
+            lang={lang}
+            onReplayIntro={() => setIsWelcomeIntroOpen(true)}
+          />
+        </div>
+
         {/* Right Side: Clean, Structured & De-cluttered Control Center */}
         <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+          {/* Mobile/Tablet Compact Greeting Clock */}
+          <div className="lg:hidden flex items-center">
+            <LiveGreetingClock
+              lang={lang}
+              onReplayIntro={() => setIsWelcomeIntroOpen(true)}
+              className="scale-90"
+            />
+          </div>
           {/* AI Smart Assistant Trigger Button */}
           <button
             onClick={() => openAIAssistantWithTab('voice')}
