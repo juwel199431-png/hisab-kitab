@@ -12,7 +12,6 @@ import {
   Wifi,
   Coffee,
   Truck,
-  Sparkles,
   TrendingDown,
   TrendingUp,
   Receipt,
@@ -21,6 +20,8 @@ import {
   HandCoins,
   Handshake,
   Edit2,
+  Search,
+  Check,
 } from 'lucide-react';
 import { formatCurrency, formatDate, formatMonth } from '../../utils/formatters';
 import { exportToCSV } from '../../utils/storage';
@@ -46,6 +47,8 @@ export const KuwaitPersonalView: React.FC<KuwaitPersonalViewProps> = ({ initialT
     getKuwaitLoanTotals,
     getKuwaitReceivableTotals,
     getKuwaitPayableTotals,
+    isPrivacyMode,
+    kwdRate,
   } = useFinance();
 
   // Active Sub-tab inside Kuwait Personal: 'daily-expense', 'extra-income', 'receivable-loan', 'payable-loan'
@@ -243,169 +246,176 @@ export const KuwaitPersonalView: React.FC<KuwaitPersonalViewProps> = ({ initialT
         </div>
       </div>
 
-      {/* Top Banner & Kuwait Personal Account Navigation */}
-      <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-2xs no-print">
-        {/* Main Title Strip */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100">
-          <div>
-            <div className="flex items-center gap-2.5">
-              <span className="text-2xl">🇰🇼</span>
+      {/* 1. Executive Kuwait Account Hero & Unified Financial Summary */}
+      <div className="rounded-2xl overflow-hidden border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs no-print">
+        {/* Top Executive Dark Slate Band */}
+        <div className="relative overflow-hidden bg-linear-to-r from-slate-900 via-slate-900 to-teal-950 text-white p-5 sm:p-6">
+          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            {/* Account Identity */}
+            <div className="flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center text-2xl shrink-0 shadow-inner">
+                🇰🇼
+              </div>
               <div>
-                <h2 className="text-xl font-bold text-slate-900 tracking-tight">
-                  {lang === 'bn' ? 'কুয়েত এর পার্সোনাল হিসাব' : 'Kuwait Personal Account'}
-                </h2>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white">
+                    {lang === 'bn' ? 'কুয়েত এর পার্সোনাল হিসাব' : 'Kuwait Personal Account'}
+                  </h2>
+                  <span className="text-[11px] font-mono font-semibold text-teal-300/90">
+                    · KWD Ledger
+                  </span>
+                </div>
+                <p className="text-xs text-slate-300/90 mt-0.5 max-w-2xl">
                   {lang === 'bn'
-                    ? 'দৈনিক ব্যক্তিগত খরচ, অতিরিক্ত আয় এবং ব্যক্তিগত দিনার লোনের আলাদা আলাদা স্বয়ংক্রিয় হিসাব বিবরনী (মুদ্রা: কুয়েতি দিনার / KWD)'
+                    ? 'দৈনিক ব্যক্তিগত খরচ, অতিরিক্ত আয় এবং ব্যক্তিগত দিনার লোনের স্বয়ংক্রিয় সমন্বিত হিসাব বিবরণী'
                     : 'Personal daily expenses, extra side earnings & dinar personal loans tracked independently in KWD'}
                 </p>
               </div>
             </div>
+
+            {/* Primary Actions */}
+            <div className="flex items-center gap-2.5 shrink-0">
+              <button
+                type="button"
+                onClick={handlePrint}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-200 bg-white/10 hover:bg-white/15 border border-white/15 rounded-xl transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+                title={lang === 'bn' ? 'কুয়েত পার্সোনাল হিসাব প্রিন্ট বা PDF হিসেবে সেভ করুন' : 'Print or Save PDF'}
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>{lang === 'bn' ? 'প্রিন্ট / PDF' : 'Print / PDF'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => openQuickAddWithSection('kuwait-personal')}
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-slate-950 bg-amber-400 hover:bg-amber-300 rounded-xl transition-colors whitespace-nowrap shrink-0 shadow-xs cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span>{lang === 'bn' ? 'নতুন খরচ এন্ট্রি' : 'Add Expense'}</span>
+              </button>
+            </div>
           </div>
 
-          {/* Quick Stats Pill Strip */}
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium">
-              <span className="text-slate-500">{lang === 'bn' ? 'মোট অতিরিক্ত আয়:' : 'Extra Income:'}</span>
-              <span className="font-mono font-bold text-teal-800">
-                {totalLifetimeExtraIncome.toFixed(3)} KD
+          {/* Unified 5-Column Financial Ribbon (Zero Pill Clutter, Tabular Alignment) */}
+          <div className="relative z-10 mt-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-y sm:divide-y-0 sm:divide-x divide-white/10 rounded-xl bg-white/[0.04] border border-white/10">
+            <div className="px-4 py-3">
+              <span className="text-[11px] font-medium text-slate-400 block">
+                {lang === 'bn' ? 'মোট অতিরিক্ত আয়' : 'Extra Income'}
+              </span>
+              <span className="text-base sm:text-lg font-mono tabular-nums font-bold text-emerald-400 mt-0.5 block">
+                {isPrivacyMode ? '••••• KD' : `${totalLifetimeExtraIncome.toFixed(3)} KD`}
               </span>
             </div>
 
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium">
-              <span className="text-slate-500">{lang === 'bn' ? 'মোট দৈনিক খরচ:' : 'Daily Expenses:'}</span>
-              <span className="font-mono font-bold text-rose-700">
-                {totalAllTimeExpense.toFixed(3)} KD
+            <div className="px-4 py-3">
+              <span className="text-[11px] font-medium text-slate-400 block">
+                {lang === 'bn' ? 'মোট দৈনিক খরচ' : 'Daily Expenses'}
+              </span>
+              <span className="text-base sm:text-lg font-mono tabular-nums font-bold text-rose-400 mt-0.5 block">
+                {isPrivacyMode ? '••••• KD' : `${totalAllTimeExpense.toFixed(3)} KD`}
               </span>
             </div>
 
-            {receivableTotalRemaining > 0 && (
-              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 border border-amber-300 rounded-lg text-xs font-medium">
-                <span className="text-amber-800">{lang === 'bn' ? 'বকেয়া লোন পাওনা:' : 'Receivable Due:'}</span>
-                <span className="font-mono font-bold text-amber-900">
-                  {receivableTotalRemaining.toFixed(3)} KD
-                </span>
-              </div>
-            )}
+            <div className="px-4 py-3">
+              <span className="text-[11px] font-medium text-slate-400 block">
+                {lang === 'bn' ? 'বকেয়া লোন পাওনা' : 'Receivable Due'}
+              </span>
+              <span className="text-base sm:text-lg font-mono tabular-nums font-bold text-amber-300 mt-0.5 block">
+                {isPrivacyMode ? '••••• KD' : `${receivableTotalRemaining.toFixed(3)} KD`}
+              </span>
+            </div>
 
-            {payableTotalRemaining > 0 && (
-              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 border border-rose-300 rounded-lg text-xs font-medium">
-                <span className="text-rose-800">{lang === 'bn' ? 'বকেয়া দেনা (Payable):' : 'Payable Debt:'}</span>
-                <span className="font-mono font-bold text-rose-900">
-                  {payableTotalRemaining.toFixed(3)} KD
-                </span>
-              </div>
-            )}
+            <div className="px-4 py-3">
+              <span className="text-[11px] font-medium text-slate-400 block">
+                {lang === 'bn' ? 'বকেয়া দেনা (Payable)' : 'Payable Debt'}
+              </span>
+              <span className="text-base sm:text-lg font-mono tabular-nums font-bold text-rose-300 mt-0.5 block">
+                {isPrivacyMode ? '••••• KD' : `${payableTotalRemaining.toFixed(3)} KD`}
+              </span>
+            </div>
 
-            <div
-              className={`flex items-center gap-1.5 px-3 py-1.5 border rounded-lg text-xs font-bold ${
-                netPersonalBalance >= 0
-                  ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
-                  : 'bg-rose-50 text-rose-800 border-rose-300'
-              }`}
-            >
-              <span>{lang === 'bn' ? 'পার্সোনাল ব্যালেন্স:' : 'Net Surplus:'}</span>
-              <span className="font-mono">{netPersonalBalance.toFixed(3)} KD</span>
+            <div className="px-4 py-3 col-span-2 sm:col-span-1">
+              <span className="text-[11px] font-medium text-slate-400 block">
+                {lang === 'bn' ? 'পার্সোনাল ব্যালেন্স' : 'Net Surplus'}
+              </span>
+              <span
+                className={`text-base sm:text-lg font-mono tabular-nums font-bold mt-0.5 block ${
+                  netPersonalBalance >= 0 ? 'text-emerald-300' : 'text-rose-400'
+                }`}
+              >
+                {isPrivacyMode ? '••••• KD' : `${netPersonalBalance.toFixed(3)} KD`}
+              </span>
             </div>
           </div>
         </div>
 
-        {/* The Distinct Sub-Heads / Tabs: ”দৈনিক খরচ”, ”অতিরিক্ত আয়”, ”Personal Receivable Loan”, & ”Personal Payable Loan” */}
-        <div className="flex flex-wrap items-center gap-2 pt-4">
-          <button
-            onClick={() => setActiveTab('daily-expense')}
-            className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-lg transition-all ${
-              activeTab === 'daily-expense'
-                ? 'bg-amber-600 text-white shadow-xs'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'
-            }`}
-          >
-            <Coins className="w-4 h-4" />
-            <span>{lang === 'bn' ? 'দৈনিক খরচ' : 'Daily Expenses'}</span>
-            <span
-              className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
-                activeTab === 'daily-expense' ? 'bg-amber-700/80 text-white' : 'bg-slate-200 text-slate-700'
+        {/* Clean Segmented Sub-Tab Navigation Strip */}
+        <div className="px-4 sm:px-6 py-3 bg-slate-50/80 dark:bg-slate-900/95 border-t border-slate-200/80 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
+          <div className="inline-flex flex-wrap items-center gap-1 p-1 bg-slate-200/70 dark:bg-slate-800 rounded-xl border border-slate-200/80 dark:border-slate-700/80">
+            <button
+              type="button"
+              onClick={() => setActiveTab('daily-expense')}
+              className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-lg transition-all whitespace-nowrap shrink-0 cursor-pointer ${
+                activeTab === 'daily-expense'
+                  ? 'bg-white dark:bg-slate-950 text-amber-700 dark:text-amber-400 shadow-xs'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              {kwtTransactions.length}
-            </span>
-          </button>
+              <Coins className="w-3.5 h-3.5" />
+              <span>{lang === 'bn' ? 'দৈনিক খরচ' : 'Daily Expenses'}</span>
+              <span className="font-mono tabular-nums text-[11px] opacity-70">· {kwtTransactions.length}</span>
+            </button>
 
-          <button
-            onClick={() => setActiveTab('extra-income')}
-            className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-lg transition-all ${
-              activeTab === 'extra-income'
-                ? 'bg-teal-700 text-white shadow-xs'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'
-            }`}
-          >
-            <Sparkles className="w-4 h-4" />
-            <span>{lang === 'bn' ? 'অতিরিক্ত আয়' : 'Extra Income'}</span>
-            <span
-              className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
-                activeTab === 'extra-income' ? 'bg-teal-800/80 text-white' : 'bg-slate-200 text-slate-700'
+            <button
+              type="button"
+              onClick={() => setActiveTab('extra-income')}
+              className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-lg transition-all whitespace-nowrap shrink-0 cursor-pointer ${
+                activeTab === 'extra-income'
+                  ? 'bg-white dark:bg-slate-950 text-teal-700 dark:text-teal-400 shadow-xs'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              {extraIncomeTransactions.length}
-            </span>
-          </button>
+              <TrendingUp className="w-3.5 h-3.5" />
+              <span>{lang === 'bn' ? 'অতিরিক্ত আয়' : 'Extra Income'}</span>
+              <span className="font-mono tabular-nums text-[11px] opacity-70">· {extraIncomeTransactions.length}</span>
+            </button>
 
-          {/* Personal Receivable Loan (Previously Loan Account) */}
-          <button
-            onClick={() => setActiveTab('receivable-loan')}
-            className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-lg transition-all ${
-              activeTab === 'receivable-loan'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'
-            }`}
-          >
-            <HandCoins className="w-4 h-4" />
-            <span>Personal Receivable Loan</span>
-            <span
-              className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+            <button
+              type="button"
+              onClick={() => setActiveTab('receivable-loan')}
+              className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-lg transition-all whitespace-nowrap shrink-0 cursor-pointer ${
                 activeTab === 'receivable-loan'
-                  ? 'bg-indigo-700/80 text-white'
-                  : receivableTotalRemaining > 0
-                  ? 'bg-amber-100 text-amber-800 font-bold'
-                  : 'bg-slate-200 text-slate-700'
+                  ? 'bg-white dark:bg-slate-950 text-indigo-700 dark:text-indigo-400 shadow-xs'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              {receivableTotalRemaining > 0 ? `${receivableTotalRemaining.toFixed(1)} KD` : '0 KD'}
-            </span>
-          </button>
+              <HandCoins className="w-3.5 h-3.5" />
+              <span>{lang === 'bn' ? 'ব্যক্তিগত পাওনা লোন' : 'Receivable Loan'}</span>
+              <span className="font-mono tabular-nums text-[11px] opacity-75">
+                · {isPrivacyMode ? '•••' : `${receivableTotalRemaining.toFixed(1)} KD`}
+              </span>
+            </button>
 
-          {/* Personal Payable Loan */}
-          <button
-            onClick={() => setActiveTab('payable-loan')}
-            className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-lg transition-all ${
-              activeTab === 'payable-loan'
-                ? 'bg-rose-600 text-white shadow-xs'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'
-            }`}
-          >
-            <Handshake className="w-4 h-4" />
-            <span>Personal Payable Loan</span>
-            <span
-              className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+            <button
+              type="button"
+              onClick={() => setActiveTab('payable-loan')}
+              className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-lg transition-all whitespace-nowrap shrink-0 cursor-pointer ${
                 activeTab === 'payable-loan'
-                  ? 'bg-rose-700/80 text-white'
-                  : payableTotalRemaining > 0
-                  ? 'bg-rose-100 text-rose-800 font-bold'
-                  : 'bg-slate-200 text-slate-700'
+                  ? 'bg-white dark:bg-slate-950 text-rose-700 dark:text-rose-400 shadow-xs'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              {payableTotalRemaining > 0 ? `${payableTotalRemaining.toFixed(1)} KD` : '0 KD'}
-            </span>
-          </button>
+              <Handshake className="w-3.5 h-3.5" />
+              <span>{lang === 'bn' ? 'ব্যক্তিগত দেনা লোন' : 'Payable Loan'}</span>
+              <span className="font-mono tabular-nums text-[11px] opacity-75">
+                · {isPrivacyMode ? '•••' : `${payableTotalRemaining.toFixed(1)} KD`}
+              </span>
+            </button>
+          </div>
 
-          <button
-            onClick={handlePrint}
-            className="sm:ml-auto flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 rounded-lg transition-colors shadow-2xs cursor-pointer"
-            title={lang === 'bn' ? 'কুয়েত পার্সোনাল হিসাব প্রিন্ট বা PDF হিসেবে সেভ করুন' : 'Print or Save PDF'}
-          >
-            <Printer className="w-3.5 h-3.5 text-slate-600" />
-            <span>{lang === 'bn' ? 'প্রিন্ট / PDF রিপোর্ট' : 'Print / PDF'}</span>
-          </button>
+          <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400 hidden xl:block">
+            1 KWD ≈ ৳{kwdRate.toFixed(2)}
+          </div>
         </div>
       </div>
 
@@ -420,36 +430,40 @@ export const KuwaitPersonalView: React.FC<KuwaitPersonalViewProps> = ({ initialT
                 {lang === 'bn' ? 'কুয়েত এর পার্সোনাল হিসাব — দৈনিক খরচ বিবরণী' : 'Daily Living Expenses Report'} — {selectedMonth === 'all' ? (lang === 'bn' ? 'সর্বমোট (সকল মাস)' : 'All Time') : formatMonth(selectedMonth, lang)}
               </p>
               <div className="flex justify-between text-xs text-slate-500 mt-3 pt-2 border-t border-slate-200">
-                <span>Prepared for: Juwel / Boss Review</span>
+                <span>Prepared for: Personal / Audit Review</span>
                 <span>Currency: Kuwaiti Dinar (KWD / د.ك)</span>
                 <span>Total Spent: {formatCurrency(totalMonthlyExpense, 'KWD', lang)}</span>
               </div>
             </div>
           </div>
 
-          {/* Daily Expense Controls & Monthly KPIs */}
-          <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-2xs no-print">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
-              <div>
-                <h3 className="text-base font-bold text-slate-900 flex items-center gap-1.5">
-                  <Coins className="w-4 h-4 text-amber-600" />
-                  <span>{lang === 'bn' ? 'দৈনিক খরচ হিসাব ও মাসিক বিবরণী' : 'Daily Expense Overview'}</span>
-                </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  {lang === 'bn'
-                    ? 'খাবার, বাজার, রুম ভাড়া, যাতায়াত ইত্যাদির নিয়মিত দৈনন্দিন খরচ'
-                    : 'Track meals, groceries, rent, transport and daily personal living costs'}
-                </p>
+          {/* 2. Daily Expense Analytical Overview (Single-Elevation Architectural Panel) */}
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-xs overflow-hidden no-print">
+            <div className="px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-950/50 border border-amber-200/80 dark:border-amber-800/60 flex items-center justify-center shrink-0">
+                  <Wallet className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div>
+                  <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight">
+                    {lang === 'bn' ? 'দৈনিক খরচ হিসাব ও মাসিক বিবরণী' : 'Daily Expense Overview'}
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    {lang === 'bn'
+                      ? 'খাবার, বাজার, রুম ভাড়া, যাতায়াত ইত্যাদির নিয়মিত দৈনন্দিন খরচ বিশ্লেষণ'
+                      : 'Track meals, groceries, rent, transport and daily personal living costs'}
+                  </p>
+                </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
                 {/* Smart Month Filter Picker */}
-                <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs">
-                  <Calendar className="w-3.5 h-3.5 text-slate-500" />
+                <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs">
+                  <Calendar className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                   <select
                     value={selectedMonth}
                     onChange={(e) => setSelectedMonth(e.target.value)}
-                    className="bg-transparent font-medium text-slate-700 dark:text-slate-200 focus:outline-hidden text-xs cursor-pointer"
+                    className="bg-transparent font-semibold text-slate-800 dark:text-slate-200 focus:outline-hidden text-xs cursor-pointer"
                   >
                     <option value="all">{lang === 'bn' ? 'সকল মাসের খরচ (সর্বমোট)' : 'All Months'}</option>
                     {availableMonths.map((m) => (
@@ -461,187 +475,226 @@ export const KuwaitPersonalView: React.FC<KuwaitPersonalViewProps> = ({ initialT
                 </div>
 
                 <button
-                  onClick={handlePrint}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 rounded-lg transition-colors shadow-2xs"
+                  type="button"
+                  onClick={handleExportCSV}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-xl transition-colors whitespace-nowrap shrink-0 cursor-pointer"
                 >
-                  <Printer className="w-3.5 h-3.5 text-slate-600" />
-                  <span>{lang === 'bn' ? 'প্রিন্ট / PDF রিপোর্ট' : 'Print / PDF Report'}</span>
-                </button>
-
-                <button
-                  onClick={() => openQuickAddWithSection('kuwait-personal')}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-lg transition-colors shadow-2xs cursor-pointer"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>{lang === 'bn' ? 'নতুন খরচ এন্ট্রি' : 'Add Expense'}</span>
+                  <Download className="w-3.5 h-3.5 text-slate-500" />
+                  <span>CSV</span>
                 </button>
               </div>
             </div>
 
-            {/* Quick KPI Strip */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
-              <div className="bg-amber-50/60 rounded-lg p-3.5 border border-amber-200/80">
-                <p className="text-[11px] font-semibold text-amber-900 uppercase tracking-wider">
-                  {selectedMonth === 'all'
-                    ? lang === 'bn' ? 'সর্বমোট খরচ (সকল মাস)' : 'Total Expense (All Time)'
-                    : lang === 'bn' ? `${formatMonth(selectedMonth, lang)} - মোট খরচ` : `Total Expense (${selectedMonth})`}
+            {/* 3-Column Structured Metric Grid (No Card-Inside-Card Sandwiches) */}
+            <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-slate-200/80 dark:divide-slate-800">
+              {/* Primary Metric Focal Anchor */}
+              <div className="p-5 bg-amber-50/35 dark:bg-amber-950/15">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-amber-900/80 dark:text-amber-300/90">
+                    {selectedMonth === 'all'
+                      ? lang === 'bn' ? 'সর্বমোট খরচ (সকল মাস)' : 'Total Expense · All Time'
+                      : lang === 'bn' ? `${formatMonth(selectedMonth, lang)} - মোট খরচ` : `Total Expense · ${selectedMonth}`}
+                  </span>
+                  <span className="text-[11px] font-mono text-amber-800/80 dark:text-amber-400">
+                    {monthTransactions.length} {lang === 'bn' ? 'টি এন্ট্রি' : 'entries'}
+                  </span>
+                </div>
+                <p className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white font-mono tabular-nums mt-2 tracking-tight">
+                  {isPrivacyMode ? '•••••• KWD' : formatCurrency(totalMonthlyExpense, 'KWD', lang)}
                 </p>
-                <p className="text-2xl font-bold text-amber-900 font-mono tabular-nums mt-1">
-                  {formatCurrency(totalMonthlyExpense, 'KWD', lang)}
-                </p>
-                <p className="text-[11px] text-amber-700 mt-0.5">
-                  {lang === 'bn' ? `মোট ${monthTransactions.length}টি খরচ প্রদর্শিত হচ্ছে` : `${monthTransactions.length} items logged`}
-                </p>
-              </div>
-
-              <div className="bg-slate-50 rounded-lg p-3.5 border border-slate-200/80">
-                <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                  {lang === 'bn' ? 'দৈনিক গড় খরচ' : 'Daily Average Spent'}
-                </p>
-                <p className="text-xl font-bold text-slate-800 font-mono tabular-nums mt-1">
-                  {formatCurrency(monthTransactions.length > 0 ? totalMonthlyExpense / 30 : 0, 'KWD', lang)}
-                </p>
-                <p className="text-[11px] text-slate-500 mt-0.5">
-                  {lang === 'bn' ? 'প্রতিদিন আনুমানিক খরচ' : 'Average per day (30d base)'}
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-mono tabular-nums mt-1">
+                  {isPrivacyMode
+                    ? '≈ ৳••••••'
+                    : `≈ ৳${Math.round(totalMonthlyExpense * kwdRate).toLocaleString('en-US')} BDT`}
                 </p>
               </div>
 
-              <div className="bg-slate-50 rounded-lg p-3.5 border border-slate-200/80">
-                <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                  {lang === 'bn' ? 'প্রধান খরচের খাত' : 'Top Expense Sector'}
+              {/* Metric 2: Daily Average */}
+              <div className="p-5">
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block">
+                  {lang === 'bn' ? 'দৈনিক গড় খরচ (৩০ দিনের হিসাব)' : 'Daily Average Spent'}
+                </span>
+                <p className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white font-mono tabular-nums mt-2 tracking-tight">
+                  {isPrivacyMode
+                    ? '•••••• KWD'
+                    : formatCurrency(monthTransactions.length > 0 ? totalMonthlyExpense / 30 : 0, 'KWD', lang)}
                 </p>
-                <p className="text-base font-bold text-slate-800 truncate mt-1">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  {lang === 'bn' ? 'প্রতিদিনের গড় ব্যয়ের হার' : '30-day rolling daily baseline'}
+                </p>
+              </div>
+
+              {/* Metric 3: Top Expense Sector with share bar */}
+              <div className="p-5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                    {lang === 'bn' ? 'প্রধান খরচের খাত' : 'Top Expense Sector'}
+                  </span>
+                  {categorySummary[0] && totalMonthlyExpense > 0 && (
+                    <span className="text-[11px] font-mono tabular-nums font-bold text-amber-700 dark:text-amber-400">
+                      {((categorySummary[0].total / totalMonthlyExpense) * 100).toFixed(1)}%
+                    </span>
+                  )}
+                </div>
+                <p className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white truncate mt-2">
                   {categorySummary[0]
                     ? lang === 'bn'
                       ? categorySummary[0].nameBn
                       : categorySummary[0].nameEn
-                    : '-'}
+                    : '—'}
                 </p>
-                <p className="text-[11px] text-slate-500 mt-0.5 font-mono">
-                  {categorySummary[0] ? formatCurrency(categorySummary[0].total, 'KWD', lang) : ''}
-                </p>
+                <div className="mt-1.5 flex items-center gap-3">
+                  <span className="text-xs font-mono tabular-nums font-semibold text-slate-600 dark:text-slate-300 shrink-0">
+                    {categorySummary[0]
+                      ? isPrivacyMode
+                        ? '•••• KWD'
+                        : formatCurrency(categorySummary[0].total, 'KWD', lang)
+                      : '0.000 KWD'}
+                  </span>
+                  {categorySummary[0] && totalMonthlyExpense > 0 && (
+                    <div className="flex-1 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-amber-500 rounded-full"
+                        style={{
+                          width: `${Math.min(100, Math.round((categorySummary[0].total / totalMonthlyExpense) * 100))}%`,
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
 
-          {/* In-Line Rapid Expense Entry Bar */}
-          <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-2xs no-print">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                <Receipt className="w-3.5 h-3.5 text-amber-600" />
-                <span>{lang === 'bn' ? 'ঝটপট দৈনিক খরচ এন্ট্রি (১-ক্লিক)' : 'Instant 1-Click Expense Entry'}</span>
-              </h3>
-              <span className="text-[11px] text-slate-400">
-                {lang === 'bn' ? 'মুদ্রা: কুয়েতি দিনার (KWD)' : 'Currency: KWD'}
-              </span>
-            </div>
-
-            <form onSubmit={handleQuickAdd} className="space-y-3">
-              {/* Quick preset chips */}
-              <div className="flex flex-wrap items-center gap-1.5 text-xs">
-                <span className="text-slate-500 text-[11px] mr-1">{lang === 'bn' ? 'কুইক অ্যামাউন্ট:' : 'Presets:'}</span>
-                {[0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 5.0].map((kd) => (
-                  <button
-                    key={kd}
-                    type="button"
-                    onClick={() => setQuickAmount(kd.toFixed(3))}
-                    className={`px-2 py-0.5 rounded border transition-colors ${
-                      quickAmount === kd.toFixed(3)
-                        ? 'bg-amber-600 text-white border-amber-600 font-bold'
-                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                    }`}
-                  >
-                    {kd.toFixed(3)} KD
-                  </button>
-                ))}
+          {/* 3. Express 1-Click Expense Entry Dock */}
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200/90 dark:border-slate-800 shadow-xs no-print">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <Receipt className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight">
+                  {lang === 'bn' ? 'ঝটপট দৈনিক খরচ এন্ট্রি (১-ক্লিক)' : 'Instant 1-Click Expense Entry'}
+                </h3>
+                <span className="text-[11px] font-mono text-slate-400 dark:text-slate-500">· KWD</span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
-                <div>
-                  <input
-                    type="number"
-                    step="0.001"
-                    placeholder={lang === 'bn' ? 'দিনার পরিমাণ (যেমন 1.250)' : 'Amount KWD (e.g. 1.250)'}
-                    value={quickAmount}
-                    onChange={(e) => setQuickAmount(e.target.value)}
-                    required
-                    className="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-md font-mono focus:bg-white focus:outline-hidden focus:ring-1 focus:ring-amber-500"
-                  />
-                </div>
+              {/* Clean Segmented Preset Keypad Strip */}
+              <div className="flex flex-wrap items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200/80 dark:border-slate-700/80">
+                {[0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 5.0].map((kd) => {
+                  const isActivePreset = quickAmount === kd.toFixed(3);
+                  return (
+                    <button
+                      key={kd}
+                      type="button"
+                      onClick={() => setQuickAmount(kd.toFixed(3))}
+                      className={`px-2.5 py-1 text-[11px] font-mono tabular-nums font-bold rounded-lg transition-all whitespace-nowrap cursor-pointer ${
+                        isActivePreset
+                          ? 'bg-slate-900 dark:bg-amber-500 text-white dark:text-slate-950 shadow-xs'
+                          : 'text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700'
+                      }`}
+                    >
+                      {kd.toFixed(3)}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
-                <div>
-                  <select
-                    value={quickCatId}
-                    onChange={(e) => setQuickCatId(e.target.value)}
-                    className="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-md focus:bg-white focus:outline-hidden focus:ring-1 focus:ring-amber-500"
-                  >
-                    {kwtCategories.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {lang === 'bn' ? c.nameBn : c.nameEn}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+            <form onSubmit={handleQuickAdd} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2.5 items-center">
+              <div className="lg:col-span-3 relative">
+                <input
+                  type="number"
+                  step="0.001"
+                  placeholder={lang === 'bn' ? 'দিনার পরিমাণ (যেমন 1.250)' : 'Amount KWD (e.g. 1.250)'}
+                  value={quickAmount}
+                  onChange={(e) => setQuickAmount(e.target.value)}
+                  required
+                  className="w-full px-3.5 py-2 text-xs bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl font-mono tabular-nums font-semibold text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:outline-hidden focus:ring-2 focus:ring-amber-500/40"
+                />
+              </div>
 
-                <div>
-                  <input
-                    type="text"
-                    placeholder={lang === 'bn' ? 'বিবরণ (যেমন: দুপুরের খাবার)' : 'Note / Description'}
-                    value={quickNote}
-                    onChange={(e) => setQuickNote(e.target.value)}
-                    className="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-md focus:bg-white focus:outline-hidden focus:ring-1 focus:ring-amber-500"
-                  />
-                </div>
+              <div className="lg:col-span-3">
+                <select
+                  value={quickCatId}
+                  onChange={(e) => setQuickCatId(e.target.value)}
+                  className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl font-medium text-slate-800 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-800 focus:outline-hidden focus:ring-2 focus:ring-amber-500/40 cursor-pointer"
+                >
+                  {kwtCategories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {lang === 'bn' ? c.nameBn : c.nameEn}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-                <div className="flex gap-2">
-                  <input
-                    type="date"
-                    value={quickDate}
-                    onChange={(e) => setQuickDate(e.target.value)}
-                    className="w-full px-2 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-md focus:bg-white focus:outline-hidden focus:ring-1 focus:ring-amber-500"
-                  />
-                  <button
-                    type="submit"
-                    className="px-4 py-1.5 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-md transition-colors whitespace-nowrap"
-                  >
-                    {lang === 'bn' ? 'এন্ট্রি করুন' : 'Add'}
-                  </button>
-                </div>
+              <div className="lg:col-span-3">
+                <input
+                  type="text"
+                  placeholder={lang === 'bn' ? 'বিবরণ (যেমন: দুপুরের খাবার)' : 'Note / Description'}
+                  value={quickNote}
+                  onChange={(e) => setQuickNote(e.target.value)}
+                  className="w-full px-3.5 py-2 text-xs bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-800 focus:outline-hidden focus:ring-2 focus:ring-amber-500/40"
+                />
+              </div>
+
+              <div className="lg:col-span-3 flex gap-2">
+                <input
+                  type="date"
+                  value={quickDate}
+                  onChange={(e) => setQuickDate(e.target.value)}
+                  className="w-full px-2.5 py-2 text-xs bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-800 focus:outline-hidden focus:ring-2 focus:ring-amber-500/40"
+                />
+                <button
+                  type="submit"
+                  className="inline-flex items-center gap-1 px-4 py-2 text-xs font-bold text-white bg-slate-900 dark:bg-amber-500 dark:text-slate-950 hover:bg-slate-800 dark:hover:bg-amber-400 rounded-xl transition-colors whitespace-nowrap shrink-0 cursor-pointer shadow-xs"
+                >
+                  <Check className="w-3.5 h-3.5" />
+                  <span>{lang === 'bn' ? 'এন্ট্রি' : 'Save'}</span>
+                </button>
               </div>
             </form>
           </div>
 
-          {/* Category Breakdown & Ledger Grid */}
+          {/* 4. Category Breakdown & Ledger Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            {/* Left: Category Summary Cards */}
+            {/* Left: Category Summary */}
             <div className="lg:col-span-1 space-y-4 no-print">
-              <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-2xs">
-                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-3">
-                  {lang === 'bn' ? 'খাত অনুযায়ী মোট খরচ' : 'Monthly Category Breakdown'}
-                </h3>
-                <div className="space-y-2.5">
+              <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200/90 dark:border-slate-800 shadow-xs">
+                <div className="flex items-center justify-between mb-4 pb-2.5 border-b border-slate-100 dark:border-slate-800">
+                  <h3 className="text-xs font-bold text-slate-900 dark:text-white tracking-tight">
+                    {lang === 'bn' ? 'খাত অনুযায়ী মোট খরচ' : 'Category Breakdown'}
+                  </h3>
+                  <span className="text-[11px] font-mono text-slate-400">
+                    {categorySummary.length}
+                  </span>
+                </div>
+                <div className="space-y-3">
                   {categorySummary.length === 0 ? (
-                    <p className="text-xs text-slate-400 py-2">
-                      {lang === 'bn' ? 'এই মাসে এখনো কোন খরচ এন্ট্রি করা হয়নি' : 'No expenses recorded this month'}
+                    <p className="text-xs text-slate-400 dark:text-slate-500 py-3 text-center">
+                      {lang === 'bn' ? 'এই সময়কালে কোনো খরচ এন্ট্রি করা হয়নি' : 'No expenses recorded'}
                     </p>
                   ) : (
                     categorySummary.map((item, idx) => {
                       const percent = totalMonthlyExpense > 0 ? (item.total / totalMonthlyExpense) * 100 : 0;
                       return (
-                        <div key={idx} className="space-y-1">
-                          <div className="flex justify-between text-xs">
-                            <span className="font-medium text-slate-700 truncate pr-2">
+                        <div key={idx} className="space-y-1.5">
+                          <div className="flex justify-between items-baseline text-xs">
+                            <span className="font-medium text-slate-700 dark:text-slate-300 truncate pr-2">
                               {lang === 'bn' ? item.nameBn : item.nameEn}
                             </span>
-                            <span className="font-mono tabular-nums font-bold text-slate-900 shrink-0">
-                              {formatCurrency(item.total, 'KWD', lang)}
+                            <span className="font-mono tabular-nums font-bold text-slate-900 dark:text-white shrink-0">
+                              {isPrivacyMode ? '•••• KD' : `${item.total.toFixed(3)} KD`}
                             </span>
                           </div>
-                          <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-amber-500 rounded-full"
-                              style={{ width: `${Math.min(100, Math.max(5, percent))}%` }}
-                            />
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-amber-500 rounded-full"
+                                style={{ width: `${Math.min(100, Math.max(4, percent))}%` }}
+                              />
+                            </div>
+                            <span className="text-[10px] font-mono tabular-nums text-slate-400 w-9 text-right">
+                              {percent.toFixed(0)}%
+                            </span>
                           </div>
                         </div>
                       );
@@ -652,24 +705,37 @@ export const KuwaitPersonalView: React.FC<KuwaitPersonalViewProps> = ({ initialT
             </div>
 
             {/* Right: Full Expense Table (Printable) */}
-            <div className="lg:col-span-3 bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden print-shadow-none">
+            <div className="lg:col-span-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-xs overflow-hidden print-shadow-none">
               {/* Table Controls (hidden in print) */}
-              <div className="p-3.5 border-b border-slate-200 bg-slate-50/60 flex flex-wrap items-center justify-between gap-3 no-print">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-slate-800">
+              <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 no-print">
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="font-bold text-slate-900 dark:text-white">
                     {lang === 'bn' ? 'দৈনিক খরচের তালিকা' : 'Daily Expense Ledger'}
                   </span>
-                  <span className="text-xs text-slate-500">
-                    ({monthTransactions.length} {lang === 'bn' ? 'টি আইটেম' : 'items'})
+                  <span className="text-slate-400">·</span>
+                  <span className="text-slate-500 dark:text-slate-400 font-mono tabular-nums">
+                    {monthTransactions.length} {lang === 'bn' ? 'টি আইটেম' : 'items'}
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  {/* Live Search Filter */}
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder={lang === 'bn' ? 'খুঁজুন...' : 'Search ledger...'}
+                      className="pl-8 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-800 focus:outline-hidden focus:ring-2 focus:ring-amber-500/40 w-36 sm:w-44"
+                    />
+                  </div>
+
                   {/* Category Filter */}
                   <select
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="px-2.5 py-1 text-xs bg-white border border-slate-300 rounded-md"
+                    className="px-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-200 font-medium cursor-pointer"
                   >
                     <option value="all">{lang === 'bn' ? 'সকল ক্যাটাগরি' : 'All Categories'}</option>
                     {kwtCategories.map((c) => (
@@ -678,14 +744,6 @@ export const KuwaitPersonalView: React.FC<KuwaitPersonalViewProps> = ({ initialT
                       </option>
                     ))}
                   </select>
-
-                  <button
-                    onClick={handleExportCSV}
-                    className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 rounded-md"
-                  >
-                    <Download className="w-3 h-3" />
-                    <span>CSV</span>
-                  </button>
                 </div>
               </div>
 
@@ -693,55 +751,56 @@ export const KuwaitPersonalView: React.FC<KuwaitPersonalViewProps> = ({ initialT
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse text-xs">
                   <thead>
-                    <tr className="bg-slate-100/70 border-b border-slate-200 text-slate-600 font-bold">
-                      <th className="py-2.5 px-3.5 whitespace-nowrap">{lang === 'bn' ? 'তারিখ' : 'Date'}</th>
-                      <th className="py-2.5 px-3.5 whitespace-nowrap">{lang === 'bn' ? 'খাত / ক্যাটাগরি' : 'Category'}</th>
-                      <th className="py-2.5 px-3.5 whitespace-nowrap">{lang === 'bn' ? 'বিবরণ / নোট' : 'Note'}</th>
-                      <th className="py-2.5 px-3.5 text-right whitespace-nowrap">{lang === 'bn' ? 'পরিমাণ (KWD)' : 'Amount (KWD)'}</th>
-                      <th className="py-2.5 px-3.5 text-center whitespace-nowrap w-14 no-print">{lang === 'bn' ? 'অ্যাকশন' : 'Action'}</th>
+                    <tr className="bg-slate-50/90 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold">
+                      <th className="py-3 px-4 whitespace-nowrap">{lang === 'bn' ? 'তারিখ' : 'Date'}</th>
+                      <th className="py-3 px-4 whitespace-nowrap">{lang === 'bn' ? 'খাত / ক্যাটাগরি' : 'Category'}</th>
+                      <th className="py-3 px-4 whitespace-nowrap">{lang === 'bn' ? 'বিবরণ / নোট' : 'Note'}</th>
+                      <th className="py-3 px-4 text-right whitespace-nowrap">{lang === 'bn' ? 'পরিমাণ (KWD)' : 'Amount (KWD)'}</th>
+                      <th className="py-3 px-4 text-center whitespace-nowrap w-16 no-print">{lang === 'bn' ? 'অ্যাকশন' : 'Action'}</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 text-slate-800">
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 text-slate-800 dark:text-slate-200">
                     {monthTransactions.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="text-center py-8 text-slate-400">
+                        <td colSpan={5} className="text-center py-10 text-slate-400 dark:text-slate-500">
                           {lang === 'bn'
-                            ? 'এই মাসে এখনো কোন খরচের এন্ট্রি নেই। উপরের ফর্ম দিয়ে ঝটপট এন্ট্রি করুন।'
-                            : 'No expenses recorded for this month.'}
+                            ? 'কোনো খরচের এন্ট্রি পাওয়া যায়নি। উপরের ফর্ম দিয়ে ঝটপট এন্ট্রি করুন।'
+                            : 'No expenses found for the selected filter.'}
                         </td>
                       </tr>
                     ) : (
                       monthTransactions.map((tx) => (
-                        <tr key={tx.id} className="hover:bg-slate-50/80 transition-colors">
-                          <td className="py-2.5 px-3.5 whitespace-nowrap font-medium text-slate-600">
+                        <tr key={tx.id} className="hover:bg-slate-50/90 dark:hover:bg-slate-800/40 transition-colors">
+                          <td className="py-3 px-4 whitespace-nowrap font-medium text-slate-500 dark:text-slate-400 font-mono text-[11px]">
                             {formatDate(tx.date, lang)}
                           </td>
-                          <td className="py-2.5 px-3.5 whitespace-nowrap font-semibold text-slate-900">
-                            {lang === 'bn' ? tx.categoryNameBn || '-' : tx.categoryNameEn || tx.categoryNameBn || '-'}
+                          <td className="py-3 px-4 whitespace-nowrap font-semibold text-slate-900 dark:text-white">
+                            {lang === 'bn' ? tx.categoryNameBn || '—' : tx.categoryNameEn || tx.categoryNameBn || '—'}
                           </td>
-                          <td className="py-2.5 px-3.5 text-slate-600 max-w-sm">
-                            {tx.note || '-'}
+                          <td className="py-3 px-4 text-slate-600 dark:text-slate-300 max-w-sm">
+                            {tx.note || '—'}
                           </td>
-                          <td className="py-2.5 px-3.5 text-right font-mono tabular-nums font-bold text-amber-900 whitespace-nowrap">
-                            {tx.amount.toFixed(3)} KD
+                          <td className="py-3 px-4 text-right font-mono tabular-nums font-bold text-slate-900 dark:text-amber-400 whitespace-nowrap">
+                            {isPrivacyMode ? '••••• KD' : `${tx.amount.toFixed(3)} KD`}
                           </td>
-                          <td className="py-2.5 px-3.5 text-center whitespace-nowrap no-print">
-                            <div className="flex items-center justify-center gap-1.5">
+                          <td className="py-3 px-4 text-center whitespace-nowrap no-print">
+                            <div className="flex items-center justify-center gap-1">
                               <button
                                 type="button"
                                 onClick={() => setEditingTxId(tx.id)}
-                                className="p-1 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors cursor-pointer"
+                                className="p-1.5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 rounded-lg transition-colors cursor-pointer"
                                 title={lang === 'bn' ? 'সংশোধন / এডিট করুন' : 'Edit'}
                               >
                                 <Edit2 className="w-3.5 h-3.5" />
                               </button>
                               <button
+                                type="button"
                                 onClick={() => {
                                   if (confirm(lang === 'bn' ? 'এই খরচের এন্ট্রিটি মুছে ফেলতে চান?' : 'Delete this expense?')) {
                                     deleteTransaction(tx.id);
                                   }
                                 }}
-                                className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors cursor-pointer"
+                                className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded-lg transition-colors cursor-pointer"
                                 title={lang === 'bn' ? 'মুছে ফেলুন' : 'Delete'}
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
@@ -755,12 +814,12 @@ export const KuwaitPersonalView: React.FC<KuwaitPersonalViewProps> = ({ initialT
                   {/* Table Footer with Total */}
                   {monthTransactions.length > 0 && (
                     <tfoot>
-                      <tr className="bg-amber-50/70 border-t-2 border-slate-300 font-bold text-slate-900">
-                        <td colSpan={3} className="py-2.5 px-3.5 text-right uppercase tracking-wider text-xs">
-                          {lang === 'bn' ? 'সর্বমোট মাসিক খরচ:' : 'Total Monthly Expenses:'}
+                      <tr className="bg-slate-50 dark:bg-slate-800/70 border-t border-slate-200 dark:border-slate-700 font-bold text-slate-900 dark:text-white">
+                        <td colSpan={3} className="py-3 px-4 text-right text-xs text-slate-600 dark:text-slate-300">
+                          {lang === 'bn' ? 'সর্বমোট খরচ:' : 'Total Filtered Expenses:'}
                         </td>
-                        <td className="py-2.5 px-3.5 text-right font-mono tabular-nums text-sm text-amber-950 font-bold">
-                          {totalMonthlyExpense.toFixed(3)} KD
+                        <td className="py-3 px-4 text-right font-mono tabular-nums text-sm text-amber-700 dark:text-amber-400 font-extrabold">
+                          {isPrivacyMode ? '•••••• KD' : `${totalMonthlyExpense.toFixed(3)} KD`}
                         </td>
                         <td className="no-print"></td>
                       </tr>
@@ -769,7 +828,7 @@ export const KuwaitPersonalView: React.FC<KuwaitPersonalViewProps> = ({ initialT
                 </table>
               </div>
 
-              {/* Printable signature for Boss review */}
+              {/* Printable signature for review */}
               <div className="hidden print:flex justify-between items-center px-8 py-10 mt-6 border-t border-slate-300 text-xs">
                 <div className="text-center">
                   <div className="w-48 border-b border-slate-400 mb-2"></div>
@@ -777,7 +836,7 @@ export const KuwaitPersonalView: React.FC<KuwaitPersonalViewProps> = ({ initialT
                 </div>
                 <div className="text-center">
                   <div className="w-48 border-b border-slate-400 mb-2"></div>
-                  <span>Approved by Boss / বসের অনুমোদন স্বাক্ষর</span>
+                  <span>Approved by Boss / অনুমোদন স্বাক্ষর</span>
                 </div>
               </div>
             </div>

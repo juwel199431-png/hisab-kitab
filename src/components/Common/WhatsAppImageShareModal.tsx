@@ -118,6 +118,27 @@ export const WhatsAppImageShareModal: React.FC<WhatsAppImageShareModalProps> = (
     ? `voucher-${voucherData.voucherNo ? voucherData.voucherNo.replace(/[^a-zA-Z0-9_-]/g, '') : 'slip'}.png`
     : `statement-${statementData?.borrowerName ? statementData.borrowerName.replace(/[^a-zA-Z0-9_-]/g, '') : 'loan'}.png`;
 
+  const openExternalWhatsApp = (url: string) => {
+    const a = document.createElement('a');
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
+  // Build formatted text invoice/receipt message for 1-click direct WhatsApp text
+  const directTextMessage = voucherData
+    ? lang === 'bn'
+      ? `🧾 *অফিসিয়াল ইনভয়েস / ভাউচার*\n━━━━━━━━━━━━━━━━━━\n📌 *খাত:* ${voucherData.sectionNameBn || voucherData.sectionNameEn || 'হিসাব কিতাব'}\n🔢 *ভাউচার নং:* ${voucherData.voucherNo || 'N/A'}\n📅 *তারিখ:* ${voucherData.date}\n🏷️ *ক্যাটাগরি:* ${voucherData.categoryNameBn || voucherData.categoryNameEn || '—'}\n📝 *বিবরণ:* ${voucherData.note || '—'}\n💰 *পরিমাণ:* ${voucherData.currency === 'KWD' ? `${voucherData.amount.toFixed(3)} KD` : `৳${voucherData.amount.toLocaleString()}`}\n━━━━━━━━━━━━━━━━━━\n_হিসাব কিতাব ফাইনান্স ম্যানেজার_`
+      : `🧾 *OFFICIAL INVOICE / VOUCHER*\n━━━━━━━━━━━━━━━━━━\n📌 *Account:* ${voucherData.sectionNameEn || voucherData.sectionNameBn || 'Hisab Kitab'}\n🔢 *Voucher #:* ${voucherData.voucherNo || 'N/A'}\n📅 *Date:* ${voucherData.date}\n🏷️ *Category:* ${voucherData.categoryNameEn || voucherData.categoryNameBn || '—'}\n📝 *Description:* ${voucherData.note || '—'}\n💰 *Amount:* ${voucherData.currency === 'KWD' ? `${voucherData.amount.toFixed(3)} KD` : `৳${voucherData.amount.toLocaleString()}`}\n━━━━━━━━━━━━━━━━━━\n_Hisab Kitab Finance Manager_`
+    : '';
+
+  const directWhatsAppTextUrl = directTextMessage
+    ? getWhatsAppUrl(recipientPhone, directTextMessage)
+    : getWhatsAppUrl(recipientPhone);
+
   // 1. One-click Copy Image & Open WhatsApp
   const handleCopyAndOpenWhatsApp = async () => {
     if (!blob) return;
@@ -132,9 +153,9 @@ export const WhatsAppImageShareModal: React.FC<WhatsAppImageShareModalProps> = (
     // B. Also auto download as backup
     downloadBlobAsImage(blob, fileName);
 
-    // C. Open WhatsApp
+    // C. Open WhatsApp safely
     const waUrl = getWhatsAppUrl(recipientPhone);
-    window.open(waUrl, '_blank');
+    openExternalWhatsApp(waUrl);
 
     setStatusMessage(
       lang === 'bn'
@@ -283,20 +304,38 @@ export const WhatsAppImageShareModal: React.FC<WhatsAppImageShareModalProps> = (
 
         {/* Action Buttons Footer */}
         <div className="p-4 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 space-y-2">
-          {/* Main Primary Button: Copy Image & Open WhatsApp */}
-          <button
-            type="button"
-            onClick={handleCopyAndOpenWhatsApp}
-            disabled={isGenerating || !blob}
-            className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer disabled:opacity-50"
-          >
-            <MessageCircle className="w-4 h-4 fill-white" />
-            <span>
-              {lang === 'bn'
-                ? '📋 ছবি কপি করুন & হোয়াটসঅ্যাপে পেস্ট করতে খুলুন'
-                : '📋 Copy Image & Open WhatsApp to Paste'}
-            </span>
-          </button>
+          {/* Main Primary Buttons: Copy Image & Open WhatsApp + Direct Text Invoice */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={handleCopyAndOpenWhatsApp}
+              disabled={isGenerating || !blob}
+              className="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-md hover:shadow-lg transition-all cursor-pointer disabled:opacity-50"
+            >
+              <MessageCircle className="w-4 h-4 fill-white shrink-0" />
+              <span>
+                {lang === 'bn'
+                  ? 'ছবি কপি & হোয়াটসঅ্যাপ খুলুন'
+                  : 'Copy Image & Open WhatsApp'}
+              </span>
+            </button>
+
+            {voucherData && (
+              <a
+                href={directWhatsAppTextUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-2.5 px-3 bg-teal-700 hover:bg-teal-600 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-md hover:shadow-lg transition-all cursor-pointer"
+              >
+                <ExternalLink className="w-4 h-4 shrink-0" />
+                <span>
+                  {lang === 'bn'
+                    ? 'সরাসরি টেক্সট ইনভয়েস পাঠান'
+                    : 'Send Text Invoice Directly'}
+                </span>
+              </a>
+            )}
+          </div>
 
           {/* Secondary Buttons Row */}
           <div className="flex items-center gap-2 flex-wrap">

@@ -38,7 +38,6 @@ export const QuickAddModal: React.FC = () => {
     addTransaction,
     addBossDeposit,
     addKuwaitLoan,
-    openAIAssistantWithTab,
   } = useFinance();
 
   // Determine initial mode based on active section
@@ -303,47 +302,6 @@ export const QuickAddModal: React.FC = () => {
           >
             <X className="w-4 h-4" />
           </button>
-        </div>
-
-        {/* AI Smart Entry Shortcut Banner */}
-        <div className="mx-4 mt-3 p-2.5 rounded-xl bg-gradient-to-r from-indigo-50 via-purple-50 to-emerald-50 border border-indigo-200/80 flex items-center justify-between gap-2 shadow-2xs">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-xs shrink-0">
-              <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
-            </div>
-            <div className="text-left">
-              <p className="text-xs font-bold text-slate-800">
-                {lang === 'bn' ? 'টাইপ না করে এআই দিয়ে দ্রুত করুন!' : 'Want faster entry? Use AI!'}
-              </p>
-              <p className="text-[10px] text-slate-500">
-                {lang === 'bn' ? 'বাংলা মুখে বলে অথবা ক্যাশ মেমো / রসিদ ছবি দিয়ে' : 'Voice in Bengali or scan receipts'}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-1.5 shrink-0">
-            <button
-              type="button"
-              onClick={() => {
-                setIsQuickAddOpen(false);
-                openAIAssistantWithTab('voice');
-              }}
-              className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs transition-transform active:scale-95 cursor-pointer flex items-center gap-1"
-            >
-              <span>🎙️</span>
-              <span>{lang === 'bn' ? 'মুখে বলে' : 'Voice'}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setIsQuickAddOpen(false);
-                openAIAssistantWithTab('receipt');
-              }}
-              className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white shadow-xs transition-transform active:scale-95 cursor-pointer flex items-center gap-1"
-            >
-              <span>🧾</span>
-              <span>{lang === 'bn' ? 'রসিদ' : 'Receipt'}</span>
-            </button>
-          </div>
         </div>
 
         {/* Mode Selector Tabs */}

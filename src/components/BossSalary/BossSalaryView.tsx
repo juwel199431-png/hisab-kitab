@@ -24,6 +24,8 @@ import {
   UniversalTransactionEditModal,
   UniversalEditTarget,
 } from '../Common/UniversalTransactionEditModal';
+import { WhatsAppImageShareModal } from '../Common/WhatsAppImageShareModal';
+import { VoucherData, getWhatsAppUrl } from '../../utils/voucherImageGenerator';
 
 export const BossSalaryView: React.FC = () => {
   const {
@@ -61,6 +63,7 @@ export const BossSalaryView: React.FC = () => {
   const [showAddExpenseModal, setShowAddExpenseModal] = useState(false);
   const [isStatementSlipOpen, setIsStatementSlipOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<UniversalEditTarget | null>(null);
+  const [shareVoucher, setShareVoucher] = useState<VoucherData | null>(null);
 
   // New Deposit State
   const [depAmount, setDepAmount] = useState('');
@@ -178,7 +181,7 @@ export const BossSalaryView: React.FC = () => {
     return Object.values(map).sort((a, b) => b.total - a.total);
   }, [currentMonthExpenses]);
 
-  // WhatsApp Boss Statement Sender
+  // WhatsApp Boss Statement Sender (safe anchor click without popup block)
   const handleSendWhatsAppBossStatement = () => {
     const monthName = formatMonth(selectedMonth, lang);
     const lines = categoryExpenseBreakdown
@@ -189,8 +192,14 @@ export const BossSalaryView: React.FC = () => {
         ? `সালামু আলাইকুম শাকের ভাই।\n${monthName} মাসের খরচের হিসাব বিবরনী:\n\n• মোট জমা প্রাপ্তি: ${totalDeposited.toFixed(3)} KD\n• এ পর্যন্ত মোট খরচ: ${totalExpenses.toFixed(3)} KD\n• বর্তমানে নগদ অবশিষ্ট ব্যালেন্স: ${remainingBalance.toFixed(3)} KD\n\nখাতওয়ারী খরচের তালিকা:\n${lines || 'কোনো খরচ লিপিবদ্ধ হয়নি'}\n\nধন্যবাদ - জুয়েল`
         : `Assalamu Alaikum Shaker Bhai.\nMonthly Expense Statement for ${monthName}:\n\n• Total Received: ${totalDeposited.toFixed(3)} KD\n• Total Expenses: ${totalExpenses.toFixed(3)} KD\n• Net Cash in Hand: ${remainingBalance.toFixed(3)} KD\n\nCategory Breakdown:\n${lines || 'No expenses logged'}\n\nThank you - Juwel`;
 
-    const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
-    window.open(url, '_blank');
+    const url = getWhatsAppUrl(undefined, message);
+    const a = document.createElement('a');
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
 
   // Handle Add Deposit
@@ -352,6 +361,16 @@ export const BossSalaryView: React.FC = () => {
             >
               <FileText className="w-3.5 h-3.5" />
               <span>{lang === 'bn' ? 'বস মান্থলি স্লিপ' : 'Boss Monthly Slip'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleSendWhatsAppBossStatement}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors shadow-2xs cursor-pointer"
+              title={lang === 'bn' ? 'পুরো মাসের হিসাব সরাসরি হোয়াটসঅ্যাপে পাঠান' : 'Send Full Statement to WhatsApp'}
+            >
+              <MessageCircle className="w-3.5 h-3.5" />
+              <span>{lang === 'bn' ? 'হোয়াটসঅ্যাপ' : 'WhatsApp'}</span>
             </button>
 
             <button
@@ -533,8 +552,30 @@ export const BossSalaryView: React.FC = () => {
                     </span>
                   )}
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="font-mono font-bold text-emerald-800">{dep.amount.toFixed(3)} KD</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-mono font-bold text-emerald-800 mr-1">{dep.amount.toFixed(3)} KD</span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setShareVoucher({
+                        id: dep.id,
+                        voucherNo: dep.receiptNumber || dep.id.slice(-4),
+                        date: dep.depositDate,
+                        currency: 'KWD',
+                        amount: dep.amount,
+                        type: 'income',
+                        sectionNameBn: 'শাকের ভাই এর বেতন জমা',
+                        sectionNameEn: 'Shaker Bhai Salary Deposit',
+                        categoryNameBn: 'মাসিক বেতন ফান্ড',
+                        categoryNameEn: 'Monthly Salary Deposit',
+                        note: dep.note || 'মাসিক বেতন জমা',
+                      })
+                    }
+                    className="p-1 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-100 rounded cursor-pointer transition-colors"
+                    title={lang === 'bn' ? 'ভাউচার ছবি হোয়াটসঅ্যাপে পাঠান' : 'Send Voucher Image to WhatsApp'}
+                  >
+                    <MessageCircle className="w-3.5 h-3.5" />
+                  </button>
                   <button
                     type="button"
                     onClick={() => setEditTarget({ id: dep.id, sourceType: 'boss-deposit' })}
@@ -608,7 +649,7 @@ export const BossSalaryView: React.FC = () => {
                 <th className="py-2.5 px-3.5 whitespace-nowrap">{lang === 'bn' ? 'খরচের খাত' : 'Category'}</th>
                 <th className="py-2.5 px-3.5 whitespace-nowrap">{lang === 'bn' ? 'বিবরণ / মালামাল ক্রয়ের বিবরণ' : 'Description'}</th>
                 <th className="py-2.5 px-3.5 text-right whitespace-nowrap">{lang === 'bn' ? 'পরিমাণ (KWD)' : 'Amount (KWD)'}</th>
-                <th className="py-2.5 px-3.5 text-center whitespace-nowrap w-14 no-print">{lang === 'bn' ? 'অ্যাকশন' : 'Action'}</th>
+                <th className="py-2.5 px-3.5 text-center whitespace-nowrap w-24 no-print">{lang === 'bn' ? 'অ্যাকশন' : 'Action'}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-800">
@@ -639,22 +680,46 @@ export const BossSalaryView: React.FC = () => {
                       {tx.amount.toFixed(3)} KD
                     </td>
                     <td className="py-2.5 px-3.5 text-center whitespace-nowrap no-print">
-                      <div className="flex items-center justify-center gap-1.5">
+                      <div className="flex items-center justify-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setShareVoucher({
+                              id: tx.id,
+                              voucherNo: tx.voucherNo,
+                              date: tx.date,
+                              currency: 'KWD',
+                              amount: tx.amount,
+                              type: 'expense',
+                              sectionNameBn: 'শাকের ভাই এর বেতন হিসাব',
+                              sectionNameEn: 'Shaker Bhai Salary & Expense',
+                              categoryNameBn: tx.categoryNameBn || 'অন্যান্য খরচ',
+                              categoryNameEn: tx.categoryNameEn || tx.categoryNameBn || 'Expense',
+                              note: tx.note,
+                            })
+                          }
+                          className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-md transition-colors cursor-pointer"
+                          title={lang === 'bn' ? 'ইনভয়েস / ভাউচার ছবি হোয়াটসঅ্যাপে পাঠান' : 'Send Invoice Image to WhatsApp'}
+                        >
+                          <MessageCircle className="w-3.5 h-3.5" />
+                          <span className="hidden xl:inline">{lang === 'bn' ? 'হোয়াটসঅ্যাপ' : 'WhatsApp'}</span>
+                        </button>
                         <button
                           type="button"
                           onClick={() => setEditTarget({ id: tx.id, sourceType: 'transaction' })}
-                          className="p-1 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors cursor-pointer"
+                          className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors cursor-pointer"
                           title={lang === 'bn' ? 'সংশোধন / এডিট করুন' : 'Edit'}
                         >
                           <Edit2 className="w-3.5 h-3.5" />
                         </button>
                         <button
+                          type="button"
                           onClick={() => {
                             if (confirm(lang === 'bn' ? 'এই খরচের রেকর্ডটি মুছে ফেলতে চান?' : 'Delete this record?')) {
                               deleteTransaction(tx.id);
                             }
                           }}
-                          className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors cursor-pointer"
+                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors cursor-pointer"
                           title={lang === 'bn' ? 'মুছে ফেলুন' : 'Delete'}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -1124,6 +1189,14 @@ export const BossSalaryView: React.FC = () => {
         isOpen={!!editTarget}
         onClose={() => setEditTarget(null)}
         target={editTarget}
+      />
+
+      {/* WhatsApp HD Invoice / Voucher Image Share Modal */}
+      <WhatsAppImageShareModal
+        isOpen={!!shareVoucher}
+        onClose={() => setShareVoucher(null)}
+        lang={lang}
+        voucherData={shareVoucher}
       />
     </div>
   );

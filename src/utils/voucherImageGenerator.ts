@@ -621,9 +621,14 @@ export async function shareFileNative(file: File, title: string = 'Voucher Image
  */
 export function getWhatsAppUrl(phone?: string, text?: string): string {
   const cleanPhone = phone ? phone.replace(/[^0-9]/g, '') : '';
-  const textParam = text ? `?text=${encodeURIComponent(text)}` : '';
+  if (cleanPhone && text) {
+    return `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(text)}`;
+  }
   if (cleanPhone) {
-    return `https://api.whatsapp.com/send?phone=${cleanPhone}${textParam ? '&' + textParam.slice(1) : ''}`;
+    return `https://api.whatsapp.com/send?phone=${cleanPhone}`;
+  }
+  if (text) {
+    return `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
   }
   return `https://web.whatsapp.com/`;
 }

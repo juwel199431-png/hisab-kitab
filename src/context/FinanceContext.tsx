@@ -72,10 +72,6 @@ interface FinanceContextType {
   setIsBackupModalOpen: (open: boolean) => void;
   isCategoryModalOpen: boolean;
   setIsCategoryModalOpen: (open: boolean) => void;
-  isAIAssistantOpen: boolean;
-  setIsAIAssistantOpen: (open: boolean) => void;
-  aiAssistantInitialTab: 'voice' | 'receipt' | 'sms' | 'qa' | 'insights';
-  openAIAssistantWithTab: (tab: 'voice' | 'receipt' | 'sms' | 'qa' | 'insights') => void;
   isWelcomeIntroOpen: boolean;
   setIsWelcomeIntroOpen: (open: boolean) => void;
 
@@ -258,13 +254,6 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [isBackupModalOpen, setIsBackupModalOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isUniversalSearchOpen, setIsUniversalSearchOpen] = useState(false);
-  const [isAIAssistantOpen, setIsAIAssistantOpen] = useState(false);
-  const [aiAssistantInitialTab, setAiAssistantInitialTab] = useState<'voice' | 'receipt' | 'sms' | 'qa' | 'insights'>('voice');
-
-  const openAIAssistantWithTab = (tab: 'voice' | 'receipt' | 'sms' | 'qa' | 'insights') => {
-    setAiAssistantInitialTab(tab);
-    setIsAIAssistantOpen(true);
-  };
 
   // Welcome Video / Slide Intro State (auto-plays on new session or manual trigger)
   const [isWelcomeIntroOpen, setIsWelcomeIntroOpenState] = useState<boolean>(() => {
@@ -1459,10 +1448,6 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setIsBackupModalOpen,
         isCategoryModalOpen,
         setIsCategoryModalOpen,
-        isAIAssistantOpen,
-        setIsAIAssistantOpen,
-        aiAssistantInitialTab,
-        openAIAssistantWithTab,
         getBankBalance,
         getSavingsBalance,
         getTotalBdBanksBalance,

@@ -23,9 +23,8 @@ import { OfflineIndicator } from './components/Common/OfflineIndicator';
 import { UniversalSearchModal } from './components/Common/UniversalSearchModal';
 import { PinLockScreen } from './components/Security/PinLockScreen';
 import { SecurityPinModal } from './components/Security/SecurityPinModal';
-import { AIAssistantModal } from './components/AI/AIAssistantModal';
 import { WelcomeIntroScreen } from './components/Common/WelcomeIntroScreen';
-import { Plus, Tags, CloudUpload, Sparkles } from 'lucide-react';
+import { Plus, Tags, CloudUpload } from 'lucide-react';
 
 const MainAppContent: React.FC = () => {
   const {
@@ -38,10 +37,6 @@ const MainAppContent: React.FC = () => {
     setIsUniversalSearchOpen,
     isPinEnabled,
     isAppLocked,
-    isAIAssistantOpen,
-    setIsAIAssistantOpen,
-    aiAssistantInitialTab,
-    openAIAssistantWithTab,
     isWelcomeIntroOpen,
     setIsWelcomeIntroOpen,
   } = useFinance();
@@ -68,16 +63,6 @@ const MainAppContent: React.FC = () => {
 
       {/* Floating Action Buttons for Rapid Mobile/Desktop Entry */}
       <div className="fixed bottom-5 right-5 z-30 flex flex-col items-end gap-2.5 no-print">
-        {/* AI Assistant Floating Button */}
-        <button
-          onClick={() => openAIAssistantWithTab('voice')}
-          className="flex items-center gap-2 px-3.5 py-2.5 rounded-full bg-gradient-to-r from-indigo-600 via-purple-600 to-emerald-600 hover:from-indigo-700 hover:to-emerald-700 text-white shadow-lg shadow-purple-900/25 border border-indigo-400/40 transition-all hover:scale-105 font-bold text-xs cursor-pointer group"
-          title={lang === 'bn' ? 'এআই স্মার্ট সহকারী (ভয়েস, রসিদ স্ক্যান, এসএমএস ও চ্যাট)' : 'AI Smart Assistant'}
-        >
-          <Sparkles className="w-4 h-4 text-amber-300 animate-pulse group-hover:rotate-12 transition-transform" />
-          <span className="hidden sm:inline">{lang === 'bn' ? 'AI সহকারী' : 'AI Assistant'}</span>
-        </button>
-
         <button
           onClick={() => setIsCategoryModalOpen(true)}
           className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 shadow-md border border-slate-300 dark:border-slate-700 flex items-center justify-center transition-all hover:scale-105 cursor-pointer"
@@ -105,11 +90,6 @@ const MainAppContent: React.FC = () => {
       <UniversalSearchModal
         isOpen={isUniversalSearchOpen}
         onClose={() => setIsUniversalSearchOpen(false)}
-      />
-      <AIAssistantModal
-        isOpen={isAIAssistantOpen}
-        onClose={() => setIsAIAssistantOpen(false)}
-        initialTab={aiAssistantInitialTab}
       />
       <SecurityPinModal />
       <OfflineIndicator lang={lang} />
