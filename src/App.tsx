@@ -42,7 +42,7 @@ const MainAppContent: React.FC = () => {
   } = useFinance();
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
+    <div className="min-h-screen w-full max-w-full overflow-x-clip bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
       {/* Security Fullscreen PIN Lock */}
       {isPinEnabled && isAppLocked && <PinLockScreen />}
 
@@ -50,7 +50,7 @@ const MainAppContent: React.FC = () => {
       <Header />
 
       {/* Main Viewport Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 pb-20">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 pb-20 overflow-x-clip">
         {activeSection === 'dashboard' && <DashboardView />}
         {activeSection === 'bd-bank' && <BangladeshBankingView />}
         {activeSection === 'boss-salary' && <BossSalaryView />}

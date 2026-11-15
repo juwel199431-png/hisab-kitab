@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useLayoutEffect, useCallback } from 'react';
 import { useFinance } from '../../context/FinanceContext';
 import {
   BarChart3,
@@ -211,7 +211,30 @@ export const ReportsView: React.FC = () => {
     return 'py-1.5';
   }, [pageSettings.rowPadding]);
 
-  // Inject dynamic print stylesheet to strictly enforce user's manual page margins and orientation
+  // Computed A4 paper & printable sheet geometry in mm
+  const printGeometry = useMemo(() => {
+    const paperWidthMm = pageSettings.orientation === 'portrait' ? 210 : 297;
+    const paperHeightMm = pageSettings.orientation === 'portrait' ? 297 : 210;
+    const marginTopMm = Math.max(pageSettings.marginTop, 4);
+    const marginBottomMm = Math.max(pageSettings.marginBottom, 5);
+    const marginLeftMm = Math.max(pageSettings.marginLeft, 4);
+    const marginRightMm = Math.max(pageSettings.marginRight, 4);
+    const printableWidthMm = paperWidthMm - marginLeftMm - marginRightMm;
+    // Leave 2mm safety buffer inside @page content box so subpixel rounding never creates a blank overflow page
+    const sheetHeightMm = Math.max(120, paperHeightMm - marginTopMm - marginBottomMm - 2);
+    return {
+      paperWidthMm,
+      paperHeightMm,
+      marginTopMm,
+      marginBottomMm,
+      marginLeftMm,
+      marginRightMm,
+      printableWidthMm,
+      sheetHeightMm,
+    };
+  }, [pageSettings.orientation, pageSettings.marginTop, pageSettings.marginBottom, pageSettings.marginLeft, pageSettings.marginRight]);
+
+  // Inject dynamic print stylesheet to strictly enforce user's manual page margins, orientation, and full-sheet A4 footer pinning
   useEffect(() => {
     const styleId = 'dynamic-custom-report-page-style';
     let styleEl = document.getElementById(styleId) as HTMLStyleElement | null;
@@ -232,10 +255,10 @@ export const ReportsView: React.FC = () => {
       @media print {
         @page {
           size: A4 ${pageSettings.orientation} !important;
-          margin-top: ${Math.max(pageSettings.marginTop, 4)}mm !important;
-          margin-bottom: ${Math.max(pageSettings.marginBottom, 5)}mm !important;
-          margin-left: ${Math.max(pageSettings.marginLeft, 4)}mm !important;
-          margin-right: ${Math.max(pageSettings.marginRight, 4)}mm !important;
+          margin-top: ${printGeometry.marginTopMm}mm !important;
+          margin-bottom: ${printGeometry.marginBottomMm}mm !important;
+          margin-left: ${printGeometry.marginLeftMm}mm !important;
+          margin-right: ${printGeometry.marginRightMm}mm !important;
         }
         * {
           -webkit-print-color-adjust: exact !important;
@@ -257,20 +280,27 @@ export const ReportsView: React.FC = () => {
           width: 100% !important;
           background: transparent !important;
         }
-        .print-fixed-watermark {
-          display: block !important;
-          position: fixed !important;
-          top: 0 !important;
-          left: 0 !important;
-          width: 100vw !important;
-          height: 100vh !important;
-          z-index: -10 !important;
-          pointer-events: none !important;
-          background-size: cover !important;
-          background-position: center !important;
-          background-repeat: no-repeat !important;
-          -webkit-print-color-adjust: exact !important;
-          print-color-adjust: exact !important;
+        .print-page-sheet {
+          position: relative !important;
+          width: 100% !important;
+          height: ${printGeometry.sheetHeightMm}mm !important;
+          min-height: ${printGeometry.sheetHeightMm}mm !important;
+          max-height: ${printGeometry.sheetHeightMm}mm !important;
+          display: flex !important;
+          flex-direction: column !important;
+          justify-content: space-between !important;
+          overflow: hidden !important;
+          background: #ffffff !important;
+          break-inside: avoid !important;
+          page-break-inside: avoid !important;
+        }
+        .print-page-sheet.has-page-break {
+          break-after: page !important;
+          page-break-after: always !important;
+        }
+        .print-page-sheet.is-last-page {
+          break-after: auto !important;
+          page-break-after: auto !important;
         }
         .report-watermark-layer,
         .report-background-image {
@@ -278,30 +308,6 @@ export const ReportsView: React.FC = () => {
           background-position: center !important;
           background-repeat: no-repeat !important;
         }
-        .print-master-table {
-          width: 100% !important;
-          zoom: ${pageSettings.scale / 100} !important;
-          border-collapse: collapse !important;
-          border: none !important;
-          margin: 0 !important;
-          padding: 0 !important;
-          background: transparent !important;
-        }
-        .print-master-header {
-          display: table-header-group !important;
-          break-inside: avoid !important;
-          page-break-inside: avoid !important;
-        }
-        .print-master-body {
-          display: table-row-group !important;
-        }
-        .print-master-footer {
-          display: table-footer-group !important;
-          break-inside: avoid !important;
-          page-break-inside: avoid !important;
-        }
-        .print-master-footer tr,
-        .print-master-footer td,
         .print-official-footer,
         .print-signature-block {
           break-inside: avoid !important;
@@ -325,7 +331,7 @@ export const ReportsView: React.FC = () => {
         }
       }
     `;
-  }, [pageSettings]);
+  }, [pageSettings, printGeometry]);
 
   // Date Range Presets
   const [datePreset, setDatePreset] = useState<'all' | 'this-month' | 'last-month' | 'last-30' | 'custom'>('this-month');
@@ -1396,6 +1402,143 @@ export const ReportsView: React.FC = () => {
     }
   };
 
+  const printMeasureRef = useRef<HTMLDivElement>(null);
+  const [printPageChunks, setPrintPageChunks] = useState<Array<{ startIdx: number; endIdx: number; isFirst: boolean; isLast: boolean }>>([
+    { startIdx: 0, endIdx: 0, isFirst: true, isLast: true },
+  ]);
+
+  const computePrintPages = useCallback(() => {
+    const totalRowCount = isSubLedgerEligible && subLedgerData ? subLedgerData.rows.length : filteredRows.length;
+    const container = printMeasureRef.current;
+
+    if (!container) {
+      setPrintPageChunks([{ startIdx: 0, endIdx: totalRowCount, isFirst: true, isLast: true }]);
+      return;
+    }
+
+    const headerEl = container.querySelector('[data-pm="header"]') as HTMLElement | null;
+    const footerEl = container.querySelector('[data-pm="footer"]') as HTMLElement | null;
+    const summaryEl = container.querySelector('[data-pm="summary"]') as HTMLElement | null;
+    const theadEl = container.querySelector('[data-pm="thead"]') as HTMLElement | null;
+    const openingEl = container.querySelector('[data-pm="opening"]') as HTMLElement | null;
+    const totalEl = container.querySelector('[data-pm="total"]') as HTMLElement | null;
+    const sigEl = container.querySelector('[data-pm="signatures"]') as HTMLElement | null;
+    const rowEls = Array.from(container.querySelectorAll('[data-pm="row"]')) as HTMLElement[];
+
+    const PX_PER_MM = 96 / 25.4;
+    const scaleFactor = Math.max(0.5, (pageSettings.scale || 100) / 100);
+    const sheetPx = printGeometry.sheetHeightMm * PX_PER_MM;
+
+    const headerH = headerEl ? headerEl.offsetHeight + 10 : 0;
+    const footerH = footerEl ? footerEl.offsetHeight + 10 : 0;
+    const summaryH = summaryEl ? summaryEl.offsetHeight + 8 : 0;
+    const theadH = theadEl ? theadEl.offsetHeight : 36;
+    const openingH = openingEl ? openingEl.offsetHeight : 0;
+    const totalH = totalEl ? totalEl.offsetHeight : 36;
+    const sigH = sigEl ? sigEl.offsetHeight + 8 : 90;
+
+    // Available unzoomed body space per sheet between header and bottom-pinned footer
+    const maxBodyPx = Math.max(180, (sheetPx - headerH - footerH - 18) / scaleFactor);
+
+    if (totalRowCount === 0 || rowEls.length === 0) {
+      setPrintPageChunks([{ startIdx: 0, endIdx: totalRowCount, isFirst: true, isLast: true }]);
+      return;
+    }
+
+    const rowHeights = rowEls.map((el) => Math.max(18, el.offsetHeight));
+    const chunks: Array<{ startIdx: number; endIdx: number; isFirst: boolean; isLast: boolean }> = [];
+
+    let idx = 0;
+    let pageNo = 0;
+
+    while (idx < totalRowCount) {
+      const overhead = theadH + (pageNo === 0 ? summaryH + openingH : 0) + 12;
+      const cap = Math.max(70, maxBodyPx - overhead);
+      const start = idx;
+      let used = 0;
+
+      while (idx < totalRowCount) {
+        const rh = rowHeights[idx] ?? 28;
+        if (idx > start && used + rh > cap) break;
+        used += rh;
+        idx++;
+      }
+
+      chunks.push({
+        startIdx: start,
+        endIdx: idx,
+        isFirst: pageNo === 0,
+        isLast: false,
+      });
+      pageNo++;
+    }
+
+    // Ensure Total row + Signature block fit cleanly above the footer on the last page
+    const last = chunks[chunks.length - 1];
+    const lastOverhead = theadH + (last.isFirst ? summaryH + openingH : 0) + 12;
+    let lastRowsH = 0;
+    for (let r = last.startIdx; r < last.endIdx; r++) {
+      lastRowsH += rowHeights[r] ?? 28;
+    }
+
+    if (lastOverhead + lastRowsH + totalH + sigH <= maxBodyPx) {
+      last.isLast = true;
+    } else {
+      // Spill onto a clean final page so signature area never collides with the footer
+      if (last.endIdx - last.startIdx > 1) {
+        const carryIdx = last.endIdx - 1;
+        last.endIdx = carryIdx;
+        chunks.push({
+          startIdx: carryIdx,
+          endIdx: totalRowCount,
+          isFirst: false,
+          isLast: true,
+        });
+      } else {
+        chunks.push({
+          startIdx: totalRowCount,
+          endIdx: totalRowCount,
+          isFirst: false,
+          isLast: true,
+        });
+      }
+    }
+
+    setPrintPageChunks(chunks);
+  }, [
+    isSubLedgerEligible,
+    subLedgerData,
+    filteredRows.length,
+    pageSettings.scale,
+    printGeometry.sheetHeightMm,
+  ]);
+
+  useLayoutEffect(() => {
+    computePrintPages();
+  }, [
+    computePrintPages,
+    filteredRows,
+    subLedgerData,
+    pageSettings,
+    lang,
+    totals,
+  ]);
+
+  useEffect(() => {
+    let active = true;
+    if (document.fonts?.ready) {
+      document.fonts.ready.then(() => {
+        if (active) computePrintPages();
+      });
+    }
+    const handleBeforePrint = () => computePrintPages();
+    window.addEventListener('beforeprint', handleBeforePrint);
+    return () => {
+      active = false;
+      window.removeEventListener('beforeprint', handleBeforePrint);
+    };
+  }, [computePrintPages]);
+
   const HEAD_SCOPE_LIST = [
     {
       id: 'all' as AccountFilter,
@@ -1681,256 +1824,365 @@ export const ReportsView: React.FC = () => {
             </div>
           </div>
 
-          {/* Paper Mockup Container with exact custom margins */}
-          <div className="overflow-x-auto py-6 flex justify-center bg-slate-950/70 rounded-xl p-4">
-            <div
-              className="bg-white text-slate-900 shadow-2xl rounded-xs transition-all origin-top border border-slate-300 overflow-hidden relative flex flex-col justify-between"
-              style={{
-                width: pageSettings.orientation === 'portrait' ? '210mm' : '297mm',
-                minHeight: pageSettings.orientation === 'portrait' ? '297mm' : '210mm',
-                paddingTop: `${pageSettings.marginTop}mm`,
-                paddingBottom: `${pageSettings.marginBottom}mm`,
-                paddingLeft: `${pageSettings.marginLeft}mm`,
-                paddingRight: `${pageSettings.marginRight}mm`,
-                fontSize: `${pageSettings.fontSizePt}pt`,
-                zoom: pageSettings.scale / 100,
-              }}
-            >
-              {/* Aesthetic Security Watermark Background */}
-              {pageSettings.showWatermark && (
-                <ReportWatermarkBackground
-                  opacity={pageSettings.watermarkOpacity}
-                  showWatermark={pageSettings.showWatermark}
-                />
-              )}
+          {/* Multi-Page A4 Paper Mockup Container matching printed letterhead output 1:1 */}
+          <div className="overflow-x-auto py-6 flex flex-col items-center gap-6 bg-slate-950/70 rounded-xl p-4">
+            {printPageChunks.map((chunk, pageIdx) => {
+              const pageSubRows = isSubLedgerEligible && subLedgerData
+                ? subLedgerData.rows.slice(chunk.startIdx, chunk.endIdx)
+                : [];
+              const pageStdRows = !(isSubLedgerEligible && subLedgerData)
+                ? filteredRows.slice(chunk.startIdx, chunk.endIdx)
+                : [];
 
-              {/* Report content inside the live paper preview */}
-              {isSubLedgerEligible && subLedgerData ? (
-                <div className="space-y-2 font-sans w-full relative z-10 flex-1 flex flex-col justify-between">
-                  {/* Official Letterhead */}
-                  {pageSettings.showLetterhead && (
-                    <ReportLetterhead
-                      title={lang === 'bn' ? 'অফিসিয়াল সাব লেজার অডিট স্টেটমেন্ট' : 'Official Sub Ledger Statement'}
-                      subtitle={lang === 'bn' ? 'সংশ্লিষ্ট অ্যাকাউন্টের বিস্তারিত ডেবিট, ক্রেডিট ও ক্লোজিং খতিয়ান' : 'Detailed Debit, Credit & Closing Ledger Statement'}
-                      accountName={subLedgerData.accountBannerTitle}
-                      startDate={startDate}
-                      endDate={endDate}
-                      currency={subLedgerData.currency}
-                      lang={lang}
-                      logoType={pageSettings.logoType}
-                      customLogoUrl={pageSettings.customLogoUrl}
-                      companyName={pageSettings.companyName}
-                      companyTagline={pageSettings.companyTagline}
-                      companyBadge={pageSettings.companyBadge}
-                      onOpenLogoModal={() => setIsLogoModalOpen(true)}
+              return (
+                <div
+                  key={`preview-sheet-${pageIdx}`}
+                  className="bg-white text-slate-900 shadow-2xl rounded-xs transition-all origin-top border border-slate-300 overflow-hidden relative flex flex-col justify-between shrink-0"
+                  style={{
+                    width: `${printGeometry.paperWidthMm}mm`,
+                    height: `${printGeometry.paperHeightMm}mm`,
+                    paddingTop: `${printGeometry.marginTopMm}mm`,
+                    paddingBottom: `${printGeometry.marginBottomMm}mm`,
+                    paddingLeft: `${printGeometry.marginLeftMm}mm`,
+                    paddingRight: `${printGeometry.marginRightMm}mm`,
+                    fontSize: `${pageSettings.fontSizePt}pt`,
+                    zoom: pageSettings.scale / 100,
+                  }}
+                >
+                  {/* Security Watermark Background on each A4 page */}
+                  {pageSettings.showWatermark && (
+                    <ReportWatermarkBackground
+                      opacity={pageSettings.watermarkOpacity}
+                      showWatermark={pageSettings.showWatermark}
                     />
                   )}
 
-                  <div className="flex justify-between items-baseline py-1 border-b border-slate-300">
-                    <div className="text-sm font-bold text-[#1E536E]">
-                      Sub ledger &nbsp;
-                      <span className="font-mono text-slate-900 font-semibold text-xs">
-                        {startDate ? startDate.replace(/-/g, '/') : '2026/01/01'} to{' '}
-                        {endDate ? endDate.replace(/-/g, '/') : new Date().toISOString().split('T')[0].replace(/-/g, '/')}
-                      </span>
-                      &nbsp;
-                      <span className="font-mono text-[10px] text-slate-500 font-normal">
-                        [ {new Date().toLocaleDateString('en-GB')} {new Date().toLocaleTimeString('en-GB')} ]
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="overflow-hidden border border-slate-400 rounded-xs w-full">
-                    <table className="w-full text-left border-collapse text-[10px] table-fixed">
-                      <colgroup>
-                        <col style={{ width: dynamicColWidths.sl }} />
-                        <col style={{ width: dynamicColWidths.date }} />
-                        <col style={{ width: dynamicColWidths.account }} />
-                        <col style={{ width: dynamicColWidths.debit }} />
-                        <col style={{ width: dynamicColWidths.credit }} />
-                        <col style={{ width: dynamicColWidths.balance }} />
-                        <col style={{ width: dynamicColWidths.remarks }} />
-                      </colgroup>
-                      <thead>
-                        <tr style={{ height: 0, lineHeight: 0, padding: 0, margin: 0, border: 'none' }}>
-                          <th style={{ width: dynamicColWidths.sl, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
-                          <th style={{ width: dynamicColWidths.date, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
-                          <th style={{ width: dynamicColWidths.account, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
-                          <th style={{ width: dynamicColWidths.debit, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
-                          <th style={{ width: dynamicColWidths.credit, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
-                          <th style={{ width: dynamicColWidths.balance, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
-                          <th style={{ width: dynamicColWidths.remarks, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
-                        </tr>
-                        <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[9.5px]">
-                          <th rowSpan={2} style={{ width: dynamicColWidths.sl }} className="py-1 px-1 text-center border-r border-slate-400">#</th>
-                          <th rowSpan={2} style={{ width: dynamicColWidths.date }} className="py-1 px-1 text-center border-r border-slate-400 whitespace-nowrap">Date</th>
-                          <th rowSpan={2} style={{ width: dynamicColWidths.account }} className="py-1 px-2 border-r border-slate-400">Account</th>
-                          <th colSpan={3} style={{ width: dynamicColWidths.baseColSpan }} className="py-1 px-1 text-center border-r border-slate-400 border-b border-slate-400 uppercase tracking-wider text-[9px]">
-                            Base ({subLedgerData.currency})
-                          </th>
-                          <th rowSpan={2} style={{ width: dynamicColWidths.remarks }} className="py-1 px-2.5 text-left border-slate-400">Remarks</th>
-                        </tr>
-                        <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[9px]">
-                          <th style={{ width: dynamicColWidths.debit }} className="py-1 px-1 text-right border-r border-slate-400">Debit</th>
-                          <th style={{ width: dynamicColWidths.credit }} className="py-1 px-1 text-right border-r border-slate-400">Credit</th>
-                          <th style={{ width: dynamicColWidths.balance }} className="py-1 px-1 text-right border-r border-slate-400">Balance</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-300 text-slate-900 text-[10px]">
-                        <tr className="bg-[#D8EEF8] font-bold text-slate-900 border-b border-slate-300">
-                          <td style={{ width: dynamicColWidths.sl }} className="py-1 px-1 text-center border-r border-slate-300 font-mono text-[10px]">1</td>
-                          <td colSpan={6} className="py-1 px-2 text-center tracking-wide font-black text-xs text-slate-900 uppercase">
-                            {subLedgerData.accountBannerTitle}
-                          </td>
-                        </tr>
-                        <tr className="bg-white font-medium border-b border-slate-200">
-                          <td style={{ width: dynamicColWidths.sl }} className="py-1 px-1 text-center border-r border-slate-200 font-mono text-slate-600">2</td>
-                          <td style={{ width: dynamicColWidths.date }} className="py-1 px-1 border-r border-slate-200 text-center font-mono text-slate-400">—</td>
-                          <td style={{ width: dynamicColWidths.account }} className="py-1 px-2 border-r border-slate-200 font-bold italic text-slate-900 whitespace-nowrap">
-                            Opening Balance
-                          </td>
-                          <td style={{ width: dynamicColWidths.debit }} className="py-1 px-1 text-right border-r border-slate-200 font-mono font-bold text-slate-900 tabular-nums text-[10.5px]">
-                            {formatSubLedgerNumber(subLedgerData.openingBal, subLedgerData.currency, false)}
-                          </td>
-                          <td style={{ width: dynamicColWidths.credit }} className="py-1 px-1 text-right border-r border-slate-200 font-mono text-slate-400 tabular-nums text-[10.5px]">
-                            {subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
-                          </td>
-                          <td style={{ width: dynamicColWidths.balance }} className="py-1 px-1 text-right border-r border-slate-200 font-mono font-black text-slate-900 tabular-nums text-[11px]">
-                            {formatSubLedgerNumber(subLedgerData.openingBal, subLedgerData.currency, false)}
-                          </td>
-                          <td style={{ width: dynamicColWidths.remarks }} className="py-1 px-2.5 text-slate-400 italic text-[9.5px]">—</td>
-                        </tr>
-                        {subLedgerData.rows.map((row) => (
-                          <tr key={`prev-row-${row.id}`} className="border-b border-slate-200">
-                            <td style={{ width: dynamicColWidths.sl }} className="py-1 px-1 text-center border-r border-slate-200 font-mono text-slate-600 text-[10px]">
-                              {row.sl}
-                            </td>
-                            <td style={{ width: dynamicColWidths.date }} className="py-1 px-1 border-r border-slate-200 font-mono text-slate-700 whitespace-nowrap text-center text-[9.5px]">
-                              {row.formattedDate}
-                            </td>
-                            <td style={{ width: dynamicColWidths.account }} className="py-1 px-2 border-r border-slate-200 font-bold text-slate-900 text-[10px] leading-tight">
-                              {row.account}
-                            </td>
-                            <td style={{ width: dynamicColWidths.debit }} className="py-1 px-1 text-right border-r border-slate-200 font-mono tabular-nums text-[10.5px] font-bold text-slate-900">
-                              {row.debit > 0
-                                ? formatSubLedgerNumber(row.debit, subLedgerData.currency, false)
-                                : subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
-                            </td>
-                            <td style={{ width: dynamicColWidths.credit }} className="py-1 px-1 text-right border-r border-slate-200 font-mono tabular-nums text-[10.5px] font-bold text-rose-800">
-                              {row.credit > 0
-                                ? formatSubLedgerNumber(row.credit, subLedgerData.currency, true)
-                                : subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
-                            </td>
-                            <td style={{ width: dynamicColWidths.balance }} className="py-1 px-1 text-right border-r border-slate-200 font-mono font-black tabular-nums text-[11px] text-slate-900">
-                              {formatSubLedgerNumber(row.balance, subLedgerData.currency, false)}
-                            </td>
-                            <td style={{ width: dynamicColWidths.remarks }} className="py-1 px-2.5 text-slate-800 text-[10px] leading-snug break-words">
-                              {row.remarks || <span className="text-slate-300 italic">—</span>}
-                            </td>
-                          </tr>
-                        ))}
-                        <tr className="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-400">
-                          <td style={{ width: dynamicColWidths.sl }} className="py-1.5 px-1 text-center border-r border-slate-300 font-mono"></td>
-                          <td style={{ width: dynamicColWidths.date }} className="py-1.5 px-1 border-r border-slate-300"></td>
-                          <td style={{ width: dynamicColWidths.account }} className="py-1.5 px-2 border-r border-slate-300 font-black uppercase text-[10px]">
-                            {lang === 'bn' ? 'সর্বমোট সমাপ্তি হিসাব' : 'Total / Closing Balance'}
-                          </td>
-                          <td style={{ width: dynamicColWidths.debit }} className="py-1.5 px-1 text-right border-r border-slate-300 font-mono font-bold text-emerald-900 tabular-nums text-[11px]">
-                            {formatSubLedgerNumber(
-                              subLedgerData.openingBal + subLedgerData.totalPeriodDebit,
-                              subLedgerData.currency,
-                              false
-                            )}
-                          </td>
-                          <td style={{ width: dynamicColWidths.credit }} className="py-1.5 px-1 text-right border-r border-slate-300 font-mono font-bold text-rose-900 tabular-nums text-[11px]">
-                            {formatSubLedgerNumber(subLedgerData.totalPeriodCredit, subLedgerData.currency, true)}
-                          </td>
-                          <td style={{ width: dynamicColWidths.balance }} className="py-1.5 px-1 text-right border-r border-slate-300 font-mono font-black text-slate-900 tabular-nums text-[11.5px]">
-                            {formatSubLedgerNumber(subLedgerData.closingBalance, subLedgerData.currency, false)}
-                          </td>
-                          <td style={{ width: dynamicColWidths.remarks }} className="py-1.5 px-2.5 border-r border-slate-300"></td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {/* Official Footer matching Screenshot */}
-                  {pageSettings.showLetterhead && (
-                    <ReportOfficialFooter className="mt-auto rounded-b-lg overflow-hidden shadow-xs" />
-                  )}
-                </div>
-              ) : (
-                <div className="space-y-3 font-sans w-full relative z-10 flex-1 flex flex-col justify-between">
-                  {/* Official Letterhead */}
-                  {pageSettings.showLetterhead ? (
-                    <ReportLetterhead
-                      title={lang === 'bn' ? 'হিসাব কিতাব — অফিসিয়াল লেনদেন অডিট ও খতিয়ান রিপোর্ট' : 'Financial Statement & Audit Ledger Report'}
-                      subtitle={lang === 'bn' ? 'ব্যক্তিগত ও কর্মক্ষেত্রের সম্পূর্ণ সমন্বিত হিসাব বিবরণী' : 'Official Financial & Audit Ledger Statement'}
-                      accountName={accountFilter === 'all' ? (lang === 'bn' ? 'সকল হেড (All Accounts)' : 'All Accounts') : accountFilter}
-                      startDate={startDate}
-                      endDate={endDate}
-                      currency={accountFilter === 'bd-bank' ? 'BDT' : 'KWD'}
-                      lang={lang}
-                      logoType={pageSettings.logoType}
-                      customLogoUrl={pageSettings.customLogoUrl}
-                      companyName={pageSettings.companyName}
-                      companyTagline={pageSettings.companyTagline}
-                      companyBadge={pageSettings.companyBadge}
-                      onOpenLogoModal={() => setIsLogoModalOpen(true)}
-                    />
-                  ) : (
-                    <div className="border-b-2 border-slate-900 pb-2 flex justify-between items-start">
-                      <div>
-                        <h2 className="text-sm font-bold uppercase tracking-tight text-slate-900">
-                          {lang === 'bn' ? 'হিসাব কিতাব — অফিসিয়াল লেনদেন অডিট ও খতিয়ান রিপোর্ট' : 'Financial Statement & Audit Ledger Report'}
-                        </h2>
-                        <p className="text-[10px] text-slate-600">
-                          {startDate && endDate ? `${formatDate(startDate, lang)} — ${formatDate(endDate, lang)}` : 'All Time'} · {filteredRows.length} Records
-                        </p>
+                  {/* Top: Official Letterhead + Page Rows */}
+                  <div className="relative z-10 flex-1 flex flex-col min-h-0">
+                    {pageSettings.showLetterhead ? (
+                      <div className="mb-2.5 shrink-0">
+                        <ReportLetterhead
+                          title={
+                            isSubLedgerEligible && subLedgerData
+                              ? lang === 'bn'
+                                ? 'অফিসিয়াল সাব লেজার অডিট স্টেটমেন্ট'
+                                : 'Official Sub Ledger Statement'
+                              : lang === 'bn'
+                              ? 'হিসাব কিতাব — অফিসিয়াল লেনদেন অডিট ও খতিয়ান রিপোর্ট'
+                              : 'Financial Statement & Audit Ledger Report'
+                          }
+                          subtitle={
+                            isSubLedgerEligible && subLedgerData
+                              ? lang === 'bn'
+                                ? 'সংশ্লিষ্ট অ্যাকাউন্টের বিস্তারিত ডেবিট, ক্রেডিট ও ক্লোজিং খতিয়ান'
+                                : 'Detailed Debit, Credit & Closing Ledger Statement'
+                              : lang === 'bn'
+                              ? 'ব্যক্তিগত ও কর্মক্ষেত্রের সম্পূর্ণ সমন্বিত হিসাব বিবরণী'
+                              : 'Official Financial & Audit Ledger Statement'
+                          }
+                          accountName={
+                            isSubLedgerEligible && subLedgerData
+                              ? subLedgerData.accountBannerTitle
+                              : accountFilter === 'all'
+                              ? lang === 'bn'
+                                ? 'সকল হেড (All Accounts)'
+                                : 'All Accounts'
+                              : accountFilter
+                          }
+                          startDate={startDate}
+                          endDate={endDate}
+                          currency={isSubLedgerEligible && subLedgerData ? subLedgerData.currency : accountFilter === 'bd-bank' ? 'BDT' : 'KWD'}
+                          lang={lang}
+                          logoType={pageSettings.logoType}
+                          customLogoUrl={pageSettings.customLogoUrl}
+                          companyName={pageSettings.companyName}
+                          companyTagline={pageSettings.companyTagline}
+                          companyBadge={pageSettings.companyBadge}
+                          onOpenLogoModal={() => setIsLogoModalOpen(true)}
+                        />
                       </div>
-                      <span className="px-2 py-0.5 bg-slate-100 border border-slate-300 rounded font-bold uppercase text-[9px]">
-                        Verified Audit
-                      </span>
-                    </div>
-                  )}
-                  <div className="border border-slate-400 rounded-xs overflow-hidden">
-                    <table className="w-full text-left border-collapse text-[10px]">
-                      <thead>
-                        <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold uppercase text-[9px]">
-                          <th className="py-1.5 px-2 border-r border-slate-400 text-center w-8">SL</th>
-                          <th className="py-1.5 px-2 border-r border-slate-400 text-center w-20">তারিখ</th>
-                          <th className="py-1.5 px-2 border-r border-slate-400">অ্যাকাউন্ট / হেড</th>
-                          <th className="py-1.5 px-2 border-r border-slate-400">খাত / বিবরণ</th>
-                          <th className="py-1.5 px-2 border-r border-slate-400 text-center w-16">ধরণ</th>
-                          <th className="py-1.5 px-2 border-r border-slate-400 text-right w-24">পরিমাণ</th>
-                          <th className="py-1.5 px-2 text-center w-16">স্ট্যাটাস</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-300 text-slate-800 text-[9.5px]">
-                        {filteredRows.slice(0, 15).map((row, idx) => (
-                          <tr key={`prev-std-${row.id}-${idx}`}>
-                            <td className="py-1 px-2 font-mono text-center border-r border-slate-200">{idx + 1}</td>
-                            <td className="py-1 px-2 font-mono text-center border-r border-slate-200">{row.date}</td>
-                            <td className="py-1 px-2 font-semibold border-r border-slate-200">{lang === 'bn' ? row.sectionNameBn : row.sectionNameEn}</td>
-                            <td className="py-1 px-2 border-r border-slate-200">{lang === 'bn' ? row.categoryNameBn : row.categoryNameEn}</td>
-                            <td className="py-1 px-2 text-center uppercase text-[9px] border-r border-slate-200">{row.type}</td>
-                            <td className="py-1 px-2 text-right font-mono font-bold border-r border-slate-200">
-                              {row.currency === 'KWD' ? `${row.amount.toFixed(3)} KD` : `${row.amount.toLocaleString()} ৳`}
-                            </td>
-                            <td className="py-1 px-2 text-center">{row.status || '—'}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                    ) : (
+                      chunk.isFirst && (
+                        <div className="border-b-2 border-slate-900 pb-2 mb-2 flex justify-between items-start shrink-0">
+                          <div>
+                            <h2 className="text-sm font-bold uppercase tracking-tight text-slate-900">
+                              {lang === 'bn' ? 'হিসাব কিতাব — অফিসিয়াল লেনদেন অডিট ও খতিয়ান রিপোর্ট' : 'Financial Statement & Audit Ledger Report'}
+                            </h2>
+                            <p className="text-[10px] text-slate-600">
+                              {startDate && endDate ? `${formatDate(startDate, lang)} — ${formatDate(endDate, lang)}` : 'All Time'} · {filteredRows.length} Records
+                            </p>
+                          </div>
+                          <span className="px-2 py-0.5 bg-slate-100 border border-slate-300 rounded font-bold uppercase text-[9px]">
+                            Verified Audit
+                          </span>
+                        </div>
+                      )
+                    )}
+
+                    {isSubLedgerEligible && subLedgerData ? (
+                      <div className="space-y-2 font-sans w-full">
+                        {chunk.isFirst && (
+                          <div className="flex justify-between items-baseline py-1 border-b border-slate-300">
+                            <div className="text-sm font-bold text-[#1E536E]">
+                              Sub ledger &nbsp;
+                              <span className="font-mono text-slate-900 font-semibold text-xs">
+                                {startDate ? startDate.replace(/-/g, '/') : '2026/01/01'} to{' '}
+                                {endDate ? endDate.replace(/-/g, '/') : new Date().toISOString().split('T')[0].replace(/-/g, '/')}
+                              </span>
+                              &nbsp;
+                              <span className="font-mono text-[10px] text-slate-500 font-normal">
+                                [ {new Date().toLocaleDateString('en-GB')} {new Date().toLocaleTimeString('en-GB')} ]
+                              </span>
+                            </div>
+                          </div>
+                        )}
+
+                        {(pageSubRows.length > 0 || chunk.isFirst || chunk.isLast) && (
+                          <div className="border border-slate-400 rounded-xs w-full">
+                            <table className="w-full text-left border-collapse text-[10px] table-fixed">
+                              <colgroup>
+                                <col style={{ width: dynamicColWidths.sl }} />
+                                <col style={{ width: dynamicColWidths.date }} />
+                                <col style={{ width: dynamicColWidths.account }} />
+                                <col style={{ width: dynamicColWidths.debit }} />
+                                <col style={{ width: dynamicColWidths.credit }} />
+                                <col style={{ width: dynamicColWidths.balance }} />
+                                <col style={{ width: dynamicColWidths.remarks }} />
+                              </colgroup>
+                              <thead>
+                                <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[9.5px]">
+                                  <th rowSpan={2} style={{ width: dynamicColWidths.sl }} className="py-1 px-1 text-center border-r border-slate-400">#</th>
+                                  <th rowSpan={2} style={{ width: dynamicColWidths.date }} className="py-1 px-1 text-center border-r border-slate-400 whitespace-nowrap">Date</th>
+                                  <th rowSpan={2} style={{ width: dynamicColWidths.account }} className="py-1 px-2 border-r border-slate-400">Account</th>
+                                  <th colSpan={3} style={{ width: dynamicColWidths.baseColSpan }} className="py-1 px-1 text-center border-r border-slate-400 border-b border-slate-400 uppercase tracking-wider text-[9px]">
+                                    Base ({subLedgerData.currency})
+                                  </th>
+                                  <th rowSpan={2} style={{ width: dynamicColWidths.remarks }} className="py-1 px-2.5 text-left border-slate-400">Remarks</th>
+                                </tr>
+                                <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[9px]">
+                                  <th style={{ width: dynamicColWidths.debit }} className="py-1 px-1 text-right border-r border-slate-400">Debit</th>
+                                  <th style={{ width: dynamicColWidths.credit }} className="py-1 px-1 text-right border-r border-slate-400">Credit</th>
+                                  <th style={{ width: dynamicColWidths.balance }} className="py-1 px-1 text-right border-r border-slate-400">Balance</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-300 text-slate-900 text-[10px]">
+                                {chunk.isFirst && (
+                                  <>
+                                    <tr className="bg-[#D8EEF8] font-bold text-slate-900 border-b border-slate-300">
+                                      <td style={{ width: dynamicColWidths.sl }} className="py-1 px-1 text-center border-r border-slate-300 font-mono text-[10px]">1</td>
+                                      <td colSpan={6} className="py-1 px-2 text-center tracking-wide font-black text-xs text-slate-900 uppercase">
+                                        {subLedgerData.accountBannerTitle}
+                                      </td>
+                                    </tr>
+                                    <tr className="bg-white font-medium border-b border-slate-200">
+                                      <td style={{ width: dynamicColWidths.sl }} className="py-1 px-1 text-center border-r border-slate-200 font-mono text-slate-600">2</td>
+                                      <td style={{ width: dynamicColWidths.date }} className="py-1 px-1 border-r border-slate-200 text-center font-mono text-slate-400">—</td>
+                                      <td style={{ width: dynamicColWidths.account }} className="py-1 px-2 border-r border-slate-200 font-bold italic text-slate-900 whitespace-nowrap">
+                                        Opening Balance
+                                      </td>
+                                      <td style={{ width: dynamicColWidths.debit }} className="py-1 px-1 text-right border-r border-slate-200 font-mono font-bold text-slate-900 tabular-nums text-[10.5px]">
+                                        {formatSubLedgerNumber(subLedgerData.openingBal, subLedgerData.currency, false)}
+                                      </td>
+                                      <td style={{ width: dynamicColWidths.credit }} className="py-1 px-1 text-right border-r border-slate-200 font-mono text-slate-400 tabular-nums text-[10.5px]">
+                                        {subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
+                                      </td>
+                                      <td style={{ width: dynamicColWidths.balance }} className="py-1 px-1 text-right border-r border-slate-200 font-mono font-black text-slate-900 tabular-nums text-[11px]">
+                                        {formatSubLedgerNumber(subLedgerData.openingBal, subLedgerData.currency, false)}
+                                      </td>
+                                      <td style={{ width: dynamicColWidths.remarks }} className="py-1 px-2.5 text-slate-400 italic text-[9.5px]">—</td>
+                                    </tr>
+                                  </>
+                                )}
+                                {pageSubRows.map((row) => (
+                                  <tr key={`prev-row-${pageIdx}-${row.id}`} className="border-b border-slate-200 bg-white/85">
+                                    <td style={{ width: dynamicColWidths.sl }} className="py-1 px-1 text-center border-r border-slate-200 font-mono text-slate-600 text-[10px]">
+                                      {row.sl}
+                                    </td>
+                                    <td style={{ width: dynamicColWidths.date }} className="py-1 px-1 border-r border-slate-200 font-mono text-slate-700 whitespace-nowrap text-center text-[9.5px]">
+                                      {row.formattedDate}
+                                    </td>
+                                    <td style={{ width: dynamicColWidths.account }} className="py-1 px-2 border-r border-slate-200 font-bold text-slate-900 text-[10px] leading-tight">
+                                      {row.account}
+                                    </td>
+                                    <td style={{ width: dynamicColWidths.debit }} className="py-1 px-1 text-right border-r border-slate-200 font-mono tabular-nums text-[10.5px] font-bold text-slate-900">
+                                      {row.debit > 0
+                                        ? formatSubLedgerNumber(row.debit, subLedgerData.currency, false)
+                                        : subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
+                                    </td>
+                                    <td style={{ width: dynamicColWidths.credit }} className="py-1 px-1 text-right border-r border-slate-200 font-mono tabular-nums text-[10.5px] font-bold text-rose-800">
+                                      {row.credit > 0
+                                        ? formatSubLedgerNumber(row.credit, subLedgerData.currency, true)
+                                        : subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
+                                    </td>
+                                    <td style={{ width: dynamicColWidths.balance }} className="py-1 px-1 text-right border-r border-slate-200 font-mono font-black tabular-nums text-[11px] text-slate-900">
+                                      {formatSubLedgerNumber(row.balance, subLedgerData.currency, false)}
+                                    </td>
+                                    <td style={{ width: dynamicColWidths.remarks }} className="py-1 px-2.5 text-slate-800 text-[10px] leading-snug break-words">
+                                      {row.remarks || <span className="text-slate-300 italic">—</span>}
+                                    </td>
+                                  </tr>
+                                ))}
+                                {chunk.isLast && (
+                                  <tr className="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-400">
+                                    <td style={{ width: dynamicColWidths.sl }} className="py-1.5 px-1 text-center border-r border-slate-300 font-mono"></td>
+                                    <td style={{ width: dynamicColWidths.date }} className="py-1.5 px-1 border-r border-slate-300"></td>
+                                    <td style={{ width: dynamicColWidths.account }} className="py-1.5 px-2 border-r border-slate-300 font-black uppercase text-[10px]">
+                                      {lang === 'bn' ? 'সর্বমোট সমাপ্তি হিসাব' : 'Total / Closing Balance'}
+                                    </td>
+                                    <td style={{ width: dynamicColWidths.debit }} className="py-1.5 px-1 text-right border-r border-slate-300 font-mono font-bold text-emerald-900 tabular-nums text-[11px]">
+                                      {formatSubLedgerNumber(
+                                        subLedgerData.openingBal + subLedgerData.totalPeriodDebit,
+                                        subLedgerData.currency,
+                                        false
+                                      )}
+                                    </td>
+                                    <td style={{ width: dynamicColWidths.credit }} className="py-1.5 px-1 text-right border-r border-slate-300 font-mono font-bold text-rose-900 tabular-nums text-[11px]">
+                                      {formatSubLedgerNumber(subLedgerData.totalPeriodCredit, subLedgerData.currency, true)}
+                                    </td>
+                                    <td style={{ width: dynamicColWidths.balance }} className="py-1.5 px-1 text-right border-r border-slate-300 font-mono font-black text-slate-900 tabular-nums text-[11.5px]">
+                                      {formatSubLedgerNumber(subLedgerData.closingBalance, subLedgerData.currency, false)}
+                                    </td>
+                                    <td style={{ width: dynamicColWidths.remarks }} className="py-1.5 px-2.5 border-r border-slate-300"></td>
+                                  </tr>
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+
+                        {chunk.isLast && (
+                          <div className="pt-14 pb-3 px-6 flex justify-between items-end text-xs text-slate-700">
+                            <div className="text-center">
+                              <div className="border-t-[1.5px] border-slate-500 w-56 pt-1.5 font-bold text-slate-800">হিসাব প্রস্তুতকারকের স্বাক্ষর</div>
+                              <p className="text-[10px] text-slate-500 mt-0.5 font-medium">Prepared By</p>
+                            </div>
+                            <div className="text-center">
+                              <div className="border-t-[1.5px] border-slate-500 w-56 pt-1.5 font-bold text-slate-800">অনুমোদনকারী / পরিচালক</div>
+                              <p className="text-[10px] text-slate-500 mt-0.5 font-medium">Authorized Signatory</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="space-y-3 font-sans w-full">
+                        {chunk.isFirst && (
+                          <div className="grid grid-cols-3 gap-3 p-3 bg-slate-50 border border-slate-300 rounded-lg text-center text-xs">
+                            <div>
+                              <span className="text-[10px] text-slate-600 font-bold uppercase block">
+                                {lang === 'bn' ? 'মোট প্রাপ্তি / জমা (Inflow)' : 'Total Inflow'}
+                              </span>
+                              <span className="font-mono font-bold text-sm text-emerald-800 mt-0.5 block">
+                                {totals.bdtIncome > 0 ? `+${totals.bdtIncome.toLocaleString('en-US')} ৳ ` : ''}
+                                {totals.kwdIncome > 0 ? `+${totals.kwdIncome.toFixed(3)} KD` : ''}
+                                {totals.bdtIncome === 0 && totals.kwdIncome === 0 ? '0.00' : ''}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-[10px] text-slate-600 font-bold uppercase block">
+                                {lang === 'bn' ? 'মোট খরচ / ব্যয় (Outflow)' : 'Total Outflow'}
+                              </span>
+                              <span className="font-mono font-bold text-sm text-rose-800 mt-0.5 block">
+                                {totals.bdtExpense > 0 ? `-${totals.bdtExpense.toLocaleString('en-US')} ৳ ` : ''}
+                                {totals.kwdExpense > 0 ? `-${totals.kwdExpense.toFixed(3)} KD` : ''}
+                                {totals.bdtExpense === 0 && totals.kwdExpense === 0 ? '0.00' : ''}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-[10px] text-slate-600 font-bold uppercase block">
+                                {lang === 'bn' ? 'নিট উদ্বৃত্ত / সঞ্চয় (Net)' : 'Net Balance'}
+                              </span>
+                              <span className="font-mono font-bold text-sm text-slate-900 mt-0.5 block">
+                                {totals.bdtNet !== 0 ? `${totals.bdtNet >= 0 ? '+' : ''}${totals.bdtNet.toLocaleString('en-US')} ৳ ` : ''}
+                                {totals.kwdNet !== 0 ? `${totals.kwdNet >= 0 ? '+' : ''}${totals.kwdNet.toFixed(3)} KD` : ''}
+                                {totals.bdtNet === 0 && totals.kwdNet === 0 ? '0.00' : ''}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+
+                        {(pageStdRows.length > 0 || chunk.isLast) && (
+                          <div className="border border-slate-400 rounded-xs">
+                            <table className="w-full text-left border-collapse text-[10px]">
+                              <thead>
+                                <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold uppercase text-[9px]">
+                                  <th className="py-1.5 px-2 border-r border-slate-400 text-center w-10">SL</th>
+                                  <th className="py-1.5 px-2 border-r border-slate-400 text-center w-22">তারিখ</th>
+                                  <th className="py-1.5 px-2 border-r border-slate-400">অ্যাকাউন্ট / হেড</th>
+                                  <th className="py-1.5 px-2 border-r border-slate-400">খাত / বিবরণ</th>
+                                  <th className="py-1.5 px-2 border-r border-slate-400 text-center w-18">ধরণ</th>
+                                  <th className="py-1.5 px-2 border-r border-slate-400 text-right w-24">পরিমাণ</th>
+                                  <th className="py-1.5 px-2 text-center w-16">স্ট্যাটাস</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-300 text-slate-800 text-[9.5px]">
+                                {pageStdRows.map((row, idx) => (
+                                  <tr key={`prev-std-${pageIdx}-${row.id}-${idx}`} className="bg-white/85">
+                                    <td className="py-1 px-2 font-mono text-center border-r border-slate-200">{chunk.startIdx + idx + 1}</td>
+                                    <td className="py-1 px-2 font-mono text-center border-r border-slate-200">{row.date}</td>
+                                    <td className="py-1 px-2 font-semibold border-r border-slate-200">{lang === 'bn' ? row.sectionNameBn : row.sectionNameEn}</td>
+                                    <td className="py-1 px-2 border-r border-slate-200">{lang === 'bn' ? row.categoryNameBn : row.categoryNameEn}</td>
+                                    <td className="py-1 px-2 text-center uppercase text-[9px] border-r border-slate-200">{row.type}</td>
+                                    <td className="py-1 px-2 text-right font-mono font-bold border-r border-slate-200">
+                                      {row.currency === 'KWD' ? `${row.amount.toFixed(3)} KD` : `${row.amount.toLocaleString()} ৳`}
+                                    </td>
+                                    <td className="py-1 px-2 text-center">{row.status || '—'}</td>
+                                  </tr>
+                                ))}
+                                {chunk.isLast && (
+                                  <tr className="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-400">
+                                    <td className="py-2 px-2 text-center border-r border-slate-300 font-mono"></td>
+                                    <td className="py-2 px-2 border-r border-slate-300"></td>
+                                    <td colSpan={2} className="py-2 px-2 border-r border-slate-300 font-black uppercase text-[10px]">
+                                      {lang === 'bn' ? 'সর্বমোট সমাপ্তি হিসাব (Total / Net Balance)' : 'Total / Net Balance'}
+                                    </td>
+                                    <td className="py-2 px-2 border-r border-slate-300 text-center font-bold text-[9.5px]">
+                                      {filteredRows.length} {lang === 'bn' ? 'টি এন্ট্রি' : 'entries'}
+                                    </td>
+                                    <td className="py-2 px-2 text-right font-mono font-black tabular-nums text-[11px] border-r border-slate-300 text-slate-900 whitespace-nowrap">
+                                      {totals.bdtNet !== 0 ? `${totals.bdtNet >= 0 ? '+' : ''}${totals.bdtNet.toLocaleString('en-US')} ৳ ` : ''}
+                                      {totals.kwdNet !== 0 ? `${totals.kwdNet >= 0 ? '+' : ''}${totals.kwdNet.toFixed(3)} KD` : ''}
+                                      {totals.bdtNet === 0 && totals.kwdNet === 0 ? '0.00' : ''}
+                                    </td>
+                                    <td className="py-2 px-2 text-center font-bold text-[9.5px] text-slate-600">
+                                      Verified
+                                    </td>
+                                  </tr>
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+
+                        {chunk.isLast && (
+                          <div className="pt-14 pb-3 px-6 flex justify-between items-end text-xs text-slate-700">
+                            <div className="text-center">
+                              <div className="border-t-[1.5px] border-slate-500 w-56 pt-1.5 font-bold text-slate-800">হিসাব প্রস্তুতকারকের স্বাক্ষর</div>
+                              <p className="text-[10px] text-slate-500 mt-0.5 font-medium">Prepared By</p>
+                            </div>
+                            <div className="text-center">
+                              <div className="border-t-[1.5px] border-slate-500 w-56 pt-1.5 font-bold text-slate-800">অনুমোদনকারী / পরিচালক</div>
+                              <p className="text-[10px] text-slate-500 mt-0.5 font-medium">Authorized Signatory</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
 
-                  {/* Official Footer matching Screenshot */}
+                  {/* Bottom: Official Footer pinned to the VERY bottom of each A4 page */}
                   {pageSettings.showLetterhead && (
-                    <ReportOfficialFooter className="mt-auto rounded-b-lg overflow-hidden shadow-xs" />
+                    <div className="relative z-10 mt-auto pt-2 shrink-0">
+                      <div className="flex justify-end mb-1 px-1">
+                        <span className="text-[9px] font-mono text-slate-400 font-semibold">
+                          Page {pageIdx + 1} of {printPageChunks.length}
+                        </span>
+                      </div>
+                      <ReportOfficialFooter className="rounded-b-xs overflow-hidden shadow-xs" />
+                    </div>
                   )}
                 </div>
-              )}
-            </div>
+              );
+            })}
           </div>
         </div>
       )}
@@ -3610,382 +3862,607 @@ export const ReportsView: React.FC = () => {
         )}
       </div>
 
-      {/* 6. Official Printable Document (Exclusively rendered during Print / PDF generation) */}
-      <div className="hidden print:block text-slate-900 bg-white p-0 w-full printable-report-wrapper relative">
-        {/* Fixed Watermark Background on EVERY page */}
-        {pageSettings.showWatermark && (
-          <div className="print-fixed-watermark">
-            <ReportWatermarkBackground
-              opacity={pageSettings.watermarkOpacity}
-              showWatermark={pageSettings.showWatermark}
+      {/* 6a. Hidden DOM Height Measurer for Exact A4 Company-Letterhead Pagination */}
+      <div
+        ref={printMeasureRef}
+        aria-hidden="true"
+        className="no-print fixed top-0 -left-[99999px] opacity-0 pointer-events-none select-none bg-white text-slate-900"
+        style={{
+          width: `${printGeometry.printableWidthMm}mm`,
+          fontSize: `${pageSettings.fontSizePt}pt`,
+          fontFamily:
+            pageSettings.fontFamily === 'mono'
+              ? '"Courier New", Courier, monospace'
+              : pageSettings.fontFamily === 'serif'
+              ? 'Georgia, Cambria, "Times New Roman", serif'
+              : 'Inter, system-ui, -apple-system, sans-serif',
+        }}
+      >
+        {pageSettings.showLetterhead && (
+          <div data-pm="header" className="pb-2">
+            <ReportLetterhead
+              logoType={pageSettings.logoType}
+              customLogoUrl={pageSettings.customLogoUrl}
+              companyName={pageSettings.companyName}
+              companyTagline={pageSettings.companyTagline}
+              companyBadge={pageSettings.companyBadge}
+              lang={lang}
             />
           </div>
         )}
 
-        {/* Master Print Table Architecture: Native browser pagination guarantees NO overlap! */}
-        <table className="w-full border-none p-0 m-0 border-collapse print-master-table">
-          {pageSettings.showLetterhead && (
-            <thead className="print-master-header" style={{ display: 'table-header-group' }}>
-              <tr>
-                <td className="border-none p-0 pb-3" style={{ border: 'none', padding: '0 0 10px 0' }}>
-                  <ReportLetterhead
-                    logoType={pageSettings.logoType}
-                    customLogoUrl={pageSettings.customLogoUrl}
-                    companyName={pageSettings.companyName}
-                    companyTagline={pageSettings.companyTagline}
-                    companyBadge={pageSettings.companyBadge}
-                    lang={lang}
-                  />
-                </td>
-              </tr>
-            </thead>
-          )}
-
-          <tbody className="print-master-body">
-            <tr>
-              <td className="border-none p-0" style={{ border: 'none', padding: '0' }}>
-                <div className="print-report-content w-full">
+        <div style={{ zoom: pageSettings.scale / 100 }}>
           {isSubLedgerEligible && subLedgerData ? (
-            /* ========================================================================= */
-            /* SUB LEDGER PRINT DOCUMENT (Matching Screenshot 2)                         */
-            /* ========================================================================= */
             <div className="space-y-2 font-sans w-full">
-
-            {/* Top Sub Ledger Title Bar */}
-            <div className="flex justify-between items-baseline py-1 border-b border-slate-300">
-              <div className="text-base font-bold text-[#1E536E] font-sans">
-                Sub ledger &nbsp;
-                <span className="font-mono text-slate-900 font-semibold">
-                  {startDate ? startDate.replace(/-/g, '/') : '2026/01/01'} to{' '}
-                  {endDate ? endDate.replace(/-/g, '/') : new Date().toISOString().split('T')[0].replace(/-/g, '/')}
-                </span>
-                &nbsp;
-                <span className="font-mono text-xs text-slate-500 font-normal">
-                  [ {new Date().toLocaleDateString('en-GB')} {new Date().toLocaleTimeString('en-GB')} ]
-                </span>
+              <div data-pm="summary" className="flex justify-between items-baseline py-1 border-b border-slate-300">
+                <div className="text-base font-bold text-[#1E536E] font-sans">
+                  Sub ledger &nbsp;
+                  <span className="font-mono text-slate-900 font-semibold">
+                    {startDate ? startDate.replace(/-/g, '/') : '2026/01/01'} to{' '}
+                    {endDate ? endDate.replace(/-/g, '/') : new Date().toISOString().split('T')[0].replace(/-/g, '/')}
+                  </span>
+                  &nbsp;
+                  <span className="font-mono text-xs text-slate-500 font-normal">
+                    [ {new Date().toLocaleDateString('en-GB')} {new Date().toLocaleTimeString('en-GB')} ]
+                  </span>
+                </div>
               </div>
-            </div>
 
-            {/* Sub Ledger Table */}
-            <div className="overflow-visible border border-slate-400 rounded-xs w-full">
-              <table className="w-full text-left border-collapse text-[10px] table-fixed">
-                <colgroup>
-                  <col style={{ width: dynamicColWidths.sl }} />
-                  <col style={{ width: dynamicColWidths.date }} />
-                  <col style={{ width: dynamicColWidths.account }} />
-                  <col style={{ width: dynamicColWidths.debit }} />
-                  <col style={{ width: dynamicColWidths.credit }} />
-                  <col style={{ width: dynamicColWidths.balance }} />
-                  <col style={{ width: dynamicColWidths.remarks }} />
-                </colgroup>
-                <thead>
-                  {/* Invisible 0-height 7-column sizing row that forces Blink/WebKit print engine to lock column ratios */}
-                  <tr style={{ height: 0, lineHeight: 0, padding: 0, margin: 0, border: 'none' }}>
-                    <th style={{ width: dynamicColWidths.sl, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
-                    <th style={{ width: dynamicColWidths.date, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
-                    <th style={{ width: dynamicColWidths.account, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
-                    <th style={{ width: dynamicColWidths.debit, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
-                    <th style={{ width: dynamicColWidths.credit, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
-                    <th style={{ width: dynamicColWidths.balance, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
-                    <th style={{ width: dynamicColWidths.remarks, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
-                  </tr>
-                  <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[9.5px]">
-                    <th rowSpan={2} style={{ width: dynamicColWidths.sl }} className="py-1 px-1 text-center border-r border-slate-400">#</th>
-                    <th rowSpan={2} style={{ width: dynamicColWidths.date }} className="py-1 px-1 text-center border-r border-slate-400 whitespace-nowrap">Date</th>
-                    <th rowSpan={2} style={{ width: dynamicColWidths.account }} className="py-1 px-2 border-r border-slate-400">Account</th>
-                    <th colSpan={3} style={{ width: dynamicColWidths.baseColSpan }} className="py-1 px-1 text-center border-r border-slate-400 border-b border-slate-400 uppercase tracking-wider text-[9px]">
-                      Base ({subLedgerData.currency})
-                    </th>
-                    <th rowSpan={2} style={{ width: dynamicColWidths.remarks }} className="py-1 px-2.5 text-left border-slate-400">Remarks</th>
-                  </tr>
-                  <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[9px]">
-                    <th style={{ width: dynamicColWidths.debit }} className="py-1 px-1 text-right border-r border-slate-400">Debit</th>
-                    <th style={{ width: dynamicColWidths.credit }} className="py-1 px-1 text-right border-r border-slate-400">Credit</th>
-                    <th style={{ width: dynamicColWidths.balance }} className="py-1 px-1 text-right border-r border-slate-400">Balance</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-300 text-slate-900 text-[10px]">
-                  {/* Row 1: Account Banner Row */}
-                  <tr className="bg-[#D8EEF8] font-bold text-slate-900 border-b border-slate-300 break-inside-avoid">
-                    <td style={{ width: dynamicColWidths.sl }} className="py-1 px-1 text-center border-r border-slate-300 font-mono text-[10px]">1</td>
-                    <td colSpan={6} className="py-1 px-2 text-center tracking-wide font-black text-xs text-slate-900 uppercase">
-                      {subLedgerData.accountBannerTitle}
-                    </td>
-                  </tr>
-
-                  {/* Row 2: Opening Balance Row */}
-                  <tr className="bg-white font-medium border-b border-slate-200 break-inside-avoid">
-                    <td style={{ width: dynamicColWidths.sl }} className="py-1 px-1 text-center border-r border-slate-200 font-mono text-slate-600">2</td>
-                    <td style={{ width: dynamicColWidths.date }} className="py-1 px-1 border-r border-slate-200 text-center font-mono text-slate-400">—</td>
-                    <td style={{ width: dynamicColWidths.account }} className="py-1 px-2 border-r border-slate-200 font-bold italic text-slate-900 whitespace-nowrap">
-                      Opening Balance
-                    </td>
-                    <td style={{ width: dynamicColWidths.debit }} className="py-1 px-1 text-right border-r border-slate-200 font-mono font-bold text-slate-900 tabular-nums text-[10.5px]">
-                      {formatSubLedgerNumber(subLedgerData.openingBal, subLedgerData.currency, false)}
-                    </td>
-                    <td style={{ width: dynamicColWidths.credit }} className="py-1 px-1 text-right border-r border-slate-200 font-mono text-slate-400 tabular-nums text-[10.5px]">
-                      {subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
-                    </td>
-                    <td style={{ width: dynamicColWidths.balance }} className="py-1 px-1 text-right border-r border-slate-200 font-mono font-black text-slate-900 tabular-nums text-[11px]">
-                      {formatSubLedgerNumber(subLedgerData.openingBal, subLedgerData.currency, false)}
-                    </td>
-                    <td style={{ width: dynamicColWidths.remarks }} className="py-1 px-2.5 text-slate-400 italic text-[9.5px]">—</td>
-                  </tr>
-
-                  {/* Dynamic In-Period Transactions */}
-                  {subLedgerData.rows.map((row) => (
-                    <tr key={row.id} className="border-b border-slate-200 break-inside-avoid">
-                      <td style={{ width: dynamicColWidths.sl }} className="py-1 px-1 text-center border-r border-slate-200 font-mono text-slate-600 text-[10px]">
-                        {row.sl}
-                      </td>
-                      <td style={{ width: dynamicColWidths.date }} className="py-1 px-1.5 border-r border-slate-200 font-mono text-slate-700 whitespace-nowrap text-center text-[9.5px] overflow-hidden min-w-[80px]">
-                        {row.formattedDate}
-                      </td>
-                      <td style={{ width: dynamicColWidths.account }} className={`py-1 px-2 border-r border-slate-200 text-slate-900 text-[10px] leading-tight break-words ${pageSettings.isBold ? 'font-black' : 'font-bold'} ${pageSettings.isItalic ? 'italic' : ''}`}>
-                        {row.account}
-                      </td>
-                      <td style={{ width: dynamicColWidths.debit }} className={`py-1 px-1 text-right border-r border-slate-200 font-mono tabular-nums text-[10.5px] ${pageSettings.isBold ? 'font-black' : 'font-bold'} text-slate-900`}>
-                        {row.debit > 0
-                          ? formatSubLedgerNumber(row.debit, subLedgerData.currency, false)
-                          : subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
-                      </td>
-                      <td style={{ width: dynamicColWidths.credit }} className={`py-1 px-1 text-right border-r border-slate-200 font-mono tabular-nums text-[10.5px] ${pageSettings.isBold ? 'font-black' : 'font-bold'} text-rose-800`}>
-                        {row.credit > 0
-                          ? formatSubLedgerNumber(row.credit, subLedgerData.currency, true)
-                          : subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
-                      </td>
-                      <td style={{ width: dynamicColWidths.balance }} className="py-1 px-1 text-right border-r border-slate-200 font-mono font-black tabular-nums text-[11px] text-slate-900">
-                        {formatSubLedgerNumber(row.balance, subLedgerData.currency, false)}
-                      </td>
-                      <td style={{ width: dynamicColWidths.remarks }} className={`py-1 px-2.5 text-slate-800 text-[10px] leading-snug break-words ${pageSettings.isItalic ? 'italic' : ''}`}>
-                        {row.remarks || <span className="text-slate-300 italic">—</span>}
+              <div className="border border-slate-400 rounded-xs w-full">
+                <table className="w-full text-left border-collapse text-[10px] table-fixed">
+                  <colgroup>
+                    <col style={{ width: dynamicColWidths.sl }} />
+                    <col style={{ width: dynamicColWidths.date }} />
+                    <col style={{ width: dynamicColWidths.account }} />
+                    <col style={{ width: dynamicColWidths.debit }} />
+                    <col style={{ width: dynamicColWidths.credit }} />
+                    <col style={{ width: dynamicColWidths.balance }} />
+                    <col style={{ width: dynamicColWidths.remarks }} />
+                  </colgroup>
+                  <thead data-pm="thead">
+                    <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[9.5px]">
+                      <th rowSpan={2} style={{ width: dynamicColWidths.sl }} className="py-1 px-1 text-center border-r border-slate-400">#</th>
+                      <th rowSpan={2} style={{ width: dynamicColWidths.date }} className="py-1 px-1 text-center border-r border-slate-400 whitespace-nowrap">Date</th>
+                      <th rowSpan={2} style={{ width: dynamicColWidths.account }} className="py-1 px-2 border-r border-slate-400">Account</th>
+                      <th colSpan={3} style={{ width: dynamicColWidths.baseColSpan }} className="py-1 px-1 text-center border-r border-slate-400 border-b border-slate-400 uppercase tracking-wider text-[9px]">
+                        Base ({subLedgerData.currency})
+                      </th>
+                      <th rowSpan={2} style={{ width: dynamicColWidths.remarks }} className="py-1 px-2.5 text-left border-slate-400">Remarks</th>
+                    </tr>
+                    <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[9px]">
+                      <th style={{ width: dynamicColWidths.debit }} className="py-1 px-1 text-right border-r border-slate-400">Debit</th>
+                      <th style={{ width: dynamicColWidths.credit }} className="py-1 px-1 text-right border-r border-slate-400">Credit</th>
+                      <th style={{ width: dynamicColWidths.balance }} className="py-1 px-1 text-right border-r border-slate-400">Balance</th>
+                    </tr>
+                  </thead>
+                  <tbody data-pm="opening">
+                    <tr className="bg-[#D8EEF8] font-bold text-slate-900 border-b border-slate-300">
+                      <td style={{ width: dynamicColWidths.sl }} className="py-1 px-1 text-center border-r border-slate-300 font-mono text-[10px]">1</td>
+                      <td colSpan={6} className="py-1 px-2 text-center tracking-wide font-black text-xs text-slate-900 uppercase">
+                        {subLedgerData.accountBannerTitle}
                       </td>
                     </tr>
-                  ))}
+                    <tr className="bg-white font-medium border-b border-slate-200">
+                      <td style={{ width: dynamicColWidths.sl }} className="py-1 px-1 text-center border-r border-slate-200 font-mono text-slate-600">2</td>
+                      <td style={{ width: dynamicColWidths.date }} className="py-1 px-1 border-r border-slate-200 text-center font-mono text-slate-400">—</td>
+                      <td style={{ width: dynamicColWidths.account }} className="py-1 px-2 border-r border-slate-200 font-bold italic text-slate-900 whitespace-nowrap">
+                        Opening Balance
+                      </td>
+                      <td style={{ width: dynamicColWidths.debit }} className="py-1 px-1 text-right border-r border-slate-200 font-mono font-bold text-slate-900 tabular-nums text-[10.5px]">
+                        {formatSubLedgerNumber(subLedgerData.openingBal, subLedgerData.currency, false)}
+                      </td>
+                      <td style={{ width: dynamicColWidths.credit }} className="py-1 px-1 text-right border-r border-slate-200 font-mono text-slate-400 tabular-nums text-[10.5px]">
+                        {subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
+                      </td>
+                      <td style={{ width: dynamicColWidths.balance }} className="py-1 px-1 text-right border-r border-slate-200 font-mono font-black text-slate-900 tabular-nums text-[11px]">
+                        {formatSubLedgerNumber(subLedgerData.openingBal, subLedgerData.currency, false)}
+                      </td>
+                      <td style={{ width: dynamicColWidths.remarks }} className="py-1 px-2.5 text-slate-400 italic text-[9.5px]">—</td>
+                    </tr>
+                  </tbody>
+                  <tbody>
+                    {subLedgerData.rows.map((row) => (
+                      <tr key={`m-sub-${row.id}`} data-pm="row" className="border-b border-slate-200">
+                        <td style={{ width: dynamicColWidths.sl }} className="py-1 px-1 text-center border-r border-slate-200 font-mono text-slate-600 text-[10px]">{row.sl}</td>
+                        <td style={{ width: dynamicColWidths.date }} className="py-1 px-1.5 border-r border-slate-200 font-mono text-slate-700 whitespace-nowrap text-center text-[9.5px] overflow-hidden min-w-[80px]">{row.formattedDate}</td>
+                        <td style={{ width: dynamicColWidths.account }} className={`py-1 px-2 border-r border-slate-200 text-slate-900 text-[10px] leading-tight break-words ${pageSettings.isBold ? 'font-black' : 'font-bold'} ${pageSettings.isItalic ? 'italic' : ''}`}>{row.account}</td>
+                        <td style={{ width: dynamicColWidths.debit }} className="py-1 px-1 text-right border-r border-slate-200 font-mono tabular-nums text-[10.5px]">0.000</td>
+                        <td style={{ width: dynamicColWidths.credit }} className="py-1 px-1 text-right border-r border-slate-200 font-mono tabular-nums text-[10.5px]">0.000</td>
+                        <td style={{ width: dynamicColWidths.balance }} className="py-1 px-1 text-right border-r border-slate-200 font-mono font-black tabular-nums text-[11px]">0.000</td>
+                        <td style={{ width: dynamicColWidths.remarks }} className={`py-1 px-2.5 text-slate-800 text-[10px] leading-snug break-words ${pageSettings.isItalic ? 'italic' : ''}`}>{row.remarks || '—'}</td>
+                      </tr>
+                    ))}
+                    <tr data-pm="total" className="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-400">
+                      <td className="py-1.5 px-1"></td>
+                      <td className="py-1.5 px-1"></td>
+                      <td className="py-1.5 px-2 font-black uppercase text-[10px]">Total / Closing Balance</td>
+                      <td className="py-1.5 px-1">0.000</td>
+                      <td className="py-1.5 px-1">0.000</td>
+                      <td className="py-1.5 px-1">0.000</td>
+                      <td className="py-1.5 px-2.5"></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
 
-                  {/* Summary Footer */}
-                  <tr className="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-400 break-inside-avoid">
-                    <td style={{ width: dynamicColWidths.sl }} className="py-1.5 px-1 text-center border-r border-slate-300 font-mono"></td>
-                    <td style={{ width: dynamicColWidths.date }} className="py-1.5 px-1 border-r border-slate-300"></td>
-                    <td style={{ width: dynamicColWidths.account }} className="py-1.5 px-2 border-r border-slate-300 font-black uppercase text-[10px]">
-                      {lang === 'bn' ? 'সর্বমোট সমাপ্তি হিসাব (Total / Closing)' : 'Total / Closing Balance'}
-                    </td>
-                    <td style={{ width: dynamicColWidths.debit }} className="py-1.5 px-1 text-right border-r border-slate-300 font-mono font-bold text-emerald-900 tabular-nums text-[11px]">
-                      {formatSubLedgerNumber(
-                        subLedgerData.openingBal + subLedgerData.totalPeriodDebit,
-                        subLedgerData.currency,
-                        false
-                      )}
-                    </td>
-                    <td style={{ width: dynamicColWidths.credit }} className="py-1.5 px-1 text-right border-r border-slate-300 font-mono font-bold text-rose-900 tabular-nums text-[11px]">
-                      {formatSubLedgerNumber(subLedgerData.totalPeriodCredit, subLedgerData.currency, true)}
-                    </td>
-                    <td style={{ width: dynamicColWidths.balance }} className="py-1.5 px-1 text-right border-r border-slate-300 font-mono font-black text-slate-900 tabular-nums text-[11.5px]">
-                      {formatSubLedgerNumber(subLedgerData.closingBalance, subLedgerData.currency, false)}
-                    </td>
-                    <td style={{ width: dynamicColWidths.remarks }} className="py-1.5 px-2.5 border-r border-slate-300"></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-              {/* Official Signatures & Verification (Compact to prevent spilling to next page) */}
-              <div className="pt-3 pb-1 flex justify-between items-center text-xs text-slate-600 break-inside-avoid print-signature-block">
+              <div data-pm="signatures" className="pt-14 pb-3 px-6 flex justify-between items-end text-xs text-slate-700">
                 <div className="text-center">
-                  <div className="border-t border-slate-400 w-44 pt-1 font-semibold">হিসাব প্রস্তুতকারকের স্বাক্ষর</div>
-                  <p className="text-[10px] text-slate-400 mt-0.5">Prepared By</p>
+                  <div className="border-t-[1.5px] border-slate-500 w-56 pt-1.5 font-bold">হিসাব প্রস্তুতকারকের স্বাক্ষর</div>
+                  <p className="text-[10px] mt-0.5">Prepared By</p>
                 </div>
                 <div className="text-center">
-                  <div className="border-t border-slate-400 w-44 pt-1 font-semibold">অনুমোদনকারী / পরিচালক</div>
-                  <p className="text-[10px] text-slate-400 mt-0.5">Authorized Signatory</p>
+                  <div className="border-t-[1.5px] border-slate-500 w-56 pt-1.5 font-bold">অনুমোদনকারী / পরিচালক</div>
+                  <p className="text-[10px] mt-0.5">Authorized Signatory</p>
                 </div>
               </div>
             </div>
           ) : (
-            /* ========================================================================= */
-            /* STANDARD FINANCIAL REPORT (Preserved for single-direction heads & 'all')  */
-            /* ========================================================================= */
             <div className="space-y-3 font-sans w-full">
-              {!pageSettings.showLetterhead && (
-                <div className="border-b-2 border-slate-900 pb-4 flex justify-between items-start">
+              <div data-pm="summary" className="grid grid-cols-3 gap-3 p-3.5 bg-slate-50 border border-slate-300 rounded-lg text-center text-xs">
                 <div>
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-slate-900 text-white font-bold flex items-center justify-center text-lg">
-                      ৳
-                    </div>
-                    <div>
-                      <h1 className="text-xl font-bold uppercase tracking-tight text-slate-900">
-                        {lang === 'bn' ? 'হিসাব কিতাব — অফিসিয়াল লেনদেন অডিট ও খতিয়ান রিপোর্ট' : 'Financial Statement & Audit Ledger Report'}
-                      </h1>
-                      <p className="text-xs text-slate-600 font-medium">
-                        {lang === 'bn' ? 'ব্যক্তিগত ও কর্মক্ষেত্রের সম্পূর্ণ সমন্বিত হিসাব বিবরণী' : 'Official Financial & Audit Ledger Statement'}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="mt-3 flex items-center gap-2 text-xs text-slate-700">
-                    <span><strong>{lang === 'bn' ? 'অ্যাকাউন্ট / হেড:' : 'Account:'}</strong> {accountFilter === 'all' ? (lang === 'bn' ? 'সকল হেড (All)' : 'All Accounts') : accountFilter}</span>
-                    <span aria-hidden="true">·</span>
-                    <span><strong>{lang === 'bn' ? 'সময়কাল:' : 'Period:'}</strong> {startDate && endDate ? `${formatDate(startDate, lang)} — ${formatDate(endDate, lang)}` : (lang === 'bn' ? 'সম্পূর্ণ সময়কাল' : 'All Time')}</span>
-                    <span aria-hidden="true">·</span>
-                    <span><strong>{lang === 'bn' ? 'মোট লেনদেন সংখ্যা:' : 'Total Records:'}</strong> {filteredRows.length} {lang === 'bn' ? 'টি' : ''}</span>
-                  </div>
+                  <span className="text-[10px] font-bold uppercase block">Total Inflow</span>
+                  <span className="font-mono font-bold text-sm mt-0.5 block">0.00</span>
                 </div>
-
-                <div className="text-right text-xs text-slate-700">
-                  <span className="inline-block px-3 py-1 bg-slate-100 border border-slate-300 rounded font-bold uppercase tracking-wider text-[10px] mb-1">
-                    Verified Audit Statement
-                  </span>
-                  <p className="font-mono text-[11px]">প্রিন্ট তারিখ: {new Date().toLocaleDateString('en-GB')}</p>
-                  <p className="font-mono text-[10px] text-slate-500">সময়: {new Date().toLocaleTimeString('en-US')}</p>
+                <div>
+                  <span className="text-[10px] font-bold uppercase block">Total Outflow</span>
+                  <span className="font-mono font-bold text-sm mt-0.5 block">0.00</span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold uppercase block">Net Balance</span>
+                  <span className="font-mono font-bold text-sm mt-0.5 block">0.00</span>
                 </div>
               </div>
-            )}
 
-            {/* Printable Summary Totals Bar */}
-            <div className="grid grid-cols-3 gap-3 p-3.5 bg-slate-50 border border-slate-300 rounded-lg text-center text-xs">
-              <div>
-                <span className="text-[10px] text-slate-600 font-bold uppercase block">
-                  {lang === 'bn' ? 'মোট প্রাপ্তি / জমা (Inflow)' : 'Total Inflow'}
-                </span>
-                <span className="font-mono font-bold text-sm text-emerald-800 mt-0.5 block">
-                  {totals.bdtIncome > 0 ? `+${totals.bdtIncome.toLocaleString('en-US')} ৳ ` : ''}
-                  {totals.kwdIncome > 0 ? `+${totals.kwdIncome.toFixed(3)} KD` : ''}
-                  {totals.bdtIncome === 0 && totals.kwdIncome === 0 ? '0.00' : ''}
-                </span>
-              </div>
-
-              <div>
-                <span className="text-[10px] text-slate-600 font-bold uppercase block">
-                  {lang === 'bn' ? 'মোট খরচ / ব্যয় (Outflow)' : 'Total Outflow'}
-                </span>
-                <span className="font-mono font-bold text-sm text-rose-800 mt-0.5 block">
-                  {totals.bdtExpense > 0 ? `-${totals.bdtExpense.toLocaleString('en-US')} ৳ ` : ''}
-                  {totals.kwdExpense > 0 ? `-${totals.kwdExpense.toFixed(3)} KD` : ''}
-                  {totals.bdtExpense === 0 && totals.kwdExpense === 0 ? '0.00' : ''}
-                </span>
-              </div>
-
-              <div>
-                <span className="text-[10px] text-slate-600 font-bold uppercase block">
-                  {lang === 'bn' ? 'নিট উদ্বৃত্ত / সঞ্চয় (Net)' : 'Net Balance'}
-                </span>
-                <span className="font-mono font-bold text-sm text-slate-900 mt-0.5 block">
-                  {totals.bdtNet !== 0 ? `${totals.bdtNet >= 0 ? '+' : ''}${totals.bdtNet.toLocaleString('en-US')} ৳ ` : ''}
-                  {totals.kwdNet !== 0 ? `${totals.kwdNet >= 0 ? '+' : ''}${totals.kwdNet.toFixed(3)} KD` : ''}
-                  {totals.bdtNet === 0 && totals.kwdNet === 0 ? '0.00' : ''}
-                </span>
-              </div>
-            </div>
-
-            {/* Complete Unpaginated Table for Print (ALL filteredRows) */}
-            <div className="overflow-visible border border-slate-400 rounded-xs">
-              <table className="w-full text-left border-collapse text-[11px]">
-                <thead>
-                  <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold uppercase tracking-wider text-[10px]">
-                    <th className="py-2 px-2.5 border-r border-slate-400 text-center w-10">SL</th>
-                    <th className="py-2 px-2.5 border-r border-slate-400 whitespace-nowrap text-center w-24">তারিখ</th>
-                    <th className="py-2 px-2.5 border-r border-slate-400 min-w-40">অ্যাকাউন্ট / হেড</th>
-                    <th className="py-2 px-2.5 border-r border-slate-400 min-w-48">খাত / বিবরণ</th>
-                    <th className="py-2 px-2.5 border-r border-slate-400 text-center whitespace-nowrap w-20">ধরণ</th>
-                    <th className="py-2 px-2.5 border-r border-slate-400 text-right whitespace-nowrap w-28">পরিমাণ</th>
-                    <th className="py-2 px-2.5 text-center whitespace-nowrap w-20">স্ট্যাটাস</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-300 text-slate-800 text-[10.5px]">
-                  {filteredRows.map((row, idx) => (
-                    <tr key={`print-row-${row.id}-${idx}`} className="break-inside-avoid">
-                      <td className="py-1.5 px-2.5 font-mono text-slate-500 border-r border-slate-200 text-center">{idx + 1}</td>
-                      <td className="py-1.5 px-2.5 font-mono text-slate-700 border-r border-slate-200 whitespace-nowrap text-center">{row.date}</td>
-                      <td className="py-1.5 px-2.5 font-semibold text-slate-900 border-r border-slate-200">
-                        {lang === 'bn' ? row.sectionNameBn : row.sectionNameEn}
-                        {row.bankName && <span className="block text-[9px] text-slate-500 font-normal">🏦 {row.bankName}</span>}
-                      </td>
-                      <td className="py-1.5 px-2.5 border-r border-slate-200">
-                        <span className="font-bold text-slate-900">{lang === 'bn' ? row.categoryNameBn : row.categoryNameEn}</span>
-                        {row.borrowerName && <span className="block text-[10px] text-indigo-800">গ্রহীতা: {row.borrowerName}</span>}
-                        {row.note && <span className="block text-[10px] text-slate-500 italic">{row.note}</span>}
-                      </td>
-                      <td className="py-1.5 px-2.5 border-r border-slate-200 font-bold uppercase text-[10px] text-center whitespace-nowrap">
-                        {row.type === 'income' ? 'আয় / জমা' : row.type === 'expense' ? 'ব্যয় / খরচ' : row.type === 'loan' ? 'দিনার লোন' : 'ট্রান্সফার'}
-                      </td>
-                      <td className="py-1.5 px-2.5 text-right font-mono font-bold text-slate-900 border-r border-slate-200 whitespace-nowrap text-[12px]">
-                        {row.type === 'income' ? '+' : row.type === 'expense' ? '-' : ''}
-                        {row.currency === 'KWD' ? `${row.amount.toFixed(3)} KD` : `${row.amount.toLocaleString('en-US')} ৳`}
-                      </td>
-                      <td className="py-1.5 px-2.5 text-center font-bold text-[10px] whitespace-nowrap">
-                        {row.status ? (
-                          <span className={row.status === 'paid' ? 'text-emerald-700' : 'text-amber-700'}>
-                            {row.status === 'paid' ? 'Paid' : 'Unpaid'}
-                          </span>
-                        ) : (
-                          '—'
-                        )}
-                      </td>
+              <div className="border border-slate-400 rounded-xs">
+                <table className="w-full text-left border-collapse text-[11px]">
+                  <thead data-pm="thead">
+                    <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold uppercase tracking-wider text-[10px]">
+                      <th className="py-2 px-2.5 border-r border-slate-400 text-center w-10">SL</th>
+                      <th className="py-2 px-2.5 border-r border-slate-400 whitespace-nowrap text-center w-24">তারিখ</th>
+                      <th className="py-2 px-2.5 border-r border-slate-400 min-w-40">অ্যাকাউন্ট / হেড</th>
+                      <th className="py-2 px-2.5 border-r border-slate-400 min-w-48">খাত / বিবরণ</th>
+                      <th className="py-2 px-2.5 border-r border-slate-400 text-center whitespace-nowrap w-20">ধরণ</th>
+                      <th className="py-2 px-2.5 border-r border-slate-400 text-right whitespace-nowrap w-28">পরিমাণ</th>
+                      <th className="py-2 px-2.5 text-center whitespace-nowrap w-20">স্ট্যাটাস</th>
                     </tr>
-                  ))}
-
-                  {/* Summary Footer inside Print Table */}
-                  <tr className="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-400 break-inside-avoid">
-                    <td className="py-2 px-2.5 text-center border-r border-slate-300 font-mono"></td>
-                    <td className="py-2 px-2.5 border-r border-slate-300"></td>
-                    <td colSpan={2} className="py-2 px-2.5 border-r border-slate-300 font-black uppercase text-[11px]">
-                      {lang === 'bn' ? 'সর্বমোট সমাপ্তি হিসাব (Total / Net Balance)' : 'Total / Net Balance'}
-                    </td>
-                    <td className="py-2 px-2.5 border-r border-slate-300 text-center font-bold text-[10px]">
-                      {filteredRows.length} {lang === 'bn' ? 'টি এন্ট্রি' : 'entries'}
-                    </td>
-                    <td className="py-2 px-2.5 text-right font-mono font-black tabular-nums text-[12.5px] border-r border-slate-300 text-slate-900 whitespace-nowrap">
-                      {totals.bdtNet !== 0 ? `${totals.bdtNet >= 0 ? '+' : ''}${totals.bdtNet.toLocaleString('en-US')} ৳ ` : ''}
-                      {totals.kwdNet !== 0 ? `${totals.kwdNet >= 0 ? '+' : ''}${totals.kwdNet.toFixed(3)} KD` : ''}
-                      {totals.bdtNet === 0 && totals.kwdNet === 0 ? '0.00' : ''}
-                    </td>
-                    <td className="py-2 px-2.5 text-center font-bold text-[10px] text-slate-600">
-                      Verified
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            {/* Official Signatures & Verification (Compact spacing) */}
-            <div className="pt-3 pb-1 flex justify-between items-center text-xs text-slate-600 break-inside-avoid print-signature-block">
-              <div className="text-center">
-                <div className="border-t border-slate-400 w-44 pt-1 font-semibold">হিসাব প্রস্তুতকারকের স্বাক্ষর</div>
-                <p className="text-[10px] text-slate-400 mt-0.5">Prepared By</p>
+                  </thead>
+                  <tbody className="divide-y divide-slate-300 text-slate-800 text-[10.5px]">
+                    {filteredRows.map((row, idx) => (
+                      <tr key={`m-std-${row.id}-${idx}`} data-pm="row">
+                        <td className="py-1.5 px-2.5 font-mono text-center w-10">{idx + 1}</td>
+                        <td className="py-1.5 px-2.5 font-mono whitespace-nowrap text-center w-24">{row.date}</td>
+                        <td className="py-1.5 px-2.5 font-semibold min-w-40">
+                          {lang === 'bn' ? row.sectionNameBn : row.sectionNameEn}
+                          {row.bankName && <span className="block text-[9px]">🏦 {row.bankName}</span>}
+                        </td>
+                        <td className="py-1.5 px-2.5 min-w-48">
+                          <span className="font-bold">{lang === 'bn' ? row.categoryNameBn : row.categoryNameEn}</span>
+                          {row.borrowerName && <span className="block text-[10px]">গ্রহীতা: {row.borrowerName}</span>}
+                          {row.note && <span className="block text-[10px] italic">{row.note}</span>}
+                        </td>
+                        <td className="py-1.5 px-2.5 text-center whitespace-nowrap w-20">ধরণ</td>
+                        <td className="py-1.5 px-2.5 text-right font-mono whitespace-nowrap w-28">0.00</td>
+                        <td className="py-1.5 px-2.5 text-center whitespace-nowrap w-20">Paid</td>
+                      </tr>
+                    ))}
+                    <tr data-pm="total" className="bg-slate-100 font-bold border-t-2 border-slate-400">
+                      <td className="py-2 px-2.5"></td>
+                      <td className="py-2 px-2.5"></td>
+                      <td colSpan={2} className="py-2 px-2.5 font-black uppercase text-[11px]">Total / Net Balance</td>
+                      <td className="py-2 px-2.5 text-center text-[10px]">0 entries</td>
+                      <td className="py-2 px-2.5 text-right font-mono text-[12.5px]">0.00</td>
+                      <td className="py-2 px-2.5 text-center text-[10px]">Verified</td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
-              <div className="text-center">
-                <div className="border-t border-slate-400 w-44 pt-1 font-semibold">অনুমোদনকারী / পরিচালক</div>
-                <p className="text-[10px] text-slate-400 mt-0.5">Authorized Signatory</p>
+
+              <div data-pm="signatures" className="pt-14 pb-3 px-6 flex justify-between items-end text-xs text-slate-700">
+                <div className="text-center">
+                  <div className="border-t-[1.5px] border-slate-500 w-56 pt-1.5 font-bold">হিসাব প্রস্তুতকারকের স্বাক্ষর</div>
+                  <p className="text-[10px] mt-0.5">Prepared By</p>
+                </div>
+                <div className="text-center">
+                  <div className="border-t-[1.5px] border-slate-500 w-56 pt-1.5 font-bold">অনুমোদনকারী / পরিচালক</div>
+                  <p className="text-[10px] mt-0.5">Authorized Signatory</p>
+                </div>
               </div>
-            </div>
             </div>
           )}
-                </div>
-              </td>
-            </tr>
-          </tbody>
+        </div>
 
-          {pageSettings.showLetterhead && (
-            <tfoot
-              className="print-master-footer"
+        {pageSettings.showLetterhead && (
+          <div data-pm="footer" className="pt-2">
+            <ReportOfficialFooter />
+          </div>
+        )}
+      </div>
+
+      {/* 6. Official Printable Document (Paginated Company-Letterhead A4 Sheets: Header at Top, Footer Pinned to Bottom of EVERY Page) */}
+      <div className="hidden print:block text-slate-900 bg-white p-0 w-full printable-report-wrapper relative">
+        {printPageChunks.map((chunk, pageIdx) => {
+          const pageSubRows = isSubLedgerEligible && subLedgerData
+            ? subLedgerData.rows.slice(chunk.startIdx, chunk.endIdx)
+            : [];
+          const pageStdRows = !(isSubLedgerEligible && subLedgerData)
+            ? filteredRows.slice(chunk.startIdx, chunk.endIdx)
+            : [];
+          const hasNextPage = pageIdx < printPageChunks.length - 1;
+
+          return (
+            <div
+              key={`print-sheet-${pageIdx}`}
+              className={`print-page-sheet relative bg-white text-slate-900 flex flex-col justify-between overflow-hidden ${
+                hasNextPage ? 'has-page-break' : 'is-last-page'
+              }`}
               style={{
-                display: 'table-footer-group',
-                breakInside: 'avoid',
-                pageBreakInside: 'avoid',
+                width: '100%',
+                height: `${printGeometry.sheetHeightMm}mm`,
               }}
             >
-              <tr style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
-                <td
-                  className="border-none p-0"
-                  style={{ border: 'none', padding: '8px 0 0 0' }}
-                >
+              {/* Page-scoped Security Watermark Background behind full letterhead sheet */}
+              {pageSettings.showWatermark && (
+                <ReportWatermarkBackground
+                  opacity={pageSettings.watermarkOpacity}
+                  showWatermark={pageSettings.showWatermark}
+                />
+              )}
+
+              {/* Top Section: Official Letterhead + Report Body for this Page */}
+              <div className="relative z-10 flex-1 flex flex-col min-h-0">
+                {pageSettings.showLetterhead ? (
+                  <div className="pb-2.5 shrink-0">
+                    <ReportLetterhead
+                      logoType={pageSettings.logoType}
+                      customLogoUrl={pageSettings.customLogoUrl}
+                      companyName={pageSettings.companyName}
+                      companyTagline={pageSettings.companyTagline}
+                      companyBadge={pageSettings.companyBadge}
+                      lang={lang}
+                    />
+                  </div>
+                ) : (
+                  chunk.isFirst && (
+                    <div className="border-b-2 border-slate-900 pb-4 mb-3 flex justify-between items-start shrink-0">
+                      <div>
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-9 h-9 rounded-xl bg-slate-900 text-white font-bold flex items-center justify-center text-lg">
+                            ৳
+                          </div>
+                          <div>
+                            <h1 className="text-xl font-bold uppercase tracking-tight text-slate-900">
+                              {lang === 'bn' ? 'হিসাব কিতাব — অফিসিয়াল লেনদেন অডিট ও খতিয়ান রিপোর্ট' : 'Financial Statement & Audit Ledger Report'}
+                            </h1>
+                            <p className="text-xs text-slate-600 font-medium">
+                              {lang === 'bn' ? 'ব্যক্তিগত ও কর্মক্ষেত্রের সম্পূর্ণ সমন্বিত হিসাব বিবরণী' : 'Official Financial & Audit Ledger Statement'}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="mt-3 flex items-center gap-2 text-xs text-slate-700">
+                          <span><strong>{lang === 'bn' ? 'অ্যাকাউন্ট / হেড:' : 'Account:'}</strong> {accountFilter === 'all' ? (lang === 'bn' ? 'সকল হেড (All)' : 'All Accounts') : accountFilter}</span>
+                          <span aria-hidden="true">·</span>
+                          <span><strong>{lang === 'bn' ? 'সময়কাল:' : 'Period:'}</strong> {startDate && endDate ? `${formatDate(startDate, lang)} — ${formatDate(endDate, lang)}` : (lang === 'bn' ? 'সম্পূর্ণ সময়কাল' : 'All Time')}</span>
+                          <span aria-hidden="true">·</span>
+                          <span><strong>{lang === 'bn' ? 'মোট লেনদেন সংখ্যা:' : 'Total Records:'}</strong> {filteredRows.length} {lang === 'bn' ? 'টি' : ''}</span>
+                        </div>
+                      </div>
+
+                      <div className="text-right text-xs text-slate-700">
+                        <span className="inline-block px-3 py-1 bg-slate-100 border border-slate-300 rounded font-bold uppercase tracking-wider text-[10px] mb-1">
+                          Verified Audit Statement
+                        </span>
+                        <p className="font-mono text-[11px]">প্রিন্ট তারিখ: {new Date().toLocaleDateString('en-GB')}</p>
+                        <p className="font-mono text-[10px] text-slate-500">সময়: {new Date().toLocaleTimeString('en-US')}</p>
+                      </div>
+                    </div>
+                  )
+                )}
+
+                <div className="print-report-content w-full" style={{ zoom: pageSettings.scale / 100 }}>
+                  {isSubLedgerEligible && subLedgerData ? (
+                    /* ========================================================================= */
+                    /* SUB LEDGER PRINT DOCUMENT                                                 */
+                    /* ========================================================================= */
+                    <div className="space-y-2 font-sans w-full">
+                      {chunk.isFirst && (
+                        <div className="flex justify-between items-baseline py-1 border-b border-slate-300">
+                          <div className="text-base font-bold text-[#1E536E] font-sans">
+                            Sub ledger &nbsp;
+                            <span className="font-mono text-slate-900 font-semibold">
+                              {startDate ? startDate.replace(/-/g, '/') : '2026/01/01'} to{' '}
+                              {endDate ? endDate.replace(/-/g, '/') : new Date().toISOString().split('T')[0].replace(/-/g, '/')}
+                            </span>
+                            &nbsp;
+                            <span className="font-mono text-xs text-slate-500 font-normal">
+                              [ {new Date().toLocaleDateString('en-GB')} {new Date().toLocaleTimeString('en-GB')} ]
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                      {(pageSubRows.length > 0 || chunk.isFirst || chunk.isLast) && (
+                        <div className="overflow-visible border border-slate-400 rounded-xs w-full">
+                          <table className="w-full text-left border-collapse text-[10px] table-fixed">
+                            <colgroup>
+                              <col style={{ width: dynamicColWidths.sl }} />
+                              <col style={{ width: dynamicColWidths.date }} />
+                              <col style={{ width: dynamicColWidths.account }} />
+                              <col style={{ width: dynamicColWidths.debit }} />
+                              <col style={{ width: dynamicColWidths.credit }} />
+                              <col style={{ width: dynamicColWidths.balance }} />
+                              <col style={{ width: dynamicColWidths.remarks }} />
+                            </colgroup>
+                            <thead>
+                              <tr style={{ height: 0, lineHeight: 0, padding: 0, margin: 0, border: 'none' }}>
+                                <th style={{ width: dynamicColWidths.sl, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
+                                <th style={{ width: dynamicColWidths.date, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
+                                <th style={{ width: dynamicColWidths.account, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
+                                <th style={{ width: dynamicColWidths.debit, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
+                                <th style={{ width: dynamicColWidths.credit, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
+                                <th style={{ width: dynamicColWidths.balance, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
+                                <th style={{ width: dynamicColWidths.remarks, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
+                              </tr>
+                              <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[9.5px]">
+                                <th rowSpan={2} style={{ width: dynamicColWidths.sl }} className="py-1 px-1 text-center border-r border-slate-400">#</th>
+                                <th rowSpan={2} style={{ width: dynamicColWidths.date }} className="py-1 px-1 text-center border-r border-slate-400 whitespace-nowrap">Date</th>
+                                <th rowSpan={2} style={{ width: dynamicColWidths.account }} className="py-1 px-2 border-r border-slate-400">Account</th>
+                                <th colSpan={3} style={{ width: dynamicColWidths.baseColSpan }} className="py-1 px-1 text-center border-r border-slate-400 border-b border-slate-400 uppercase tracking-wider text-[9px]">
+                                  Base ({subLedgerData.currency})
+                                </th>
+                                <th rowSpan={2} style={{ width: dynamicColWidths.remarks }} className="py-1 px-2.5 text-left border-slate-400">Remarks</th>
+                              </tr>
+                              <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[9px]">
+                                <th style={{ width: dynamicColWidths.debit }} className="py-1 px-1 text-right border-r border-slate-400">Debit</th>
+                                <th style={{ width: dynamicColWidths.credit }} className="py-1 px-1 text-right border-r border-slate-400">Credit</th>
+                                <th style={{ width: dynamicColWidths.balance }} className="py-1 px-1 text-right border-r border-slate-400">Balance</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-300 text-slate-900 text-[10px]">
+                              {chunk.isFirst && (
+                                <>
+                                  <tr className="bg-[#D8EEF8] font-bold text-slate-900 border-b border-slate-300 break-inside-avoid">
+                                    <td style={{ width: dynamicColWidths.sl }} className="py-1 px-1 text-center border-r border-slate-300 font-mono text-[10px]">1</td>
+                                    <td colSpan={6} className="py-1 px-2 text-center tracking-wide font-black text-xs text-slate-900 uppercase">
+                                      {subLedgerData.accountBannerTitle}
+                                    </td>
+                                  </tr>
+                                  <tr className="bg-white font-medium border-b border-slate-200 break-inside-avoid">
+                                    <td style={{ width: dynamicColWidths.sl }} className="py-1 px-1 text-center border-r border-slate-200 font-mono text-slate-600">2</td>
+                                    <td style={{ width: dynamicColWidths.date }} className="py-1 px-1 border-r border-slate-200 text-center font-mono text-slate-400">—</td>
+                                    <td style={{ width: dynamicColWidths.account }} className="py-1 px-2 border-r border-slate-200 font-bold italic text-slate-900 whitespace-nowrap">
+                                      Opening Balance
+                                    </td>
+                                    <td style={{ width: dynamicColWidths.debit }} className="py-1 px-1 text-right border-r border-slate-200 font-mono font-bold text-slate-900 tabular-nums text-[10.5px]">
+                                      {formatSubLedgerNumber(subLedgerData.openingBal, subLedgerData.currency, false)}
+                                    </td>
+                                    <td style={{ width: dynamicColWidths.credit }} className="py-1 px-1 text-right border-r border-slate-200 font-mono text-slate-400 tabular-nums text-[10.5px]">
+                                      {subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
+                                    </td>
+                                    <td style={{ width: dynamicColWidths.balance }} className="py-1 px-1 text-right border-r border-slate-200 font-mono font-black text-slate-900 tabular-nums text-[11px]">
+                                      {formatSubLedgerNumber(subLedgerData.openingBal, subLedgerData.currency, false)}
+                                    </td>
+                                    <td style={{ width: dynamicColWidths.remarks }} className="py-1 px-2.5 text-slate-400 italic text-[9.5px]">—</td>
+                                  </tr>
+                                </>
+                              )}
+
+                              {pageSubRows.map((row) => (
+                                <tr key={`print-sub-${pageIdx}-${row.id}`} className="border-b border-slate-200 break-inside-avoid bg-white">
+                                  <td style={{ width: dynamicColWidths.sl }} className="py-1 px-1 text-center border-r border-slate-200 font-mono text-slate-600 text-[10px]">
+                                    {row.sl}
+                                  </td>
+                                  <td style={{ width: dynamicColWidths.date }} className="py-1 px-1.5 border-r border-slate-200 font-mono text-slate-700 whitespace-nowrap text-center text-[9.5px] overflow-hidden min-w-[80px]">
+                                    {row.formattedDate}
+                                  </td>
+                                  <td style={{ width: dynamicColWidths.account }} className={`py-1 px-2 border-r border-slate-200 text-slate-900 text-[10px] leading-tight break-words ${pageSettings.isBold ? 'font-black' : 'font-bold'} ${pageSettings.isItalic ? 'italic' : ''}`}>
+                                    {row.account}
+                                  </td>
+                                  <td style={{ width: dynamicColWidths.debit }} className={`py-1 px-1 text-right border-r border-slate-200 font-mono tabular-nums text-[10.5px] ${pageSettings.isBold ? 'font-black' : 'font-bold'} text-slate-900`}>
+                                    {row.debit > 0
+                                      ? formatSubLedgerNumber(row.debit, subLedgerData.currency, false)
+                                      : subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
+                                  </td>
+                                  <td style={{ width: dynamicColWidths.credit }} className={`py-1 px-1 text-right border-r border-slate-200 font-mono tabular-nums text-[10.5px] ${pageSettings.isBold ? 'font-black' : 'font-bold'} text-rose-800`}>
+                                    {row.credit > 0
+                                      ? formatSubLedgerNumber(row.credit, subLedgerData.currency, true)
+                                      : subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
+                                  </td>
+                                  <td style={{ width: dynamicColWidths.balance }} className="py-1 px-1 text-right border-r border-slate-200 font-mono font-black tabular-nums text-[11px] text-slate-900">
+                                    {formatSubLedgerNumber(row.balance, subLedgerData.currency, false)}
+                                  </td>
+                                  <td style={{ width: dynamicColWidths.remarks }} className={`py-1 px-2.5 text-slate-800 text-[10px] leading-snug break-words ${pageSettings.isItalic ? 'italic' : ''}`}>
+                                    {row.remarks || <span className="text-slate-300 italic">—</span>}
+                                  </td>
+                                </tr>
+                              ))}
+
+                              {chunk.isLast && (
+                                <tr className="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-400 break-inside-avoid">
+                                  <td style={{ width: dynamicColWidths.sl }} className="py-1.5 px-1 text-center border-r border-slate-300 font-mono"></td>
+                                  <td style={{ width: dynamicColWidths.date }} className="py-1.5 px-1 border-r border-slate-300"></td>
+                                  <td style={{ width: dynamicColWidths.account }} className="py-1.5 px-2 border-r border-slate-300 font-black uppercase text-[10px]">
+                                    {lang === 'bn' ? 'সর্বমোট সমাপ্তি হিসাব (Total / Closing)' : 'Total / Closing Balance'}
+                                  </td>
+                                  <td style={{ width: dynamicColWidths.debit }} className="py-1.5 px-1 text-right border-r border-slate-300 font-mono font-bold text-emerald-900 tabular-nums text-[11px]">
+                                    {formatSubLedgerNumber(
+                                      subLedgerData.openingBal + subLedgerData.totalPeriodDebit,
+                                      subLedgerData.currency,
+                                      false
+                                    )}
+                                  </td>
+                                  <td style={{ width: dynamicColWidths.credit }} className="py-1.5 px-1 text-right border-r border-slate-300 font-mono font-bold text-rose-900 tabular-nums text-[11px]">
+                                    {formatSubLedgerNumber(subLedgerData.totalPeriodCredit, subLedgerData.currency, true)}
+                                  </td>
+                                  <td style={{ width: dynamicColWidths.balance }} className="py-1.5 px-1 text-right border-r border-slate-300 font-mono font-black text-slate-900 tabular-nums text-[11.5px]">
+                                    {formatSubLedgerNumber(subLedgerData.closingBalance, subLedgerData.currency, false)}
+                                  </td>
+                                  <td style={{ width: dynamicColWidths.remarks }} className="py-1.5 px-2.5 border-r border-slate-300"></td>
+                                </tr>
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+
+                      {chunk.isLast && (
+                        <div className="pt-14 pb-3 px-6 flex justify-between items-end text-xs text-slate-700 break-inside-avoid print-signature-block">
+                          <div className="text-center">
+                            <div className="border-t-[1.5px] border-slate-500 w-56 pt-1.5 font-bold text-slate-800">হিসাব প্রস্তুতকারকের স্বাক্ষর</div>
+                            <p className="text-[10px] text-slate-500 mt-0.5 font-medium">Prepared By</p>
+                          </div>
+                          <div className="text-center">
+                            <div className="border-t-[1.5px] border-slate-500 w-56 pt-1.5 font-bold text-slate-800">অনুমোদনকারী / পরিচালক</div>
+                            <p className="text-[10px] text-slate-500 mt-0.5 font-medium">Authorized Signatory</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    /* ========================================================================= */
+                    /* STANDARD FINANCIAL REPORT                                                 */
+                    /* ========================================================================= */
+                    <div className="space-y-3 font-sans w-full">
+                      {chunk.isFirst && (
+                        <div className="grid grid-cols-3 gap-3 p-3.5 bg-slate-50 border border-slate-300 rounded-lg text-center text-xs">
+                          <div>
+                            <span className="text-[10px] text-slate-600 font-bold uppercase block">
+                              {lang === 'bn' ? 'মোট প্রাপ্তি / জমা (Inflow)' : 'Total Inflow'}
+                            </span>
+                            <span className="font-mono font-bold text-sm text-emerald-800 mt-0.5 block">
+                              {totals.bdtIncome > 0 ? `+${totals.bdtIncome.toLocaleString('en-US')} ৳ ` : ''}
+                              {totals.kwdIncome > 0 ? `+${totals.kwdIncome.toFixed(3)} KD` : ''}
+                              {totals.bdtIncome === 0 && totals.kwdIncome === 0 ? '0.00' : ''}
+                            </span>
+                          </div>
+
+                          <div>
+                            <span className="text-[10px] text-slate-600 font-bold uppercase block">
+                              {lang === 'bn' ? 'মোট খরচ / ব্যয় (Outflow)' : 'Total Outflow'}
+                            </span>
+                            <span className="font-mono font-bold text-sm text-rose-800 mt-0.5 block">
+                              {totals.bdtExpense > 0 ? `-${totals.bdtExpense.toLocaleString('en-US')} ৳ ` : ''}
+                              {totals.kwdExpense > 0 ? `-${totals.kwdExpense.toFixed(3)} KD` : ''}
+                              {totals.bdtExpense === 0 && totals.kwdExpense === 0 ? '0.00' : ''}
+                            </span>
+                          </div>
+
+                          <div>
+                            <span className="text-[10px] text-slate-600 font-bold uppercase block">
+                              {lang === 'bn' ? 'নিট উদ্বৃত্ত / সঞ্চয় (Net)' : 'Net Balance'}
+                            </span>
+                            <span className="font-mono font-bold text-sm text-slate-900 mt-0.5 block">
+                              {totals.bdtNet !== 0 ? `${totals.bdtNet >= 0 ? '+' : ''}${totals.bdtNet.toLocaleString('en-US')} ৳ ` : ''}
+                              {totals.kwdNet !== 0 ? `${totals.kwdNet >= 0 ? '+' : ''}${totals.kwdNet.toFixed(3)} KD` : ''}
+                              {totals.bdtNet === 0 && totals.kwdNet === 0 ? '0.00' : ''}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                      {(pageStdRows.length > 0 || chunk.isLast) && (
+                        <div className="overflow-visible border border-slate-400 rounded-xs">
+                          <table className="w-full text-left border-collapse text-[11px]">
+                            <thead>
+                              <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold uppercase tracking-wider text-[10px]">
+                                <th className="py-2 px-2.5 border-r border-slate-400 text-center w-10">SL</th>
+                                <th className="py-2 px-2.5 border-r border-slate-400 whitespace-nowrap text-center w-24">তারিখ</th>
+                                <th className="py-2 px-2.5 border-r border-slate-400 min-w-40">অ্যাকাউন্ট / হেড</th>
+                                <th className="py-2 px-2.5 border-r border-slate-400 min-w-48">খাত / বিবরণ</th>
+                                <th className="py-2 px-2.5 border-r border-slate-400 text-center whitespace-nowrap w-20">ধরণ</th>
+                                <th className="py-2 px-2.5 border-r border-slate-400 text-right whitespace-nowrap w-28">পরিমাণ</th>
+                                <th className="py-2 px-2.5 text-center whitespace-nowrap w-20">স্ট্যাটাস</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-300 text-slate-800 text-[10.5px]">
+                              {pageStdRows.map((row, idx) => (
+                                <tr key={`print-row-${pageIdx}-${row.id}-${idx}`} className="break-inside-avoid bg-white">
+                                  <td className="py-1.5 px-2.5 font-mono text-slate-500 border-r border-slate-200 text-center">{chunk.startIdx + idx + 1}</td>
+                                  <td className="py-1.5 px-2.5 font-mono text-slate-700 border-r border-slate-200 whitespace-nowrap text-center">{row.date}</td>
+                                  <td className="py-1.5 px-2.5 font-semibold text-slate-900 border-r border-slate-200">
+                                    {lang === 'bn' ? row.sectionNameBn : row.sectionNameEn}
+                                    {row.bankName && <span className="block text-[9px] text-slate-500 font-normal">🏦 {row.bankName}</span>}
+                                  </td>
+                                  <td className="py-1.5 px-2.5 border-r border-slate-200">
+                                    <span className="font-bold text-slate-900">{lang === 'bn' ? row.categoryNameBn : row.categoryNameEn}</span>
+                                    {row.borrowerName && <span className="block text-[10px] text-indigo-800">গ্রহীতা: {row.borrowerName}</span>}
+                                    {row.note && <span className="block text-[10px] text-slate-500 italic">{row.note}</span>}
+                                  </td>
+                                  <td className="py-1.5 px-2.5 border-r border-slate-200 font-bold uppercase text-[10px] text-center whitespace-nowrap">
+                                    {row.type === 'income' ? 'আয় / জমা' : row.type === 'expense' ? 'ব্যয় / খরচ' : row.type === 'loan' ? 'দিনার লোন' : 'ট্রান্সফার'}
+                                  </td>
+                                  <td className="py-1.5 px-2.5 text-right font-mono font-bold text-slate-900 border-r border-slate-200 whitespace-nowrap text-[12px]">
+                                    {row.type === 'income' ? '+' : row.type === 'expense' ? '-' : ''}
+                                    {row.currency === 'KWD' ? `${row.amount.toFixed(3)} KD` : `${row.amount.toLocaleString('en-US')} ৳`}
+                                  </td>
+                                  <td className="py-1.5 px-2.5 text-center font-bold text-[10px] whitespace-nowrap">
+                                    {row.status ? (
+                                      <span className={row.status === 'paid' ? 'text-emerald-700' : 'text-amber-700'}>
+                                        {row.status === 'paid' ? 'Paid' : 'Unpaid'}
+                                      </span>
+                                    ) : (
+                                      '—'
+                                    )}
+                                  </td>
+                                </tr>
+                              ))}
+
+                              {chunk.isLast && (
+                                <tr className="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-400 break-inside-avoid">
+                                  <td className="py-2 px-2.5 text-center border-r border-slate-300 font-mono"></td>
+                                  <td className="py-2 px-2.5 border-r border-slate-300"></td>
+                                  <td colSpan={2} className="py-2 px-2.5 border-r border-slate-300 font-black uppercase text-[11px]">
+                                    {lang === 'bn' ? 'সর্বমোট সমাপ্তি হিসাব (Total / Net Balance)' : 'Total / Net Balance'}
+                                  </td>
+                                  <td className="py-2 px-2.5 border-r border-slate-300 text-center font-bold text-[10px]">
+                                    {filteredRows.length} {lang === 'bn' ? 'টি এন্ট্রি' : 'entries'}
+                                  </td>
+                                  <td className="py-2 px-2.5 text-right font-mono font-black tabular-nums text-[12.5px] border-r border-slate-300 text-slate-900 whitespace-nowrap">
+                                    {totals.bdtNet !== 0 ? `${totals.bdtNet >= 0 ? '+' : ''}${totals.bdtNet.toLocaleString('en-US')} ৳ ` : ''}
+                                    {totals.kwdNet !== 0 ? `${totals.kwdNet >= 0 ? '+' : ''}${totals.kwdNet.toFixed(3)} KD` : ''}
+                                    {totals.bdtNet === 0 && totals.kwdNet === 0 ? '0.00' : ''}
+                                  </td>
+                                  <td className="py-2 px-2.5 text-center font-bold text-[10px] text-slate-600">
+                                    Verified
+                                  </td>
+                                </tr>
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+
+                      {chunk.isLast && (
+                        <div className="pt-14 pb-3 px-6 flex justify-between items-end text-xs text-slate-700 break-inside-avoid print-signature-block">
+                          <div className="text-center">
+                            <div className="border-t-[1.5px] border-slate-500 w-56 pt-1.5 font-bold text-slate-800">হিসাব প্রস্তুতকারকের স্বাক্ষর</div>
+                            <p className="text-[10px] text-slate-500 mt-0.5 font-medium">Prepared By</p>
+                          </div>
+                          <div className="text-center">
+                            <div className="border-t-[1.5px] border-slate-500 w-56 pt-1.5 font-bold text-slate-800">অনুমোদনকারী / পরিচালক</div>
+                            <p className="text-[10px] text-slate-500 mt-0.5 font-medium">Authorized Signatory</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Bottom Section: Official Letterhead Footer PINNED to the very bottom of EVERY A4 Page */}
+              {pageSettings.showLetterhead && (
+                <div className="relative z-10 mt-auto pt-2 shrink-0">
+                  <div className="flex justify-end mb-1 px-1">
+                    <span className="text-[9px] font-mono text-slate-400 font-semibold">
+                      Page {pageIdx + 1} of {printPageChunks.length}
+                    </span>
+                  </div>
                   <ReportOfficialFooter />
-                </td>
-              </tr>
-            </tfoot>
-          )}
-        </table>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* 7. Transaction Audit Voucher Slip Modal */}
