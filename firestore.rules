@@ -1,21 +1,70 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // 1. Global Safety Net: Deny all access by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 2. Hardened Identity & Validation Primitives
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    // Owner-Locked Access: Only the verified application owner account can access cloud ledger data
+    function isAppOwner() {
+      return isVerifiedUser() && request.auth.token.email == 'juwel199431@gmail.com';
+    }
+
     function isValidId(id) {
       return id is string && id.size() > 0 && id.size() <= 64 && id.matches('^[a-zA-Z0-9_\\-]+$');
     }
 
-    function isValidLedger(data) {
-      return data.keys().hasAll(['ledgerId', 'payload', 'updatedAt']) &&
-             data.keys().hasOnly(['ledgerId', 'payload', 'updatedAt']) &&
-             data.ledgerId is string && data.ledgerId.size() > 0 && data.ledgerId.size() <= 64 &&
-             data.payload is string && data.payload.size() > 0 && data.payload.size() <= 1048576 &&
-             data.updatedAt is string && data.updatedAt.size() > 0 && data.updatedAt.size() <= 64;
+    function incoming() {
+      return request.resource.data;
     }
 
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidLedger(data) {
+      return data.keys().hasAll(['ledgerId', 'ownerUid', 'ownerEmail', 'payload', 'updatedAt']) &&
+             data.keys().hasOnly(['ledgerId', 'ownerUid', 'ownerEmail', 'payload', 'updatedAt']) &&
+             isValidId(data.ledgerId) &&
+             data.ownerUid is string &&
+             data.ownerUid.size() > 0 &&
+             data.ownerUid.size() <= 128 &&
+             data.ownerUid == request.auth.uid &&
+             data.ownerEmail is string &&
+             data.ownerEmail.size() > 0 &&
+             data.ownerEmail.size() <= 160 &&
+             data.ownerEmail == request.auth.token.email &&
+             data.payload is string &&
+             data.payload.size() >= 2 &&
+             data.payload.size() <= 1000000 &&
+             data.updatedAt is timestamp &&
+             data.updatedAt == request.time;
+    }
+
+    // 3. Owner-Locked Financial Ledgers Collection
     match /financialLedgers/{ledgerId} {
-      allow read: if isValidId(ledgerId);
-      allow create, update: if isValidId(ledgerId) && isValidLedger(request.resource.data);
+      allow get: if isAppOwner() && isValidId(ledgerId);
+      allow list: if false;
+      allow create: if isAppOwner() &&
+                       isValidId(ledgerId) &&
+                       isValidLedger(incoming()) &&
+                       incoming().ledgerId == ledgerId;
+      allow update: if isAppOwner() &&
+                       isValidId(ledgerId) &&
+                       isValidLedger(incoming()) &&
+                       (!('ledgerId' in existing()) || incoming().ledgerId == existing().ledgerId) &&
+                       (!('ownerUid' in existing()) || incoming().ownerUid == existing().ownerUid) &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['ledgerId', 'ownerUid', 'ownerEmail', 'payload', 'updatedAt']);
       allow delete: if false;
     }
   }

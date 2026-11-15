@@ -7,9 +7,95 @@ import {
   DEFAULT_KUWAIT_PAYABLE_LENDERS,
   DEFAULT_KUWAIT_PAYABLE_TRANSACTIONS,
 } from './initialData';
+import {
+  EncryptedBackupEnvelope,
+  encryptBackupPayload,
+  decryptBackupPayload,
+  isEncryptedBackupEnvelope,
+} from './securityCrypto';
 
 export const STORAGE_KEY = 'hisab_kitab_user_data_v1';
 export const LANG_STORAGE_KEY = 'hisab_kitab_lang_pref';
+const CORRUPT_RESCUE_KEY = 'hisab_kitab_corrupt_rescue_v1';
+
+function safeFiniteNumber(val: unknown, fallback = 0): number {
+  const num = Number(val);
+  return Number.isFinite(num) ? num : fallback;
+}
+
+/**
+ * Validates and sanitizes AppData loaded from localStorage, backup files, or Firestore
+ * so malformed/NaN entries can never crash charts, ledgers, or calculations.
+ */
+export function validateAndSanitizeAppData(raw: unknown): AppData | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const candidate = raw as Partial<AppData>;
+  if (!Array.isArray(candidate.banks) || !Array.isArray(candidate.transactions)) {
+    return null;
+  }
+
+  return {
+    ...INITIAL_APP_DATA,
+    ...candidate,
+    banks: candidate.banks.map((b) => ({
+      ...b,
+      openingBalance: safeFiniteNumber(b.openingBalance, 0),
+    })),
+    savingsAccounts: Array.isArray(candidate.savingsAccounts)
+      ? candidate.savingsAccounts.map((s) => ({
+          ...s,
+          openingBalance: safeFiniteNumber(s.openingBalance, 0),
+          monthlyAmount: safeFiniteNumber(s.monthlyAmount, 0),
+        }))
+      : INITIAL_APP_DATA.savingsAccounts,
+    transactions: candidate.transactions
+      .filter((t) => t && typeof t === 'object' && typeof t.id === 'string')
+      .map((t) => ({
+        ...t,
+        amount: safeFiniteNumber(t.amount, 0),
+      })),
+    bossDeposits: Array.isArray(candidate.bossDeposits)
+      ? candidate.bossDeposits.map((d) => ({
+          ...d,
+          amount: safeFiniteNumber(d.amount, 0),
+        }))
+      : INITIAL_APP_DATA.bossDeposits,
+    categories: Array.isArray(candidate.categories)
+      ? candidate.categories
+      : INITIAL_APP_DATA.categories,
+    loans: Array.isArray(candidate.loans)
+      ? candidate.loans.map((l) => ({
+          ...l,
+          totalAmount: safeFiniteNumber(l.totalAmount, 0),
+          paidAmount: safeFiniteNumber(l.paidAmount, 0),
+        }))
+      : INITIAL_APP_DATA.loans,
+    kuwaitLoans: Array.isArray(candidate.kuwaitLoans)
+      ? candidate.kuwaitLoans.map((l) => ({
+          ...l,
+          amount: safeFiniteNumber(l.amount, 0),
+        }))
+      : DEFAULT_KUWAIT_LOANS,
+    kuwaitReceivableBorrowers: Array.isArray(candidate.kuwaitReceivableBorrowers)
+      ? candidate.kuwaitReceivableBorrowers
+      : DEFAULT_KUWAIT_RECEIVABLE_BORROWERS,
+    kuwaitReceivableTransactions: Array.isArray(candidate.kuwaitReceivableTransactions)
+      ? candidate.kuwaitReceivableTransactions.map((t) => ({
+          ...t,
+          amount: safeFiniteNumber(t.amount, 0),
+        }))
+      : DEFAULT_KUWAIT_RECEIVABLE_TRANSACTIONS,
+    kuwaitPayableLenders: Array.isArray(candidate.kuwaitPayableLenders)
+      ? candidate.kuwaitPayableLenders
+      : DEFAULT_KUWAIT_PAYABLE_LENDERS,
+    kuwaitPayableTransactions: Array.isArray(candidate.kuwaitPayableTransactions)
+      ? candidate.kuwaitPayableTransactions.map((t) => ({
+          ...t,
+          amount: safeFiniteNumber(t.amount, 0),
+        }))
+      : DEFAULT_KUWAIT_PAYABLE_TRANSACTIONS,
+  };
+}
 
 export function loadStoredData(): AppData {
   try {
@@ -18,9 +104,20 @@ export function loadStoredData(): AppData {
       saveData(INITIAL_APP_DATA);
       return INITIAL_APP_DATA;
     }
-    const parsed = JSON.parse(raw);
-    if (!parsed || !Array.isArray(parsed.banks) || !Array.isArray(parsed.transactions)) {
-      console.warn('Invalid stored data structure, resetting to default');
+    const rawParsed = JSON.parse(raw);
+    const parsed = validateAndSanitizeAppData(rawParsed);
+    if (!parsed) {
+      console.warn('Invalid stored data structure, rescuing raw copy and checking snapshots');
+      try {
+        localStorage.setItem(CORRUPT_RESCUE_KEY, raw);
+      } catch {
+        // ignore storage quota errors
+      }
+      const snapshots = getAutoSnapshots();
+      if (snapshots.length > 0) {
+        const snapValid = validateAndSanitizeAppData(snapshots[0].data);
+        if (snapValid) return snapValid;
+      }
       return INITIAL_APP_DATA;
     }
 
@@ -208,9 +305,22 @@ export function loadStoredData(): AppData {
       saveData(parsed);
     }
 
-    return parsed;
+    return validateAndSanitizeAppData(parsed) || INITIAL_APP_DATA;
   } catch (err) {
     console.error('Failed to load stored finance data:', err);
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      try {
+        localStorage.setItem(CORRUPT_RESCUE_KEY, raw);
+      } catch {
+        // ignore
+      }
+    }
+    const snapshots = getAutoSnapshots();
+    if (snapshots.length > 0) {
+      const snapValid = validateAndSanitizeAppData(snapshots[0].data);
+      if (snapValid) return snapValid;
+    }
     return INITIAL_APP_DATA;
   }
 }
@@ -257,6 +367,25 @@ export function saveAutoSnapshot(data: AppData): void {
   }
 }
 
+export function forceAutoSnapshot(data: AppData): void {
+  try {
+    const validated = validateAndSanitizeAppData(data);
+    if (!validated) return;
+    const todayStr = new Date().toISOString().split('T')[0];
+    const existing = getAutoSnapshots();
+    const newSnap: StorageSnapshot = {
+      timestamp: new Date().toISOString(),
+      dateStr: todayStr,
+      data: validated,
+      txCount: validated.transactions?.length || 0,
+    };
+    const updated = [newSnap, ...existing].slice(0, 12);
+    localStorage.setItem(SNAPSHOTS_KEY, JSON.stringify(updated));
+  } catch (err) {
+    console.warn('Force snapshot save error:', err);
+  }
+}
+
 export function saveData(data: AppData): void {
   try {
     const updated = {
@@ -288,19 +417,43 @@ export function exportBackupFile(data: AppData): void {
 }
 
 /**
- * Parses and validates an uploaded JSON backup file.
+ * Downloads a password-protected AES-GCM-256 encrypted backup file.
  */
-export async function parseBackupFile(file: File): Promise<AppData> {
+export async function exportEncryptedBackupFile(data: AppData, passphrase: string): Promise<void> {
+  const envelope = await encryptBackupPayload(data, passphrase);
+  const dateStr = new Date().toISOString().split('T')[0];
+  const filename = `Hisab-Kitab-Encrypted-${dateStr}.json`;
+  const blob = new Blob([JSON.stringify(envelope, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+export type ParsedBackupResult =
+  | { encrypted: false; data: AppData }
+  | { encrypted: true; envelope: EncryptedBackupEnvelope };
+
+export async function inspectBackupFile(file: File): Promise<ParsedBackupResult> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
         const content = e.target?.result as string;
         const parsed = JSON.parse(content);
-        if (!parsed.banks || !parsed.transactions || !parsed.categories) {
+        if (isEncryptedBackupEnvelope(parsed)) {
+          resolve({ encrypted: true, envelope: parsed });
+          return;
+        }
+        const validated = validateAndSanitizeAppData(parsed);
+        if (!validated) {
           throw new Error('ফাইলটিতে হিসাব কিতাবের সঠিক ডাটা পাওয়া যায়নি (Invalid schema)');
         }
-        resolve(parsed);
+        resolve({ encrypted: false, data: validated });
       } catch (err) {
         reject(err);
       }
@@ -308,6 +461,29 @@ export async function parseBackupFile(file: File): Promise<AppData> {
     reader.onerror = () => reject(new Error('ফাইল পড়তে সমস্যা হয়েছে'));
     reader.readAsText(file);
   });
+}
+
+export async function unlockEncryptedBackup(
+  envelope: EncryptedBackupEnvelope,
+  passphrase: string
+): Promise<AppData> {
+  const decrypted = await decryptBackupPayload(envelope, passphrase);
+  const validated = validateAndSanitizeAppData(decrypted);
+  if (!validated) {
+    throw new Error('ডিক্রিপ্ট করার পর সঠিক হিসাব ডাটা পাওয়া যায়নি।');
+  }
+  return validated;
+}
+
+/**
+ * Parses and validates an uploaded JSON backup file.
+ */
+export async function parseBackupFile(file: File): Promise<AppData> {
+  const result = await inspectBackupFile(file);
+  if (result.encrypted) {
+    throw new Error('ENCRYPTED_BACKUP_REQUIRED');
+  }
+  return result.data;
 }
 
 /**

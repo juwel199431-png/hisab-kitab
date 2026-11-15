@@ -7,24 +7,42 @@
       "properties": {
         "ledgerId": {
           "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
           "description": "The unique identifier of the financial ledger document."
+        },
+        "ownerUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "Firebase Auth UID of the authenticated ledger owner."
+        },
+        "ownerEmail": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 160,
+          "description": "Verified owner email associated with the ledger."
         },
         "payload": {
           "type": "string",
-          "description": "JSON serialized snapshot of all banks, transactions, savings, and loan accounts."
+          "minLength": 2,
+          "maxLength": 1000000,
+          "description": "Serialized snapshot of all banks, transactions, savings, and loan accounts."
         },
         "updatedAt": {
           "type": "string",
-          "description": "ISO timestamp of the most recent sync update."
+          "format": "date-time",
+          "description": "Server timestamp of the most recent sync update."
         }
       },
-      "required": ["ledgerId", "payload", "updatedAt"]
+      "required": ["ledgerId", "ownerUid", "ownerEmail", "payload", "updatedAt"]
     }
   },
   "firestore": {
     "/financialLedgers/{ledgerId}": {
       "schema": "FinancialLedger",
-      "description": "Cross-device synced ledger document connecting mobile and computer instances."
+      "description": "Owner-locked cross-device synced ledger document connecting mobile and computer instances."
     }
   }
 }

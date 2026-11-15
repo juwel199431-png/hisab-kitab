@@ -47,6 +47,9 @@ export const Header: React.FC = () => {
     isPinEnabled,
     setIsPinModalOpen,
     lockApp,
+    isCloudOwnerVerified,
+    isCloudAuthLoading,
+    cloudSyncError,
     isCloudSynced,
     forcePushToCloud,
     setIsWelcomeIntroOpen,
@@ -55,6 +58,10 @@ export const Header: React.FC = () => {
   const [justSynced, setJustSynced] = useState(false);
 
   const handleSyncClick = () => {
+    if (!isCloudOwnerVerified) {
+      setIsPinModalOpen(true);
+      return;
+    }
     forcePushToCloud();
     setJustSynced(true);
     setTimeout(() => setJustSynced(false), 2000);
@@ -200,21 +207,70 @@ export const Header: React.FC = () => {
             />
           </div>
 
-          {/* 1. Live Real-time Cloud Sync Indicator */}
+          {/* 1. Live Real-time Cloud Sync & Owner Verification Indicator */}
           <button
             onClick={handleSyncClick}
             className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl transition-all border shadow-2xs whitespace-nowrap cursor-pointer ${
-              justSynced
+              isCloudAuthLoading
+                ? 'text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700'
+                : !isCloudOwnerVerified
+                ? 'text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/70 hover:bg-amber-100 dark:hover:bg-amber-900/80 border-amber-300 dark:border-amber-700'
+                : cloudSyncError
+                ? 'text-rose-800 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/70 border-rose-300 dark:border-rose-700'
+                : justSynced
                 ? 'bg-emerald-600 text-white border-emerald-700 shadow-emerald-500/30 scale-105'
                 : 'text-emerald-800 dark:text-emerald-300 bg-emerald-50/90 dark:bg-emerald-950/70 hover:bg-emerald-100 dark:hover:bg-emerald-900/80 border-emerald-300 dark:border-emerald-700 hover:scale-[1.02]'
             }`}
-            title={lang === 'bn' ? 'রিয়েল-টাইম ক্লাউড সিঙ্ক সক্রিয় (ক্লিক করে এখনই ম্যানুয়াল সিঙ্ক করুন)' : 'Real-time Cloud Sync Active (Click to sync now)'}
+            title={
+              !isCloudOwnerVerified
+                ? lang === 'bn'
+                  ? 'ক্লাউড সিঙ্ক সুরক্ষিত: আপনার Google অ্যাকাউন্ট দিয়ে সাইন-ইন করতে ক্লিক করুন'
+                  : 'Cloud Sync Protected: Click to verify owner Google account'
+                : cloudSyncError
+                ? cloudSyncError
+                : lang === 'bn'
+                ? 'ভেরিফায়েড ক্লাউড সিঙ্ক সক্রিয় (ক্লিক করে এখনই ম্যানুয়াল সিঙ্ক করুন)'
+                : 'Verified Cloud Sync Active (Click to sync now)'
+            }
           >
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-            <span className="font-bold">{justSynced ? (lang === 'bn' ? 'সিঙ্ক হয়েছে!' : 'Synced!') : (lang === 'bn' ? 'সিঙ্কড' : 'Synced')}</span>
+            {isCloudAuthLoading ? (
+              <span className="font-semibold">{lang === 'bn' ? 'চেক...' : 'Auth...'}</span>
+            ) : !isCloudOwnerVerified ? (
+              <>
+                <Lock className="w-3.5 h-3.5 shrink-0" />
+                <span className="font-bold">
+                  {lang === 'bn' ? 'ক্লাউড সাইন-ইন' : 'Cloud Login'}
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="relative flex h-2 w-2">
+                  <span
+                    className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
+                      cloudSyncError ? 'bg-rose-400' : 'bg-emerald-400'
+                    }`}
+                  />
+                  <span
+                    className={`relative inline-flex rounded-full h-2 w-2 ${
+                      cloudSyncError ? 'bg-rose-500' : 'bg-emerald-500'
+                    }`}
+                  />
+                </span>
+                <span className="font-bold">
+                  {justSynced
+                    ? lang === 'bn'
+                      ? 'সিঙ্ক হয়েছে!'
+                      : 'Synced!'
+                    : cloudSyncError
+                    ? lang === 'bn'
+                      ? 'সিঙ্ক সমস্যা'
+                      : 'Sync Err'
+                    : lang === 'bn'
+                    ? 'সিঙ্কড'
+                    : 'Synced'}
+                </span>
+              </>
+            )}
           </button>
 
           {/* 2. Unified Preferences Control Pill (Privacy, PIN, Dark Mode) */}

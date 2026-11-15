@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useEffect, useMemo, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState, useCallback, useRef } from 'react';
+import type { User } from 'firebase/auth';
 import {
   AccountSection,
   AppData,
@@ -23,9 +24,27 @@ import {
   LANG_STORAGE_KEY,
   loadStoredData,
   saveData,
+  validateAndSanitizeAppData,
+  forceAutoSnapshot,
 } from '../utils/storage';
 import { formatCurrency, TRANSLATIONS, getNextVoucherNumber } from '../utils/formatters';
-import { subscribeToCloudLedger, pushToCloudLedger } from '../firebase';
+import {
+  subscribeToCloudLedger,
+  pushToCloudLedger,
+  subscribeToAuthChanges,
+  signInCloudWithGoogle,
+  signOutCloud,
+  isAuthorizedCloudOwner,
+} from '../firebase';
+import {
+  loadPinSecurityState,
+  migrateLegacyPinIfNeeded,
+  createHashedPinState,
+  clearHashedPinState,
+  verifyHashedPin,
+  hasLegacyPlaintextPin,
+  PinVerifyResult,
+} from '../utils/securityCrypto';
 
 interface FinanceContextType {
   data: AppData;
@@ -222,18 +241,26 @@ interface FinanceContextType {
     note?: string;
   }) => Transaction;
 
-  // Security PIN Lock
+  // Security PIN Lock (PBKDF2-SHA256 + Lockout)
   isPinEnabled: boolean;
   isAppLocked: boolean;
+  pinLength: 4 | 6;
+  pinLockoutRemainingSec: number;
   setIsAppLocked: (locked: boolean) => void;
   isPinModalOpen: boolean;
   setIsPinModalOpen: (open: boolean) => void;
-  setSecurityPin: (newPin: string) => void;
+  setSecurityPin: (newPin: string) => Promise<void>;
   disableSecurityPin: () => void;
-  verifySecurityPin: (enteredPin: string) => boolean;
+  verifySecurityPin: (enteredPin: string) => Promise<PinVerifyResult>;
   lockApp: () => void;
 
-  // Real-time Cloud Synchronization (Mobile <-> Computer)
+  // Real-time Cloud Synchronization & Owner Auth (Mobile <-> Computer)
+  cloudUser: User | null;
+  isCloudOwnerVerified: boolean;
+  isCloudAuthLoading: boolean;
+  cloudSyncError: string | null;
+  signInToCloud: () => Promise<void>;
+  signOutFromCloud: () => Promise<void>;
   isCloudSynced: boolean;
   lastCloudSyncTime: Date | null;
   forcePushToCloud: () => void;
@@ -329,46 +356,85 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   });
 
-  // Security PIN Lock
-  const PIN_CODE_KEY = 'hisab_kitab_pin_code';
-  const PIN_ENABLED_KEY = 'hisab_kitab_pin_enabled';
-
+  // Security PIN Lock (Salted PBKDF2-SHA256 + 5-attempt lockout)
   const [isPinEnabled, setIsPinEnabled] = useState<boolean>(() => {
-    const enabled = localStorage.getItem(PIN_ENABLED_KEY) === 'true';
-    const pin = localStorage.getItem(PIN_CODE_KEY);
-    return Boolean(enabled && pin);
+    const state = loadPinSecurityState();
+    if (state && state.enabled && state.hash) return true;
+    return hasLegacyPlaintextPin();
   });
 
   const [isAppLocked, setIsAppLocked] = useState<boolean>(() => {
-    const enabled = localStorage.getItem(PIN_ENABLED_KEY) === 'true';
-    const pin = localStorage.getItem(PIN_CODE_KEY);
-    return Boolean(enabled && pin);
+    const state = loadPinSecurityState();
+    if (state && state.enabled && state.hash) return true;
+    return hasLegacyPlaintextPin();
+  });
+
+  const [pinLength, setPinLength] = useState<4 | 6>(() => {
+    const state = loadPinSecurityState();
+    return state?.pinLength === 6 ? 6 : 4;
+  });
+
+  const [pinLockoutRemainingSec, setPinLockoutRemainingSec] = useState<number>(() => {
+    const state = loadPinSecurityState();
+    if (state && state.lockedUntil > Date.now()) {
+      return Math.ceil((state.lockedUntil - Date.now()) / 1000);
+    }
+    return 0;
   });
 
   const [isPinModalOpen, setIsPinModalOpen] = useState(false);
 
-  const setSecurityPin = (newPin: string) => {
-    localStorage.setItem(PIN_CODE_KEY, newPin);
-    localStorage.setItem(PIN_ENABLED_KEY, 'true');
+  // Migrate any legacy plaintext PIN into salted PBKDF2 hash on boot
+  useEffect(() => {
+    migrateLegacyPinIfNeeded().then((migrated) => {
+      if (migrated && migrated.enabled && migrated.hash) {
+        setIsPinEnabled(true);
+        setPinLength(migrated.pinLength);
+        if (migrated.lockedUntil > Date.now()) {
+          setPinLockoutRemainingSec(Math.ceil((migrated.lockedUntil - Date.now()) / 1000));
+        }
+      }
+    });
+  }, []);
+
+  // Countdown timer when brute-force lockout is active
+  useEffect(() => {
+    if (pinLockoutRemainingSec <= 0) return;
+    const timer = setInterval(() => {
+      const state = loadPinSecurityState();
+      if (!state || state.lockedUntil <= Date.now()) {
+        setPinLockoutRemainingSec(0);
+      } else {
+        setPinLockoutRemainingSec(Math.ceil((state.lockedUntil - Date.now()) / 1000));
+      }
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [pinLockoutRemainingSec]);
+
+  const setSecurityPin = async (newPin: string): Promise<void> => {
+    const state = await createHashedPinState(newPin);
+    setPinLength(state.pinLength);
+    setPinLockoutRemainingSec(0);
     setIsPinEnabled(true);
     setIsAppLocked(false);
   };
 
   const disableSecurityPin = () => {
-    localStorage.setItem(PIN_ENABLED_KEY, 'false');
-    localStorage.removeItem(PIN_CODE_KEY);
+    clearHashedPinState();
+    setPinLockoutRemainingSec(0);
     setIsPinEnabled(false);
     setIsAppLocked(false);
   };
 
-  const verifySecurityPin = (enteredPin: string): boolean => {
-    const savedPin = localStorage.getItem(PIN_CODE_KEY);
-    if (!savedPin) return true;
-    if (enteredPin === savedPin) {
+  const verifySecurityPin = async (enteredPin: string): Promise<PinVerifyResult> => {
+    const result = await verifyHashedPin(enteredPin);
+    if (result.ok) {
+      setPinLockoutRemainingSec(0);
       setIsAppLocked(false);
-      return true;
+    } else if (result.lockedRemainingSec > 0) {
+      setPinLockoutRemainingSec(result.lockedRemainingSec);
     }
-    return false;
+    return result;
   };
 
   const lockApp = () => {
@@ -381,38 +447,99 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return formatCurrency(amount, currency, lang, isPrivacyMode);
   };
 
-  // Real-time Cloud Synchronization (Mobile <-> Computer)
+  // Real-time Cloud Synchronization & Owner Auth (Mobile <-> Computer)
+  const [cloudUser, setCloudUser] = useState<User | null>(null);
+  const [isCloudAuthLoading, setIsCloudAuthLoading] = useState<boolean>(true);
+  const [cloudSyncError, setCloudSyncError] = useState<string | null>(null);
   const [isCloudSynced, setIsCloudSynced] = useState(false);
   const [lastCloudSyncTime, setLastCloudSyncTime] = useState<Date | null>(null);
+  const latestDataRef = useRef<AppData>(data);
 
   useEffect(() => {
+    latestDataRef.current = data;
+  }, [data]);
+
+  const isCloudOwnerVerified = isAuthorizedCloudOwner(cloudUser);
+
+  useEffect(() => {
+    const unsubAuth = subscribeToAuthChanges((user) => {
+      setCloudUser(user);
+      setIsCloudAuthLoading(false);
+      if (!user) {
+        setIsCloudSynced(false);
+      }
+    });
+    return () => unsubAuth();
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthorizedCloudOwner(cloudUser)) {
+      return;
+    }
+
     const unsubscribe = subscribeToCloudLedger(
       (cloudData) => {
         setData(cloudData);
         saveData(cloudData);
+        setCloudSyncError(null);
         setIsCloudSynced(true);
         setLastCloudSyncTime(new Date());
       },
       () => {
         // Cloud document doesn't exist yet: push current local state to initialize cloud
-        pushToCloudLedger(data, true);
+        pushToCloudLedger(latestDataRef.current, true, (err) => setCloudSyncError(err.message));
+        setCloudSyncError(null);
         setIsCloudSynced(true);
         setLastCloudSyncTime(new Date());
+      },
+      (err) => {
+        setCloudSyncError(err.message);
+        setIsCloudSynced(false);
       }
     );
 
     return () => {
       unsubscribe();
     };
-  }, []);
+  }, [cloudUser]);
 
   useEffect(() => {
     saveData(data);
-    pushToCloudLedger(data);
-  }, [data]);
+    if (isCloudOwnerVerified) {
+      pushToCloudLedger(data, false, (err) => setCloudSyncError(err.message));
+    }
+  }, [data, isCloudOwnerVerified]);
+
+  const signInToCloud = async (): Promise<void> => {
+    setCloudSyncError(null);
+    try {
+      await signInCloudWithGoogle();
+    } catch (err: any) {
+      const msg =
+        err?.code === 'auth/popup-blocked'
+          ? 'ব্রাউজারে পপ-আপ ব্লক করা হয়েছে। অনুগ্রহ করে পপ-আপ অনুমতি দিন।'
+          : err?.code === 'auth/popup-closed-by-user'
+          ? 'সাইন-ইন বাতিল করা হয়েছে।'
+          : err?.message || 'গুগল সাইন-ইন সম্পন্ন করা যায়নি।';
+      setCloudSyncError(msg);
+      throw new Error(msg);
+    }
+  };
+
+  const signOutFromCloud = async (): Promise<void> => {
+    await signOutCloud();
+    setCloudUser(null);
+    setIsCloudSynced(false);
+    setCloudSyncError(null);
+  };
 
   const forcePushToCloud = () => {
-    pushToCloudLedger(data, true);
+    if (!isCloudOwnerVerified) {
+      setCloudSyncError('ক্লাউড সিঙ্ক করতে আপনার অনুমোদিত Google অ্যাকাউন্টে সাইন-ইন করুন।');
+      return;
+    }
+    setCloudSyncError(null);
+    pushToCloudLedger(data, true, (err) => setCloudSyncError(err.message));
     setIsCloudSynced(true);
     setLastCloudSyncTime(new Date());
   };
@@ -1105,11 +1232,17 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const restoreAllData = (newData: AppData) => {
-    setData(newData);
-    saveData(newData);
+    const validated = validateAndSanitizeAppData(newData);
+    if (!validated) return;
+    // Save emergency pre-restore snapshot so nothing is ever lost by mistake
+    forceAutoSnapshot(data);
+    setData(validated);
+    saveData(validated);
   };
 
   const resetToDemoData = () => {
+    // Save emergency pre-reset snapshot before resetting
+    forceAutoSnapshot(data);
     setData(INITIAL_APP_DATA);
     saveData(INITIAL_APP_DATA);
   };
@@ -1508,6 +1641,8 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         transferBankFunds,
         isPinEnabled,
         isAppLocked,
+        pinLength,
+        pinLockoutRemainingSec,
         setIsAppLocked,
         isPinModalOpen,
         setIsPinModalOpen,
@@ -1515,6 +1650,12 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         disableSecurityPin,
         verifySecurityPin,
         lockApp,
+        cloudUser,
+        isCloudOwnerVerified,
+        isCloudAuthLoading,
+        cloudSyncError,
+        signInToCloud,
+        signOutFromCloud,
         isCloudSynced,
         lastCloudSyncTime,
         forcePushToCloud,
