@@ -56,10 +56,23 @@
     border: 1px solid #cbd5e1 !important;
   }
 
-  /* Ensure containers do not clip or scroll during print */
-  main, div, table, tbody {
+  /* Ensure page & layout containers do not clip, pad, or force min-height during print */
+  html, body, #root, main {
+    margin: 0 !important;
+    padding: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .min-h-screen {
+    min-height: 0 !important;
+    height: auto !important;
+  }
+
+  table, tbody {
     overflow: visible !important;
     max-height: none !important;
-    height: auto !important;
   }
 }

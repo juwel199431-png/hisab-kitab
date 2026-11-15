@@ -233,7 +233,7 @@ export const ReportsView: React.FC = () => {
         @page {
           size: A4 ${pageSettings.orientation} !important;
           margin-top: ${Math.max(pageSettings.marginTop, 4)}mm !important;
-          margin-bottom: ${Math.max(pageSettings.marginBottom, 4)}mm !important;
+          margin-bottom: ${Math.max(pageSettings.marginBottom, 5)}mm !important;
           margin-left: ${Math.max(pageSettings.marginLeft, 4)}mm !important;
           margin-right: ${Math.max(pageSettings.marginRight, 4)}mm !important;
         }
@@ -250,7 +250,6 @@ export const ReportsView: React.FC = () => {
         }
         .printable-report-wrapper {
           position: relative !important;
-          zoom: ${pageSettings.scale / 100} !important;
           font-size: ${pageSettings.fontSizePt}pt !important;
           font-family: ${fontFamilyRule} !important;
           font-weight: ${pageSettings.isBold ? '700' : '400'} !important;
@@ -281,6 +280,7 @@ export const ReportsView: React.FC = () => {
         }
         .print-master-table {
           width: 100% !important;
+          zoom: ${pageSettings.scale / 100} !important;
           border-collapse: collapse !important;
           border: none !important;
           margin: 0 !important;
@@ -289,25 +289,23 @@ export const ReportsView: React.FC = () => {
         }
         .print-master-header {
           display: table-header-group !important;
+          break-inside: avoid !important;
+          page-break-inside: avoid !important;
         }
         .print-master-body {
           display: table-row-group !important;
         }
         .print-master-footer {
           display: table-footer-group !important;
+          break-inside: avoid !important;
+          page-break-inside: avoid !important;
         }
-        .print-fixed-footer {
-          display: block !important;
-          position: fixed !important;
-          bottom: 0 !important;
-          left: 0 !important;
-          right: 0 !important;
-          width: 100% !important;
-          height: 12mm !important;
-          z-index: 1000 !important;
-          background: transparent !important;
-          -webkit-print-color-adjust: exact !important;
-          print-color-adjust: exact !important;
+        .print-master-footer tr,
+        .print-master-footer td,
+        .print-official-footer,
+        .print-signature-block {
+          break-inside: avoid !important;
+          page-break-inside: avoid !important;
         }
         .print-report-content {
           position: relative !important;
@@ -3669,7 +3667,7 @@ export const ReportsView: React.FC = () => {
             </div>
 
             {/* Sub Ledger Table */}
-            <div className="overflow-hidden border border-slate-400 rounded-xs w-full">
+            <div className="overflow-visible border border-slate-400 rounded-xs w-full">
               <table className="w-full text-left border-collapse text-[10px] table-fixed">
                 <colgroup>
                   <col style={{ width: dynamicColWidths.sl }} />
@@ -3792,7 +3790,7 @@ export const ReportsView: React.FC = () => {
             </div>
 
               {/* Official Signatures & Verification (Compact to prevent spilling to next page) */}
-              <div className="pt-3 pb-1 flex justify-between items-center text-xs text-slate-600 break-inside-avoid">
+              <div className="pt-3 pb-1 flex justify-between items-center text-xs text-slate-600 break-inside-avoid print-signature-block">
                 <div className="text-center">
                   <div className="border-t border-slate-400 w-44 pt-1 font-semibold">হিসাব প্রস্তুতকারকের স্বাক্ষর</div>
                   <p className="text-[10px] text-slate-400 mt-0.5">Prepared By</p>
@@ -3881,7 +3879,7 @@ export const ReportsView: React.FC = () => {
             </div>
 
             {/* Complete Unpaginated Table for Print (ALL filteredRows) */}
-            <div className="overflow-hidden border border-slate-400 rounded-xs">
+            <div className="overflow-visible border border-slate-400 rounded-xs">
               <table className="w-full text-left border-collapse text-[11px]">
                 <thead>
                   <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold uppercase tracking-wider text-[10px]">
@@ -3951,7 +3949,7 @@ export const ReportsView: React.FC = () => {
             </div>
 
             {/* Official Signatures & Verification (Compact spacing) */}
-            <div className="pt-3 pb-1 flex justify-between items-center text-xs text-slate-600 break-inside-avoid">
+            <div className="pt-3 pb-1 flex justify-between items-center text-xs text-slate-600 break-inside-avoid print-signature-block">
               <div className="text-center">
                 <div className="border-t border-slate-400 w-44 pt-1 font-semibold">হিসাব প্রস্তুতকারকের স্বাক্ষর</div>
                 <p className="text-[10px] text-slate-400 mt-0.5">Prepared By</p>
@@ -3969,22 +3967,25 @@ export const ReportsView: React.FC = () => {
           </tbody>
 
           {pageSettings.showLetterhead && (
-            <tfoot className="print-master-footer" style={{ display: 'table-footer-group' }}>
-              <tr>
-                <td className="border-none p-0" style={{ border: 'none', padding: '0', height: '14mm' }}>
-                  <div style={{ height: '14mm', visibility: 'hidden' }} />
+            <tfoot
+              className="print-master-footer"
+              style={{
+                display: 'table-footer-group',
+                breakInside: 'avoid',
+                pageBreakInside: 'avoid',
+              }}
+            >
+              <tr style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+                <td
+                  className="border-none p-0"
+                  style={{ border: 'none', padding: '8px 0 0 0' }}
+                >
+                  <ReportOfficialFooter />
                 </td>
               </tr>
             </tfoot>
           )}
         </table>
-
-        {/* Fixed Running Footer on EVERY printed page pinned to bottom */}
-        {pageSettings.showLetterhead && (
-          <div className="print-fixed-footer">
-            <ReportOfficialFooter />
-          </div>
-        )}
       </div>
 
       {/* 7. Transaction Audit Voucher Slip Modal */}

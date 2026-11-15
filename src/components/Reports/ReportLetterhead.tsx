@@ -302,12 +302,14 @@ export const ReportWatermarkBackground: React.FC<ReportWatermarkBackgroundProps>
 export const ReportOfficialFooter: React.FC<{ className?: string }> = ({ className = '' }) => {
   return (
     <div
-      className={`w-full bg-[#031525] text-white px-5 py-2.5 flex items-center justify-between ${className}`}
+      className={`w-full bg-[#031525] text-white px-5 py-2.5 flex items-center justify-between break-inside-avoid print-official-footer ${className}`}
       style={{
         backgroundColor: '#031525',
         borderTop: '2.5px solid #10b981',
         WebkitPrintColorAdjust: 'exact',
         printColorAdjust: 'exact',
+        breakInside: 'avoid',
+        pageBreakInside: 'avoid',
       }}
     >
       {/* Left: App Branding */}
