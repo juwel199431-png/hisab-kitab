@@ -515,8 +515,11 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     try {
       await signInCloudWithGoogle();
     } catch (err: any) {
+      const domain = typeof window !== 'undefined' ? window.location.hostname : '';
       const msg =
-        err?.code === 'auth/popup-blocked'
+        err?.code === 'auth/unauthorized-domain'
+          ? `এই ডোমেইন (${domain}) এখনো Firebase Auth-এ অনুমোদিত নয়। পেজটি একবার রিলোড দিয়ে চেষ্টা করুন, অথবা Firebase Console > Authentication > Settings > Authorized domains-এ "${domain}" যোগ করুন।`
+          : err?.code === 'auth/popup-blocked'
           ? 'ব্রাউজারে পপ-আপ ব্লক করা হয়েছে। অনুগ্রহ করে পপ-আপ অনুমতি দিন।'
           : err?.code === 'auth/popup-closed-by-user'
           ? 'সাইন-ইন বাতিল করা হয়েছে।'
