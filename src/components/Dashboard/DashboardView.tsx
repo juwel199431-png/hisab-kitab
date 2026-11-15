@@ -7,12 +7,8 @@ import {
   Briefcase,
   Wallet,
   ArrowUpRight,
-  Sparkles,
   CreditCard,
-  Calendar,
-  CheckCircle2,
   History,
-  Coins,
   TrendingUp,
   TrendingDown,
   ArrowRight,
@@ -101,62 +97,18 @@ export const DashboardView: React.FC = () => {
 
   return (
     <div className="space-y-6 pb-12 animate-fade-in">
-      {/* Top Hero Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-linear-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-6 md:p-8 shadow-xl border border-slate-800">
-        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-1/3 -mb-10 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-1.5">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-xs font-semibold tracking-wide">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              <span>{lang === 'bn' ? 'এক্সিকিউটিভ ফিন্যান্সিয়াল ওভারভিউ' : 'Executive Financial Overview'}</span>
-            </div>
-            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-white">
-              {lang === 'bn' ? 'ব্যক্তিগত অর্থ ও সঞ্চয় ড্যাশবোর্ড' : 'Personal Finance & Savings Dashboard'}
-            </h1>
-            <p className="text-xs md:text-sm text-slate-300 max-w-2xl leading-relaxed">
-              {lang === 'bn'
-                ? 'আপনার বাংলাদেশ ব্যাংকগুলোর রিয়েল-টাইম কারেন্ট ব্যালেন্স, ডিপিএস ও ইন্স্যুরেন্সের জমার স্থিতি ও কিস্তির পরিমাণ এবং শাকের ভাই বেতন হিসাবের নগদ ক্যাশ ইন হ্যান্ড এক নজরে।'
-                : 'Real-time balances of your BD Banks, DPS & Insurance savings with monthly installments, and Shaker Bhai Salary Cash in Hand.'}
-            </p>
-          </div>
-
-          {/* Quick Summary Pill Highlights */}
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="bg-slate-800/80 backdrop-blur-md border border-slate-700/60 rounded-xl px-4 py-3 min-w-[140px]">
-              <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block mb-0.5">
-                {lang === 'bn' ? 'মোট বিডি ব্যাংক ব্যালেন্স' : 'Total BD Banks'}
-              </span>
-              <span className="font-mono text-lg font-bold text-emerald-400">
-                {formatCurrency(totalBdBanks, 'BDT', lang, isPrivacyMode)}
-              </span>
-            </div>
-
-            <div className="bg-slate-800/80 backdrop-blur-md border border-slate-700/60 rounded-xl px-4 py-3 min-w-[140px]">
-              <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block mb-0.5">
-                {lang === 'bn' ? 'বেতন ক্যাশ ইন হ্যান্ড' : 'Boss Fund Cash'}
-              </span>
-              <span className="font-mono text-lg font-bold text-amber-400">
-                {isPrivacyMode ? '•••••• KD' : `${bossCashInHand.toFixed(3)} KD`}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* SECTION 1: BD BANK ACCOUNTS */}
       <section className="space-y-3">
-        <div className="flex items-center justify-between border-b border-slate-200/80 pb-2">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/80 dark:border-slate-800 pb-2">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold shadow-2xs">
+            <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 flex items-center justify-center font-bold shadow-2xs">
               <Building2 className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-900">
+              <h2 className="text-base font-bold text-slate-900 dark:text-white">
                 {lang === 'bn' ? 'বাংলাদেশ ব্যাংক কারেন্ট ব্যালেন্স' : 'Bangladesh Bank Balances'}
               </h2>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 {lang === 'bn'
                   ? 'প্রতিটি ব্যাংকের রিয়েল-টাইম হিসাবের স্থিতি ও বিবরণ'
                   : 'Current real-time ledger balance for each bank'}
@@ -164,13 +116,19 @@ export const DashboardView: React.FC = () => {
             </div>
           </div>
 
-          <button
-            onClick={() => setActiveSection('bd-bank')}
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-lg transition-colors"
-          >
-            <span>{lang === 'bn' ? 'ব্যাংক হিসাব পরিচালনা' : 'Manage Banks'}</span>
-            <ArrowUpRight className="w-3.5 h-3.5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <span className="px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-xs font-mono font-bold text-emerald-800 dark:text-emerald-300">
+              {lang === 'bn' ? 'মোট: ' : 'Total: '}
+              {formatCurrency(totalBdBanks, 'BDT', lang, isPrivacyMode)}
+            </span>
+            <button
+              onClick={() => setActiveSection('bd-bank')}
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-300 hover:text-emerald-800 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 border border-emerald-200 dark:border-emerald-800 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+            >
+              <span>{lang === 'bn' ? 'ব্যাংক হিসাব পরিচালনা' : 'Manage Banks'}</span>
+              <ArrowUpRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
 
         {/* Bank Cards Grid */}
@@ -255,8 +213,8 @@ export const DashboardView: React.FC = () => {
           </div>
         </div>
 
-        {/* DPS and Insurance Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+        {/* DPS and Insurance Cards Grid - 3 Cards in One Single Row */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* DPS Accounts Block - Cute Vibrant Gradients */}
           {dpsAccounts.map((dps, idx) => {
             const currentBal = getSavingsBalance(dps.id);
@@ -282,51 +240,51 @@ export const DashboardView: React.FC = () => {
             return (
               <div
                 key={dps.id}
-                className={`relative overflow-hidden rounded-2xl bg-linear-to-br ${theme.gradient} text-white p-5 shadow-lg flex flex-col justify-between transition-all hover:translate-y-[-2px] hover:shadow-xl`}
+                className={`relative overflow-hidden rounded-2xl bg-linear-to-br ${theme.gradient} text-white p-4 sm:p-5 shadow-lg flex flex-col justify-between h-full transition-all hover:translate-y-[-2px] hover:shadow-xl`}
               >
                 {/* Cute Floating Glass Bubbles */}
                 <div className={`absolute -right-6 -bottom-6 w-32 h-32 ${theme.circleColor} rounded-full blur-xl pointer-events-none`} />
                 <div className="absolute top-0 right-1/3 w-20 h-20 bg-white/10 rounded-full blur-2xl pointer-events-none" />
 
-                <div className="relative z-10 flex items-start justify-between gap-3 mb-4">
-                  <div className="space-y-1">
+                <div className="relative z-10 flex items-start justify-between gap-2.5 mb-4">
+                  <div className="space-y-1 min-w-0 flex-1">
                     <div className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold ${theme.badge} border backdrop-blur-md`}>
-                      <PiggyBank className="w-3.5 h-3.5 text-pink-200" />
+                      <PiggyBank className="w-3.5 h-3.5 text-pink-200 shrink-0" />
                       <span>{lang === 'bn' ? 'ব্যাংক ডিপিএস (DPS)' : 'Bank DPS'}</span>
                     </div>
-                    <h3 className="font-extrabold text-base text-white tracking-wide">{dps.name}</h3>
+                    <h3 className="font-extrabold text-sm sm:text-base text-white tracking-wide leading-snug">{dps.name}</h3>
                     <p className="text-xs text-white/80 font-mono">
                       A/C: {dps.accountNumber || 'N/A'}
                     </p>
                   </div>
 
                   {/* Monthly Installment Pill */}
-                  <div className={`${theme.installmentBg} border backdrop-blur-md rounded-xl px-3 py-2 text-right shadow-2xs`}>
+                  <div className={`${theme.installmentBg} border backdrop-blur-md rounded-xl px-2.5 py-1.5 text-right shadow-2xs shrink-0`}>
                     <span className="text-[10px] font-bold uppercase tracking-wider text-white/80 block">
                       {lang === 'bn' ? 'মাসিক কিস্তি' : 'Monthly'}
                     </span>
-                    <span className="font-mono text-sm font-black text-amber-300">
+                    <span className="font-mono text-xs sm:text-sm font-black text-amber-300">
                       {formatCurrency(dps.monthlyAmount || 0, 'BDT', lang, isPrivacyMode)}
                     </span>
                   </div>
                 </div>
 
-                <div className={`relative z-10 p-3.5 ${theme.chipBg} border backdrop-blur-md rounded-xl flex items-center justify-between`}>
+                <div className={`relative z-10 p-3 ${theme.chipBg} border backdrop-blur-md rounded-xl flex items-center justify-between gap-2`}>
                   <div>
-                    <span className="text-[11px] font-semibold text-white/80 block mb-0.5">
-                      {lang === 'bn' ? 'কারেন্ট জমার ব্যালেন্স (Current Balance)' : 'Current Balance'}
+                    <span className="text-[10px] sm:text-[11px] font-semibold text-white/80 block mb-0.5">
+                      {lang === 'bn' ? 'কারেন্ট ব্যালেন্স' : 'Current Balance'}
                     </span>
-                    <span className="text-xl md:text-2xl font-black font-mono tracking-tight text-white">
+                    <span className="text-lg sm:text-xl font-black font-mono tracking-tight text-white">
                       {formatCurrency(currentBal, 'BDT', lang, isPrivacyMode)}
                     </span>
                   </div>
 
                   {dps.maturityDate && (
-                    <div className="text-right">
+                    <div className="text-right shrink-0">
                       <span className="text-[10px] font-semibold text-white/70 block">
                         {lang === 'bn' ? 'মেয়াদপূর্তি' : 'Maturity'}
                       </span>
-                      <span className="text-xs font-bold text-white/95">
+                      <span className="text-[11px] sm:text-xs font-bold text-white/95">
                         {formatDate(dps.maturityDate)}
                       </span>
                     </div>
@@ -360,51 +318,51 @@ export const DashboardView: React.FC = () => {
             return (
               <div
                 key={ins.id}
-                className={`relative overflow-hidden rounded-2xl bg-linear-to-br ${theme.gradient} text-white p-5 shadow-lg flex flex-col justify-between transition-all hover:translate-y-[-2px] hover:shadow-xl`}
+                className={`relative overflow-hidden rounded-2xl bg-linear-to-br ${theme.gradient} text-white p-4 sm:p-5 shadow-lg flex flex-col justify-between h-full transition-all hover:translate-y-[-2px] hover:shadow-xl`}
               >
                 {/* Cute Floating Glass Bubbles */}
                 <div className={`absolute -right-6 -bottom-6 w-32 h-32 ${theme.circleColor} rounded-full blur-xl pointer-events-none`} />
                 <div className="absolute top-0 right-1/3 w-20 h-20 bg-white/10 rounded-full blur-2xl pointer-events-none" />
 
-                <div className="relative z-10 flex items-start justify-between gap-3 mb-4">
-                  <div className="space-y-1">
+                <div className="relative z-10 flex items-start justify-between gap-2.5 mb-4">
+                  <div className="space-y-1 min-w-0 flex-1">
                     <div className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold ${theme.badge} border backdrop-blur-md`}>
-                      <ShieldCheck className="w-3.5 h-3.5 text-cyan-200" />
-                      <span>{lang === 'bn' ? 'ইন্স্যুরেন্স পলিসি (Insurance)' : 'Insurance Policy'}</span>
+                      <ShieldCheck className="w-3.5 h-3.5 text-cyan-200 shrink-0" />
+                      <span>{lang === 'bn' ? 'ইন্স্যুরেন্স পলিসি' : 'Insurance Policy'}</span>
                     </div>
-                    <h3 className="font-extrabold text-base text-white tracking-wide">{ins.name}</h3>
+                    <h3 className="font-extrabold text-sm sm:text-base text-white tracking-wide leading-snug">{ins.name}</h3>
                     <p className="text-xs text-white/80 font-mono">
                       Policy #: {ins.accountNumber || 'N/A'}
                     </p>
                   </div>
 
                   {/* Monthly Premium Pill */}
-                  <div className={`${theme.installmentBg} border backdrop-blur-md rounded-xl px-3 py-2 text-right shadow-2xs`}>
+                  <div className={`${theme.installmentBg} border backdrop-blur-md rounded-xl px-2.5 py-1.5 text-right shadow-2xs shrink-0`}>
                     <span className="text-[10px] font-bold uppercase tracking-wider text-white/80 block">
                       {lang === 'bn' ? 'মাসিক কিস্তি' : 'Premium'}
                     </span>
-                    <span className="font-mono text-sm font-black text-cyan-300">
+                    <span className="font-mono text-xs sm:text-sm font-black text-cyan-300">
                       {formatCurrency(ins.monthlyAmount || 0, 'BDT', lang, isPrivacyMode)}
                     </span>
                   </div>
                 </div>
 
-                <div className={`relative z-10 p-3.5 ${theme.chipBg} border backdrop-blur-md rounded-xl flex items-center justify-between`}>
+                <div className={`relative z-10 p-3 ${theme.chipBg} border backdrop-blur-md rounded-xl flex items-center justify-between gap-2`}>
                   <div>
-                    <span className="text-[11px] font-semibold text-white/80 block mb-0.5">
-                      {lang === 'bn' ? 'কারেন্ট জমার ব্যালেন্স (Current Balance)' : 'Current Balance'}
+                    <span className="text-[10px] sm:text-[11px] font-semibold text-white/80 block mb-0.5">
+                      {lang === 'bn' ? 'কারেন্ট ব্যালেন্স' : 'Current Balance'}
                     </span>
-                    <span className="text-xl md:text-2xl font-black font-mono tracking-tight text-white">
+                    <span className="text-lg sm:text-xl font-black font-mono tracking-tight text-white">
                       {formatCurrency(currentBal, 'BDT', lang, isPrivacyMode)}
                     </span>
                   </div>
 
                   {ins.maturityDate && (
-                    <div className="text-right">
+                    <div className="text-right shrink-0">
                       <span className="text-[10px] font-semibold text-white/70 block">
                         {lang === 'bn' ? 'মেয়াদপূর্তি' : 'Maturity'}
                       </span>
-                      <span className="text-xs font-bold text-white/95">
+                      <span className="text-[11px] sm:text-xs font-bold text-white/95">
                         {formatDate(ins.maturityDate)}
                       </span>
                     </div>

@@ -35,53 +35,53 @@ export const CategoryManagerModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-lg border border-slate-200 overflow-hidden flex flex-col max-h-[85vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/65 backdrop-blur-xs">
+      <div className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-xl shadow-2xl w-full max-w-lg border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[85vh]">
         {/* Header */}
-        <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+        <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/70">
           <div className="flex items-center gap-2">
-            <Tags className="w-5 h-5 text-emerald-700" />
-            <h2 className="text-base font-bold text-slate-900">
+            <Tags className="w-5 h-5 text-emerald-700 dark:text-emerald-400" />
+            <h2 className="text-base font-bold text-slate-900 dark:text-white">
               {lang === 'bn' ? 'ক্যাটাগরি ম্যানেজমেন্ট (খাত ব্যবস্থাপনা)' : 'Manage Categories'}
             </h2>
           </div>
           <button
             onClick={() => setIsCategoryModalOpen(false)}
-            className="text-slate-400 hover:text-slate-600 p-1"
+            className="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 rounded cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Section Tabs */}
-        <div className="px-5 pt-3 pb-2 border-b border-slate-200 bg-white">
-          <div className="grid grid-cols-3 gap-1 p-1 bg-slate-100 rounded-lg text-xs font-medium">
+        <div className="px-5 pt-3 pb-2 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+          <div className="grid grid-cols-3 gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-medium">
             <button
               onClick={() => setActiveSectionTab('bd-bank')}
-              className={`py-1.5 px-2 rounded-md transition-colors ${
+              className={`py-1.5 px-2 rounded-md transition-colors cursor-pointer ${
                 activeSectionTab === 'bd-bank'
-                  ? 'bg-white text-emerald-900 font-bold shadow-2xs'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-white dark:bg-slate-900 text-emerald-900 dark:text-emerald-300 font-bold shadow-2xs'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               {lang === 'bn' ? 'বাংলাদেশের ব্যাংকের হিসাব বিবরনী' : 'BD Bank Statement'}
             </button>
             <button
               onClick={() => setActiveSectionTab('kuwait-personal')}
-              className={`py-1.5 px-2 rounded-md transition-colors ${
+              className={`py-1.5 px-2 rounded-md transition-colors cursor-pointer ${
                 activeSectionTab === 'kuwait-personal'
-                  ? 'bg-white text-amber-900 font-bold shadow-2xs'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-white dark:bg-slate-900 text-amber-900 dark:text-amber-300 font-bold shadow-2xs'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               {lang === 'bn' ? 'কুয়েত খরচ' : 'Kuwait Daily'}
             </button>
             <button
               onClick={() => setActiveSectionTab('boss-salary')}
-              className={`py-1.5 px-2 rounded-md transition-colors ${
+              className={`py-1.5 px-2 rounded-md transition-colors cursor-pointer ${
                 activeSectionTab === 'boss-salary'
-                  ? 'bg-white text-indigo-900 font-bold shadow-2xs'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-white dark:bg-slate-900 text-indigo-900 dark:text-indigo-300 font-bold shadow-2xs'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               {lang === 'bn' ? 'বসের খরচ' : 'Boss Expense'}
@@ -92,9 +92,9 @@ export const CategoryManagerModal: React.FC = () => {
         {/* Body */}
         <div className="p-5 overflow-y-auto space-y-4 text-xs">
           {/* Add Category Form */}
-          <form onSubmit={handleAdd} className="p-3.5 bg-slate-50 border border-slate-200 rounded-lg space-y-3">
-            <h3 className="font-bold text-slate-800 flex items-center gap-1.5">
-              <Plus className="w-3.5 h-3.5 text-emerald-600" />
+          <form onSubmit={handleAdd} className="p-3.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg space-y-3">
+            <h3 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+              <Plus className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
               <span>{lang === 'bn' ? 'নতুন ক্যাটাগরি তৈরি করুন' : 'Create New Category'}</span>
             </h3>
 
@@ -103,10 +103,10 @@ export const CategoryManagerModal: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setNewCatType('expense')}
-                  className={`flex-1 py-1 rounded text-xs font-semibold border ${
+                  className={`flex-1 py-1.5 rounded text-xs font-semibold border cursor-pointer ${
                     newCatType === 'expense'
                       ? 'bg-rose-600 text-white border-rose-600'
-                      : 'bg-white text-slate-700 border-slate-300'
+                      : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700'
                   }`}
                 >
                   খরচ / ব্যয় (Expense)
@@ -114,10 +114,10 @@ export const CategoryManagerModal: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setNewCatType('income')}
-                  className={`flex-1 py-1 rounded text-xs font-semibold border ${
+                  className={`flex-1 py-1.5 rounded text-xs font-semibold border cursor-pointer ${
                     newCatType === 'income'
                       ? 'bg-emerald-600 text-white border-emerald-600'
-                      : 'bg-white text-slate-700 border-slate-300'
+                      : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700'
                   }`}
                 >
                   জমা / আয় (Income)
@@ -127,7 +127,7 @@ export const CategoryManagerModal: React.FC = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div>
-                <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">
                   বাংলা নাম <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -135,11 +135,11 @@ export const CategoryManagerModal: React.FC = () => {
                   placeholder="যেমন: ইন্টারনেট বিল"
                   value={nameBn}
                   onChange={(e) => setNameBn(e.target.value)}
-                  className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-md"
+                  className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 border border-slate-300 dark:border-slate-700 rounded-md focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">
                   English Name
                 </label>
                 <input
@@ -147,7 +147,7 @@ export const CategoryManagerModal: React.FC = () => {
                   placeholder="e.g. Internet Bill"
                   value={nameEn}
                   onChange={(e) => setNameEn(e.target.value)}
-                  className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-md"
+                  className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 border border-slate-300 dark:border-slate-700 rounded-md focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
             </div>
@@ -155,7 +155,7 @@ export const CategoryManagerModal: React.FC = () => {
             <div className="flex justify-end">
               <button
                 type="submit"
-                className="px-4 py-1.5 text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 rounded-md"
+                className="px-4 py-1.5 text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 rounded-md cursor-pointer"
               >
                 {lang === 'bn' ? 'ক্যাটাগরি যুক্ত করুন' : 'Add Category'}
               </button>
@@ -164,7 +164,7 @@ export const CategoryManagerModal: React.FC = () => {
 
           {/* List of existing categories */}
           <div className="space-y-2">
-            <h4 className="font-bold text-slate-700 uppercase tracking-wider text-[11px]">
+            <h4 className="font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[11px]">
               {lang === 'bn' ? 'বিদ্যমান ক্যাটাগরি তালিকা' : 'Existing Categories'} ({currentCategories.length})
             </h4>
 
@@ -172,18 +172,18 @@ export const CategoryManagerModal: React.FC = () => {
               {currentCategories.map((cat) => (
                 <div
                   key={cat.id}
-                  className="p-2 rounded border border-slate-200 bg-white flex items-center justify-between"
+                  className="p-2 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/70 flex items-center justify-between"
                 >
                   <div>
-                    <p className="font-bold text-slate-900">{lang === 'bn' ? cat.nameBn : cat.nameEn}</p>
-                    <p className="text-[10px] text-slate-500">{cat.nameEn}</p>
+                    <p className="font-bold text-slate-900 dark:text-slate-100">{lang === 'bn' ? cat.nameBn : cat.nameEn}</p>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400">{cat.nameEn}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <span
                       className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${
                         cat.type === 'income'
-                          ? 'bg-emerald-50 text-emerald-800'
-                          : 'bg-rose-50 text-rose-800'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300'
+                          : 'bg-rose-50 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300'
                       }`}
                     >
                       {cat.type === 'income' ? 'আয়' : 'ব্যয়'}
@@ -191,7 +191,7 @@ export const CategoryManagerModal: React.FC = () => {
                     {cat.isCustom && (
                       <button
                         onClick={() => deleteCategory(cat.id)}
-                        className="text-slate-400 hover:text-rose-600 p-0.5"
+                        className="text-slate-400 hover:text-rose-600 p-0.5 cursor-pointer"
                         title="মুছে ফেলুন"
                       >
                         <Trash2 className="w-3.5 h-3.5" />

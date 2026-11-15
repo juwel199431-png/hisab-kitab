@@ -24,6 +24,7 @@ import { UniversalSearchModal } from './components/Common/UniversalSearchModal';
 import { PinLockScreen } from './components/Security/PinLockScreen';
 import { SecurityPinModal } from './components/Security/SecurityPinModal';
 import { WelcomeIntroScreen } from './components/Common/WelcomeIntroScreen';
+import { ThemeCustomizer } from './components/Theme/ThemeCustomizer';
 import { Plus, Tags, CloudUpload } from 'lucide-react';
 
 const MainAppContent: React.FC = () => {
@@ -39,6 +40,7 @@ const MainAppContent: React.FC = () => {
     isAppLocked,
     isWelcomeIntroOpen,
     setIsWelcomeIntroOpen,
+    setIsThemeModalOpen,
   } = useFinance();
 
   return (
@@ -92,6 +94,7 @@ const MainAppContent: React.FC = () => {
         onClose={() => setIsUniversalSearchOpen(false)}
       />
       <SecurityPinModal />
+      <ThemeCustomizer />
       <OfflineIndicator lang={lang} />
       <WelcomeIntroScreen
         isOpen={isWelcomeIntroOpen}
@@ -123,6 +126,13 @@ const MainAppContent: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-4 text-xs">
+            <button
+              onClick={() => setIsThemeModalOpen(true)}
+              className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+            >
+              {lang === 'bn' ? 'থিম ও ফন্ট' : 'Theme & Fonts'}
+            </button>
+            <span className="text-slate-300 dark:text-slate-700">·</span>
             <button
               onClick={() => setIsCategoryModalOpen(true)}
               className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"

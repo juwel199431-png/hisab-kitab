@@ -45,6 +45,13 @@ import {
   hasLegacyPlaintextPin,
   PinVerifyResult,
 } from '../utils/securityCrypto';
+import {
+  ThemePreferences,
+  DEFAULT_THEME_PREFS,
+  loadThemePreferences,
+  saveThemePreferences,
+  applyThemePreferences,
+} from '../utils/themeEngine';
 
 interface FinanceContextType {
   data: AppData;
@@ -57,11 +64,16 @@ interface FinanceContextType {
   // Auto-generated Sequential Voucher / Invoice Number
   getNextVoucherNo: () => string;
   
-  // Privacy & Dark Theme
+  // Privacy & Theme Customizer (Dark/Light, Primary Brand Color, Font Family)
   isPrivacyMode: boolean;
   togglePrivacyMode: () => void;
   theme: 'light' | 'dark';
   toggleTheme: () => void;
+  themePrefs: ThemePreferences;
+  updateThemePrefs: (updates: Partial<ThemePreferences>) => void;
+  resetThemePrefs: () => void;
+  isThemeModalOpen: boolean;
+  setIsThemeModalOpen: (open: boolean) => void;
   formatAmount: (amount: number, currency: 'BDT' | 'KWD') => string;
 
   // Currency Converter & Net Worth
@@ -315,21 +327,34 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     });
   };
 
-  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    return (localStorage.getItem('hisab_kitab_theme') as 'light' | 'dark') || 'light';
+  const [themePrefs, setThemePrefs] = useState<ThemePreferences>(() => {
+    const initial = loadThemePreferences();
+    applyThemePreferences(initial);
+    return initial;
   });
 
+  const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
+
+  const theme = themePrefs.mode;
+
   useEffect(() => {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-    localStorage.setItem('hisab_kitab_theme', theme);
-  }, [theme]);
+    applyThemePreferences(themePrefs);
+    saveThemePreferences(themePrefs);
+  }, [themePrefs]);
+
+  const updateThemePrefs = (updates: Partial<ThemePreferences>) => {
+    setThemePrefs((prev) => ({ ...prev, ...updates }));
+  };
+
+  const resetThemePrefs = () => {
+    setThemePrefs({ ...DEFAULT_THEME_PREFS });
+  };
 
   const toggleTheme = () => {
-    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
+    setThemePrefs((prev) => ({
+      ...prev,
+      mode: prev.mode === 'light' ? 'dark' : 'light',
+    }));
   };
 
   // Currency Converter & Rate
@@ -1664,6 +1689,11 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         forcePushToCloud,
         isWelcomeIntroOpen,
         setIsWelcomeIntroOpen,
+        themePrefs,
+        updateThemePrefs,
+        resetThemePrefs,
+        isThemeModalOpen,
+        setIsThemeModalOpen,
       }}
     >
       {children}

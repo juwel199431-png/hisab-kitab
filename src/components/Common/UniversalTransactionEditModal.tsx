@@ -242,8 +242,8 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto animate-in fade-in duration-150">
-      <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/65 backdrop-blur-xs overflow-y-auto animate-in fade-in duration-150">
+      <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden my-8">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 bg-linear-to-r from-slate-900 via-indigo-950 to-slate-900 text-white border-b border-indigo-900">
           <div className="flex items-center gap-3">
@@ -283,7 +283,7 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -292,7 +292,7 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
         {/* Form Body */}
         <form onSubmit={handleSave} className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
           {error && (
-            <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs flex items-center gap-2">
+            <div className="p-3 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-200 rounded-xl text-xs flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{error}</span>
             </div>
@@ -302,11 +302,11 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
           {target.sourceType === 'transaction' && txItem && (
             <>
               {/* Account / Head Indicator Badge */}
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between text-xs">
-                <span className="font-semibold text-slate-600">
+              <div className="p-3 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-xl flex items-center justify-between text-xs">
+                <span className="font-semibold text-slate-600 dark:text-slate-300">
                   {lang === 'bn' ? 'অ্যাকাউন্ট / হেড:' : 'Account / Head:'}
                 </span>
-                <span className="font-bold text-indigo-700 px-2.5 py-0.5 bg-indigo-50 border border-indigo-200 rounded-md">
+                <span className="font-bold text-indigo-700 dark:text-indigo-300 px-2.5 py-0.5 bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 rounded-md">
                   {txItem.section === 'bd-bank'
                     ? lang === 'bn'
                       ? 'বাংলাদেশের ব্যাংক'
@@ -332,7 +332,7 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
               {/* Date & Amount */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
                     {lang === 'bn' ? 'তারিখ *' : 'Date *'}
                   </label>
                   <div className="relative">
@@ -342,13 +342,13 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
                       required
                       value={date}
                       onChange={(e) => setDate(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white"
+                      className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
                     {lang === 'bn' ? 'পরিমাণ *' : 'Amount *'} ({txItem.currency})
                   </label>
                   <div className="relative">
@@ -358,7 +358,7 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
                       required
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
-                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white font-mono font-bold"
+                      className="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-mono font-bold"
                     />
                   </div>
                 </div>
@@ -367,7 +367,7 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
               {/* Type Selection if BD Bank */}
               {txItem.section === 'bd-bank' && txItem.type !== 'transfer' && (
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
                     {lang === 'bn' ? 'লেনদেনের ধরন' : 'Transaction Type'}
                   </label>
                   <div className="grid grid-cols-2 gap-2">
@@ -377,7 +377,7 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
                       className={`py-1.5 px-3 rounded-lg text-xs font-bold border transition-colors ${
                         type === 'income'
                           ? 'bg-emerald-600 text-white border-emerald-600'
-                          : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                          : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
                       }`}
                     >
                       {lang === 'bn' ? '+ আয় / জমা (Deposit)' : '+ Income / Deposit'}
@@ -388,7 +388,7 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
                       className={`py-1.5 px-3 rounded-lg text-xs font-bold border transition-colors ${
                         type === 'expense'
                           ? 'bg-rose-600 text-white border-rose-600'
-                          : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                          : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
                       }`}
                     >
                       {lang === 'bn' ? '- খরচ / উত্তোলন (Withdraw)' : '- Expense / Withdraw'}
@@ -400,13 +400,13 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
               {/* Bank selector for BD Bank */}
               {txItem.section === 'bd-bank' && (
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
                     {lang === 'bn' ? 'ব্যাংক অ্যাকাউন্ট' : 'Bank Account'}
                   </label>
                   <select
                     value={bankId}
                     onChange={(e) => setBankId(e.target.value)}
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white"
+                    className="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
                   >
                     <option value="">{lang === 'bn' ? '-- ব্যাংক নির্বাচন করুন --' : '-- Select Bank --'}</option>
                     {data.banks.map((b) => (
@@ -443,7 +443,7 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
 
               {/* Category */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
                   {lang === 'bn' ? 'ক্যাটাগরি' : 'Category'}
                 </label>
                 {availableCategories.length > 0 ? (
@@ -457,7 +457,7 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
                           setCustomCategory(sel.nameBn);
                         }
                       }}
-                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white"
+                      className="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
                     >
                       <option value="">{lang === 'bn' ? '-- ক্যাটাগরি তালিকা --' : '-- Select Category --'}</option>
                       {availableCategories.map((c) => (
@@ -471,7 +471,7 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
                       value={customCategory}
                       onChange={(e) => setCustomCategory(e.target.value)}
                       placeholder={lang === 'bn' ? 'অথবা ক্যাটাগরির নাম লিখুন' : 'Or enter category label'}
-                      className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white"
+                      className="w-full px-3 py-1.5 text-xs border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
                     />
                   </div>
                 ) : (
@@ -480,14 +480,14 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
                     value={customCategory}
                     onChange={(e) => setCustomCategory(e.target.value)}
                     placeholder={lang === 'bn' ? 'ক্যাটাগরির বিবরণ' : 'Category description'}
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white"
+                    className="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
                   />
                 )}
               </div>
 
               {/* Voucher / Receipt No */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
                   {lang === 'bn' ? 'ভাউচার / ইনভয়েস / রশিদ নং (ঐচ্ছিক)' : 'Voucher / Invoice / Slip No (Optional)'}
                 </label>
                 <div className="relative">
@@ -497,7 +497,7 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
                     value={voucherNo}
                     onChange={(e) => setVoucherNo(e.target.value)}
                     placeholder={lang === 'bn' ? 'যেমন: INV-9823 বা VCH-001' : 'e.g. INV-9823'}
-                    className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white"
+                    className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
                   />
                 </div>
               </div>
@@ -505,7 +505,7 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
               {/* Emdad Bhai Payment Status */}
               {txItem.section === 'emdad-expense' && (
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
                     {lang === 'bn' ? 'পরিশোধের অবস্থা (ইমদাদ ভাই কালেকশন)' : 'Payment Status'}
                   </label>
                   <div className="grid grid-cols-2 gap-2">
@@ -515,7 +515,7 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
                       className={`py-1.5 px-3 rounded-lg text-xs font-bold border transition-colors flex items-center justify-center gap-1.5 ${
                         paymentStatus === 'unpaid'
                           ? 'bg-amber-600 text-white border-amber-600'
-                          : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                          : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
                       }`}
                     >
                       <Clock className="w-3.5 h-3.5" />
@@ -527,7 +527,7 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
                       className={`py-1.5 px-3 rounded-lg text-xs font-bold border transition-colors flex items-center justify-center gap-1.5 ${
                         paymentStatus === 'paid'
                           ? 'bg-emerald-600 text-white border-emerald-600'
-                          : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                          : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
                       }`}
                     >
                       <CheckCircle2 className="w-3.5 h-3.5" />
@@ -539,7 +539,7 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
 
               {/* Note */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
                   {lang === 'bn' ? 'নোট ও বিবরণ' : 'Note & Details'}
                 </label>
                 <textarea
@@ -547,7 +547,7 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                   placeholder={lang === 'bn' ? 'লেনদেনের বিস্তারিত বিবরণ...' : 'Detailed description...'}
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white"
+                  className="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
                 />
               </div>
             </>
@@ -569,7 +569,7 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
                     {lang === 'bn' ? 'জমার তারিখ *' : 'Deposit Date *'}
                   </label>
                   <input
@@ -577,12 +577,12 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
                     required
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white"
+                    className="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
                     {lang === 'bn' ? 'জমার পরিমাণ (KWD) *' : 'Amount (KWD) *'}
                   </label>
                   <input
@@ -591,26 +591,26 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
                     required
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white font-mono font-bold"
+                    className="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-mono font-bold"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
                     {lang === 'bn' ? 'কোন মাসের বেতন (YYYY-MM)' : 'Salary Month (YYYY-MM)'}
                   </label>
                   <input
                     type="month"
                     value={month}
                     onChange={(e) => setMonth(e.target.value)}
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white"
+                    className="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
                     {lang === 'bn' ? 'রশিদ / রেফারেন্স নং' : 'Receipt / Ref No'}
                   </label>
                   <input
@@ -618,13 +618,13 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
                     value={voucherNo}
                     onChange={(e) => setVoucherNo(e.target.value)}
                     placeholder={lang === 'bn' ? 'যেমন: SLR-2026-10' : 'e.g. SLR-2026-10'}
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white"
+                    className="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
                   {lang === 'bn' ? 'নোট ও বিবরণ' : 'Note & Details'}
                 </label>
                 <textarea
@@ -632,7 +632,7 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                   placeholder={lang === 'bn' ? 'বেতন বা বিশেষ ফান্ড সংক্রান্ত নোট...' : 'Notes regarding deposit...'}
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white"
+                  className="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
                 />
               </div>
             </>
@@ -654,7 +654,7 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
                     {lang === 'bn' ? 'লোন গ্রহীতার নাম *' : 'Borrower Name *'}
                   </label>
                   <div className="relative">
@@ -664,13 +664,13 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
                       required
                       value={borrowerName}
                       onChange={(e) => setBorrowerName(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white"
+                      className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
                     {lang === 'bn' ? 'লোনের পরিমাণ (KWD) *' : 'Amount (KWD) *'}
                   </label>
                   <input
@@ -679,14 +679,14 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
                     required
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white font-mono font-bold"
+                    className="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-mono font-bold"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
                     {lang === 'bn' ? 'লোন দেওয়ার তারিখ *' : 'Loan Given Date *'}
                   </label>
                   <input
@@ -694,26 +694,26 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
                     required
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white"
+                    className="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
                     {lang === 'bn' ? 'সম্ভাব্য ফেরত তারিখ' : 'Due Date (Optional)'}
                   </label>
                   <input
                     type="date"
                     value={dueDate}
                     onChange={(e) => setDueDate(e.target.value)}
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white"
+                    className="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
                   />
                 </div>
               </div>
 
               {/* Loan Status */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
                   {lang === 'bn' ? 'লোন পরিশোধের অবস্থা' : 'Loan Repayment Status'}
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -723,7 +723,7 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
                     className={`py-2 px-3 rounded-lg text-xs font-bold border transition-colors flex items-center justify-center gap-1.5 ${
                       loanStatus === 'unpaid'
                         ? 'bg-amber-600 text-white border-amber-600 shadow-2xs'
-                        : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                        : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
                     }`}
                   >
                     <Clock className="w-3.5 h-3.5" />
@@ -740,7 +740,7 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
                     className={`py-2 px-3 rounded-lg text-xs font-bold border transition-colors flex items-center justify-center gap-1.5 ${
                       loanStatus === 'paid'
                         ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
-                        : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                        : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
                     }`}
                   >
                     <CheckCircle2 className="w-3.5 h-3.5" />
@@ -751,20 +751,20 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
 
               {loanStatus === 'paid' && (
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
                     {lang === 'bn' ? 'টাকা ফেরত পাওয়ার প্রকৃত তারিখ' : 'Actual Return Date'}
                   </label>
                   <input
                     type="date"
                     value={returnDate}
                     onChange={(e) => setReturnDate(e.target.value)}
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white"
+                    className="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
                   />
                 </div>
               )}
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
                   {lang === 'bn' ? 'নোট ও বিবরণ' : 'Note & Details'}
                 </label>
                 <textarea
@@ -772,7 +772,7 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                   placeholder={lang === 'bn' ? 'ফোন নম্বর, যোগাযোগের ঠিকানা বা কারণ...' : 'Phone, contact, purpose...'}
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white"
+                  className="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
                 />
               </div>
             </>
@@ -799,7 +799,7 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
 
               {/* Type Switcher: Borrow vs Repay */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
                   {lang === 'bn' ? 'লেনদেনের ধরন *' : 'Transaction Type *'}
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -809,7 +809,7 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
                     className={`py-2 px-3 rounded-lg text-xs font-bold border transition-colors flex items-center justify-center gap-1.5 ${
                       payableType === 'borrow'
                         ? 'bg-rose-600 text-white border-rose-600 shadow-2xs'
-                        : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                        : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
                     }`}
                   >
                     <span>{lang === 'bn' ? '+ ধার নেওয়া (Borrow)' : '+ Borrow Loan'}</span>
@@ -820,7 +820,7 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
                     className={`py-2 px-3 rounded-lg text-xs font-bold border transition-colors flex items-center justify-center gap-1.5 ${
                       payableType === 'repay'
                         ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
-                        : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                        : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
                     }`}
                   >
                     <span>{lang === 'bn' ? '- ঋণ পরিশোধ (Repay)' : '- Repay Loan'}</span>
@@ -830,7 +830,7 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
                     {lang === 'bn' ? 'তারিখ *' : 'Date *'}
                   </label>
                   <input
@@ -838,12 +838,12 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
                     required
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white"
+                    className="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
                     {lang === 'bn' ? 'পরিমাণ (KWD / দিনার) *' : 'Amount (KWD) *'}
                   </label>
                   <input
@@ -852,13 +852,13 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
                     required
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white font-mono font-bold"
+                    className="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-mono font-bold"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
                   {lang === 'bn' ? 'ভাউচার / রেফারেন্স নং' : 'Voucher / Ref No'}
                 </label>
                 <input
@@ -866,12 +866,12 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
                   value={voucherNo}
                   onChange={(e) => setVoucherNo(e.target.value)}
                   placeholder={lang === 'bn' ? 'যেমন: VCH-101' : 'e.g. VCH-101'}
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white"
+                  className="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
                   {lang === 'bn' ? 'নোট ও বিবরণ' : 'Note & Details'}
                 </label>
                 <textarea
@@ -879,7 +879,7 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                   placeholder={lang === 'bn' ? 'ধার নেওয়ার বা পরিশোধের বিস্তারিত বিবরণ...' : 'Transaction notes...'}
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white"
+                  className="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
                 />
               </div>
             </>
@@ -904,7 +904,7 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
 
               {/* Type Switcher: Lend vs Collect */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
                   {lang === 'bn' ? 'লেনদেনের ধরন *' : 'Transaction Type *'}
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -914,7 +914,7 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
                     className={`py-2 px-3 rounded-lg text-xs font-bold border transition-colors flex items-center justify-center gap-1.5 ${
                       receivableType === 'lend'
                         ? 'bg-blue-600 text-white border-blue-600 shadow-2xs'
-                        : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                        : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
                     }`}
                   >
                     <span>{lang === 'bn' ? '+ লোন প্রদান (Lend)' : '+ Lend Loan'}</span>
@@ -925,7 +925,7 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
                     className={`py-2 px-3 rounded-lg text-xs font-bold border transition-colors flex items-center justify-center gap-1.5 ${
                       receivableType === 'collect'
                         ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
-                        : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                        : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
                     }`}
                   >
                     <span>{lang === 'bn' ? '✓ লোন আদায় / ফেরত (Collect)' : '✓ Collect / Repay'}</span>
@@ -935,7 +935,7 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
                     {lang === 'bn' ? 'তারিখ *' : 'Date *'}
                   </label>
                   <input
@@ -943,12 +943,12 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
                     required
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white"
+                    className="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
                     {lang === 'bn' ? 'পরিমাণ (KWD / দিনার) *' : 'Amount (KWD) *'}
                   </label>
                   <input
@@ -957,13 +957,13 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
                     required
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white font-mono font-bold"
+                    className="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-mono font-bold"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
                   {lang === 'bn' ? 'ভাউচার / রেফারেন্স নং' : 'Voucher / Ref No'}
                 </label>
                 <input
@@ -971,12 +971,12 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
                   value={voucherNo}
                   onChange={(e) => setVoucherNo(e.target.value)}
                   placeholder={lang === 'bn' ? 'যেমন: R-101' : 'e.g. R-101'}
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white"
+                  className="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
                   {lang === 'bn' ? 'নোট ও বিবরণ' : 'Note & Details'}
                 </label>
                 <textarea
@@ -984,18 +984,18 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                   placeholder={lang === 'bn' ? 'ধার দেওয়া বা ফেরত পাওয়ার বিবরণ...' : 'Transaction notes...'}
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white"
+                  className="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
                 />
               </div>
             </>
           )}
 
           {/* Action buttons */}
-          <div className="pt-4 border-t border-slate-200 flex items-center justify-end gap-2.5">
+          <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+              className="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-200 hover:text-slate-800 dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors cursor-pointer"
             >
               {lang === 'bn' ? 'বাতিল' : 'Cancel'}
             </button>

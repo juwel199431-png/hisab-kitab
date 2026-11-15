@@ -62,6 +62,8 @@ export const QuickAddModal: React.FC = () => {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
   });
 
+  const [errorMsg, setErrorMsg] = useState('');
+
   // Sync mode with section when opened
   useEffect(() => {
     if (isQuickAddOpen) {
@@ -85,6 +87,7 @@ export const QuickAddModal: React.FC = () => {
       setNote('');
       setVoucherNo(getNextVoucherNo());
       setPaymentStatus('unpaid');
+      setErrorMsg('');
       if (data.banks.length > 0) {
         setBankId(data.banks[0].id);
         setFromBankId(data.banks[0].id);
@@ -119,9 +122,10 @@ export const QuickAddModal: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMsg('');
     const parsedAmount = parseFloat(amount);
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
-      alert(lang === 'bn' ? 'সঠিক টাকার পরিমাণ লিখুন' : 'Please enter a valid amount');
+      setErrorMsg(lang === 'bn' ? 'সঠিক টাকার পরিমাণ লিখুন' : 'Please enter a valid amount');
       return;
     }
 
@@ -142,7 +146,7 @@ export const QuickAddModal: React.FC = () => {
     // 2. Emdad Bhai Expense (NO CATEGORY, Strictly Expense, Paid/Unpaid)
     if (mode === 'emdad-expense') {
       if (!note.trim()) {
-        alert(lang === 'bn' ? 'খরচের বিবরণ লিখুন' : 'Please describe the expense');
+        setErrorMsg(lang === 'bn' ? 'খরচের বিবরণ লিখুন' : 'Please describe the expense');
         return;
       }
       addTransaction({
@@ -162,7 +166,7 @@ export const QuickAddModal: React.FC = () => {
     // 3. Kuwait Extra Income (NO CATEGORY, Strictly Income, Running deposit)
     if (mode === 'kuwait-extra-income') {
       if (!note.trim()) {
-        alert(lang === 'bn' ? 'আয়ের উৎস বা বিবরণ লিখুন' : 'Please describe the income source');
+        setErrorMsg(lang === 'bn' ? 'আয়ের উৎস বা বিবরণ লিখুন' : 'Please describe the income source');
         return;
       }
       addTransaction({
@@ -181,7 +185,7 @@ export const QuickAddModal: React.FC = () => {
     // 4. Kuwait Personal Loan Given (Strictly Loans, Zero Income)
     if (mode === 'kuwait-loan') {
       if (!borrowerName.trim()) {
-        alert(lang === 'bn' ? 'অনুগ্রহ করে ঋণগ্রহীতার নাম লিখুন' : 'Please enter borrower name');
+        setErrorMsg(lang === 'bn' ? 'অনুগ্রহ করে ঋণগ্রহীতার নাম লিখুন' : 'Please enter borrower name');
         return;
       }
       addKuwaitLoan({
@@ -199,11 +203,11 @@ export const QuickAddModal: React.FC = () => {
     // 5. Bangladesh Bank Transfer / DPS / Insurance
     if (mode === 'bd-transfer') {
       if (!fromBankId) {
-        alert(lang === 'bn' ? 'কোন ব্যাংক থেকে টাকা কর্তন হবে তা নির্বাচন করুন' : 'Select source bank');
+        setErrorMsg(lang === 'bn' ? 'কোন ব্যাংক থেকে টাকা কর্তন হবে তা নির্বাচন করুন' : 'Select source bank');
         return;
       }
       if (transferTargetType === 'bank' && fromBankId === toBankId) {
-        alert(lang === 'bn' ? 'দুটি ভিন্ন ব্যাংক নির্বাচন করুন' : 'Source and destination banks must be different');
+        setErrorMsg(lang === 'bn' ? 'দুটি ভিন্ন ব্যাংক নির্বাচন করুন' : 'Source and destination banks must be different');
         return;
       }
 
@@ -285,31 +289,34 @@ export const QuickAddModal: React.FC = () => {
     mode === 'kuwait-extra-income' ||
     mode === 'kuwait-loan';
 
+  const inputCls =
+    'w-full px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-400 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-emerald-500';
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-lg border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/65 backdrop-blur-xs">
+      <div className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-xl shadow-2xl w-full max-w-lg border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[92vh]">
         {/* Modal Header */}
-        <div className="px-5 py-3.5 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+        <div className="px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/70">
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>
-            <h2 className="text-sm font-bold text-slate-900">
+            <h2 className="text-sm font-bold text-slate-900 dark:text-white">
               {lang === 'bn' ? 'নতুন লেনদেন এন্ট্রি' : 'Quick Financial Entry'}
             </h2>
           </div>
           <button
             onClick={() => setIsQuickAddOpen(false)}
-            className="text-slate-400 hover:text-slate-600 p-1 rounded-md transition-colors"
+            className="text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 rounded-md transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Mode Selector Tabs */}
-        <div className="px-4 pt-3 pb-2.5 border-b border-slate-200 bg-white">
-          <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
+        <div className="px-4 pt-3 pb-2.5 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+          <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
             {lang === 'bn' ? 'লেনদেনের ধরণ নির্বাচন করুন' : 'Select Entry Type'}
           </p>
-          <div className="grid grid-cols-4 gap-1 p-1 bg-slate-100 rounded-lg text-xs font-medium">
+          <div className="grid grid-cols-4 gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-medium">
             {/* BD Expense */}
             <button
               type="button"
@@ -317,10 +324,10 @@ export const QuickAddModal: React.FC = () => {
                 setMode('bd-expense');
                 setCategoryId('');
               }}
-              className={`py-1.5 px-1.5 rounded-md flex flex-col sm:flex-row items-center justify-center gap-1 transition-colors text-center ${
+              className={`py-1.5 px-1.5 rounded-md flex flex-col sm:flex-row items-center justify-center gap-1 transition-colors text-center cursor-pointer ${
                 mode === 'bd-expense'
                   ? 'bg-rose-600 text-white shadow-2xs font-bold'
-                  : 'text-slate-700 hover:bg-slate-200'
+                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
               }`}
             >
               <TrendingDown className="w-3.5 h-3.5 shrink-0" />
@@ -334,10 +341,10 @@ export const QuickAddModal: React.FC = () => {
                 setMode('bd-income');
                 setCategoryId('');
               }}
-              className={`py-1.5 px-1.5 rounded-md flex flex-col sm:flex-row items-center justify-center gap-1 transition-colors text-center ${
+              className={`py-1.5 px-1.5 rounded-md flex flex-col sm:flex-row items-center justify-center gap-1 transition-colors text-center cursor-pointer ${
                 mode === 'bd-income'
                   ? 'bg-emerald-600 text-white shadow-2xs font-bold'
-                  : 'text-slate-700 hover:bg-slate-200'
+                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
               }`}
             >
               <TrendingUp className="w-3.5 h-3.5 shrink-0" />
@@ -348,10 +355,10 @@ export const QuickAddModal: React.FC = () => {
             <button
               type="button"
               onClick={() => setMode('bd-transfer')}
-              className={`py-1.5 px-1.5 rounded-md flex flex-col sm:flex-row items-center justify-center gap-1 transition-colors text-center ${
+              className={`py-1.5 px-1.5 rounded-md flex flex-col sm:flex-row items-center justify-center gap-1 transition-colors text-center cursor-pointer ${
                 mode === 'bd-transfer'
                   ? 'bg-blue-600 text-white shadow-2xs font-bold'
-                  : 'text-slate-700 hover:bg-slate-200'
+                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
               }`}
             >
               <ArrowRightLeft className="w-3.5 h-3.5 shrink-0" />
@@ -365,10 +372,10 @@ export const QuickAddModal: React.FC = () => {
                 setMode('boss-expense');
                 setCategoryId('');
               }}
-              className={`py-1.5 px-1.5 rounded-md flex flex-col sm:flex-row items-center justify-center gap-1 transition-colors text-center ${
+              className={`py-1.5 px-1.5 rounded-md flex flex-col sm:flex-row items-center justify-center gap-1 transition-colors text-center cursor-pointer ${
                 mode === 'boss-expense'
                   ? 'bg-indigo-600 text-white shadow-2xs font-bold'
-                  : 'text-slate-700 hover:bg-slate-200'
+                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
               }`}
             >
               <Briefcase className="w-3.5 h-3.5 shrink-0" />
@@ -379,10 +386,10 @@ export const QuickAddModal: React.FC = () => {
             <button
               type="button"
               onClick={() => setMode('boss-deposit')}
-              className={`py-1.5 px-1.5 rounded-md flex flex-col sm:flex-row items-center justify-center gap-1 transition-colors text-center ${
+              className={`py-1.5 px-1.5 rounded-md flex flex-col sm:flex-row items-center justify-center gap-1 transition-colors text-center cursor-pointer ${
                 mode === 'boss-deposit'
                   ? 'bg-teal-700 text-white shadow-2xs font-bold'
-                  : 'text-slate-700 hover:bg-slate-200'
+                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
               }`}
             >
               <Plus className="w-3.5 h-3.5 shrink-0" />
@@ -393,10 +400,10 @@ export const QuickAddModal: React.FC = () => {
             <button
               type="button"
               onClick={() => setMode('emdad-expense')}
-              className={`py-1.5 px-1.5 rounded-md flex flex-col sm:flex-row items-center justify-center gap-1 transition-colors text-center ${
+              className={`py-1.5 px-1.5 rounded-md flex flex-col sm:flex-row items-center justify-center gap-1 transition-colors text-center cursor-pointer ${
                 mode === 'emdad-expense'
                   ? 'bg-rose-700 text-white shadow-2xs font-bold'
-                  : 'text-slate-700 hover:bg-slate-200'
+                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
               }`}
             >
               <UserCheck className="w-3.5 h-3.5 shrink-0" />
@@ -410,10 +417,10 @@ export const QuickAddModal: React.FC = () => {
                 setMode('kuwait-personal');
                 setCategoryId('');
               }}
-              className={`py-1.5 px-1.5 rounded-md flex flex-col sm:flex-row items-center justify-center gap-1 transition-colors text-center ${
+              className={`py-1.5 px-1.5 rounded-md flex flex-col sm:flex-row items-center justify-center gap-1 transition-colors text-center cursor-pointer ${
                 mode === 'kuwait-personal'
                   ? 'bg-amber-600 text-white shadow-2xs font-bold'
-                  : 'text-slate-700 hover:bg-slate-200'
+                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
               }`}
             >
               <Coins className="w-3.5 h-3.5 shrink-0" />
@@ -424,10 +431,10 @@ export const QuickAddModal: React.FC = () => {
             <button
               type="button"
               onClick={() => setMode('kuwait-extra-income')}
-              className={`py-1.5 px-1.5 rounded-md flex flex-col sm:flex-row items-center justify-center gap-1 transition-colors text-center ${
+              className={`py-1.5 px-1.5 rounded-md flex flex-col sm:flex-row items-center justify-center gap-1 transition-colors text-center cursor-pointer ${
                 mode === 'kuwait-extra-income'
                   ? 'bg-emerald-700 text-white shadow-2xs font-bold'
-                  : 'text-slate-700 hover:bg-slate-200'
+                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
               }`}
             >
               <Sparkles className="w-3.5 h-3.5 shrink-0" />
@@ -438,10 +445,10 @@ export const QuickAddModal: React.FC = () => {
             <button
               type="button"
               onClick={() => setMode('kuwait-loan')}
-              className={`py-1.5 px-1.5 rounded-md flex flex-col sm:flex-row items-center justify-center gap-1 transition-colors text-center ${
+              className={`py-1.5 px-1.5 rounded-md flex flex-col sm:flex-row items-center justify-center gap-1 transition-colors text-center cursor-pointer ${
                 mode === 'kuwait-loan'
                   ? 'bg-indigo-600 text-white shadow-2xs font-bold'
-                  : 'text-slate-700 hover:bg-slate-200'
+                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
               }`}
             >
               <HandCoins className="w-3.5 h-3.5 shrink-0" />
@@ -452,10 +459,16 @@ export const QuickAddModal: React.FC = () => {
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-5 overflow-y-auto space-y-4">
+          {errorMsg && (
+            <div className="p-2.5 rounded-lg bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-200 text-xs font-semibold">
+              {errorMsg}
+            </div>
+          )}
+
           {/* Kuwait Quick Amount Chips (if Kuwait personal mode) */}
           {mode === 'kuwait-personal' && (
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                 {lang === 'bn' ? 'দ্রুত দিনার নির্বাচন করুন (KWD)' : 'Quick Amount Presets (KWD)'}
               </label>
               <div className="flex flex-wrap gap-1.5">
@@ -464,10 +477,10 @@ export const QuickAddModal: React.FC = () => {
                     key={preset}
                     type="button"
                     onClick={() => setAmount(preset.toFixed(3))}
-                    className={`px-2.5 py-1 text-xs rounded border transition-colors ${
+                    className={`px-2.5 py-1 text-xs rounded border transition-colors cursor-pointer ${
                       amount === preset.toFixed(3)
                         ? 'bg-amber-600 text-white border-amber-600 font-bold'
-                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                        : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'
                     }`}
                   >
                     {preset.toFixed(3)} KD
@@ -480,7 +493,7 @@ export const QuickAddModal: React.FC = () => {
           {/* Amount and Date */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1">
                 {isKwdCurrency
                   ? lang === 'bn'
                     ? 'দিনার পরিমাণ (KWD د.ك)'
@@ -498,15 +511,15 @@ export const QuickAddModal: React.FC = () => {
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder={isKwdCurrency ? '0.000' : 'যেমন: 5000'}
                   required
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-emerald-500 font-mono"
+                  className={`${inputCls} pr-9 font-mono font-semibold`}
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500 dark:text-slate-400 pointer-events-none">
                   {isKwdCurrency ? 'KD' : '৳'}
                 </span>
               </div>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1">
                 {lang === 'bn' ? 'তারিখ' : 'Date'} <span className="text-rose-500">*</span>
               </label>
               <input
@@ -514,15 +527,15 @@ export const QuickAddModal: React.FC = () => {
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
                 required
-                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
+                className={inputCls}
               />
             </div>
           </div>
 
           {/* Emdad Bhai Specific: Paid vs Unpaid Toggle */}
           {mode === 'emdad-expense' && (
-            <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-lg">
-              <label className="block text-xs font-semibold text-amber-900 mb-1.5">
+            <div className="p-3 bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/70 rounded-lg">
+              <label className="block text-xs font-semibold text-amber-900 dark:text-amber-200 mb-1.5">
                 {lang === 'bn' ? 'ইমদাদ ভাই এর কাছে কালেকশন স্ট্যাটাস' : 'Collection Status'}{' '}
                 <span className="text-rose-500">*</span>
               </label>
@@ -530,10 +543,10 @@ export const QuickAddModal: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setPaymentStatus('unpaid')}
-                  className={`py-2 px-3 text-xs font-bold rounded-lg border text-center transition-colors ${
+                  className={`py-2 px-3 text-xs font-bold rounded-lg border text-center transition-colors cursor-pointer ${
                     paymentStatus === 'unpaid'
                       ? 'bg-rose-600 text-white border-rose-600 shadow-2xs'
-                      : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                      : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
                   }`}
                 >
                   {lang === 'bn' ? 'কালেকশন বাকি (Unpaid)' : 'Unpaid (Pending)'}
@@ -541,16 +554,16 @@ export const QuickAddModal: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setPaymentStatus('paid')}
-                  className={`py-2 px-3 text-xs font-bold rounded-lg border text-center transition-colors ${
+                  className={`py-2 px-3 text-xs font-bold rounded-lg border text-center transition-colors cursor-pointer ${
                     paymentStatus === 'paid'
                       ? 'bg-emerald-700 text-white border-emerald-700 shadow-2xs'
-                      : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                      : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
                   }`}
                 >
                   {lang === 'bn' ? 'কালেকশন সম্পন্ন (Paid)' : 'Paid (Collected)'}
                 </button>
               </div>
-              <p className="text-[11px] text-amber-800 mt-1.5">
+              <p className="text-[11px] text-amber-800 dark:text-amber-300/90 mt-1.5">
                 {lang === 'bn'
                   ? 'উনি টাকা পরিশোধ না করা পর্যন্ত Unpaid থাকবে, টাকা পেলে Paid করে দিবেন।'
                   : 'Mark Unpaid until collection is completed, then toggle to Paid.'}
@@ -560,9 +573,9 @@ export const QuickAddModal: React.FC = () => {
 
           {/* Kuwait Loan Specific: Borrower Name & Due Date */}
           {mode === 'kuwait-loan' && (
-            <div className="space-y-3 p-3.5 bg-indigo-50/80 border border-indigo-200 rounded-lg">
+            <div className="space-y-3 p-3.5 bg-indigo-50/80 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800/70 rounded-lg">
               <div>
-                <label className="block text-xs font-bold text-indigo-950 mb-1">
+                <label className="block text-xs font-bold text-indigo-950 dark:text-indigo-200 mb-1">
                   {lang === 'bn' ? 'ঋণগ্রহীতার নাম *' : 'Borrower Name *'}
                 </label>
                 <input
@@ -571,23 +584,23 @@ export const QuickAddModal: React.FC = () => {
                   value={borrowerName}
                   onChange={(e) => setBorrowerName(e.target.value)}
                   placeholder={lang === 'bn' ? 'যেমন: রফিক ভাই' : 'e.g. Rafiq Bhai'}
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white"
+                  className="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-indigo-950 mb-1">
+                <label className="block text-xs font-bold text-indigo-950 dark:text-indigo-200 mb-1">
                   {lang === 'bn' ? 'সম্ভাব্য ফেরত দেওয়ার তারিখ (ঐচ্ছিক)' : 'Due Date (Optional)'}
                 </label>
                 <input
                   type="date"
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white"
+                  className="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
                 />
               </div>
 
-              <p className="text-[11px] text-indigo-700 font-medium">
+              <p className="text-[11px] text-indigo-700 dark:text-indigo-300 font-medium">
                 {lang === 'bn'
                   ? 'লোনটি স্বয়ংক্রিয়ভাবে Unpaid (বাকি) হিসেবে সেভ হবে। পরবর্তীতে টাকা ফেরত পেলে রিপোর্ট থেকে Paid মার্ক করতে পারবেন।'
                   : 'Loan is saved as Unpaid. You can mark it as Paid from the reports ledger upon collection.'}
@@ -598,14 +611,14 @@ export const QuickAddModal: React.FC = () => {
           {/* Bank Account Selection for BD Income / Expense */}
           {(mode === 'bd-expense' || mode === 'bd-income') && (
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1">
                 {lang === 'bn' ? 'কোন ব্যাংক অ্যাকাউন্ট?' : 'Select BD Bank Account'}{' '}
                 <span className="text-rose-500">*</span>
               </label>
               <select
                 value={bankId}
                 onChange={(e) => setBankId(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
+                className={inputCls}
               >
                 {data.banks.map((bank) => (
                   <option key={bank.id} value={bank.id}>
@@ -618,16 +631,16 @@ export const QuickAddModal: React.FC = () => {
 
           {/* Transfer Specific Options */}
           {mode === 'bd-transfer' && (
-            <div className="space-y-3 p-3 bg-blue-50/70 border border-blue-200 rounded-lg">
+            <div className="space-y-3 p-3 bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/70 rounded-lg">
               <div>
-                <label className="block text-xs font-semibold text-blue-900 mb-1">
+                <label className="block text-xs font-semibold text-blue-900 dark:text-blue-200 mb-1">
                   {lang === 'bn' ? 'টাকা কর্তন হবে (উৎস ব্যাংক)' : 'From Bank'}{' '}
                   <span className="text-rose-500">*</span>
                 </label>
                 <select
                   value={fromBankId}
                   onChange={(e) => setFromBankId(e.target.value)}
-                  className="w-full px-3 py-2 text-sm bg-white border border-blue-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border border-blue-300 dark:border-blue-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                 >
                   {data.banks.map((bank) => (
                     <option key={bank.id} value={bank.id}>
@@ -638,7 +651,7 @@ export const QuickAddModal: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-blue-900 mb-1">
+                <label className="block text-xs font-semibold text-blue-900 dark:text-blue-200 mb-1">
                   {lang === 'bn' ? 'কোথায় স্থানান্তর করবেন?' : 'Transfer Destination'}{' '}
                   <span className="text-rose-500">*</span>
                 </label>
@@ -646,10 +659,10 @@ export const QuickAddModal: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setTransferTargetType('bank')}
-                    className={`py-1.5 px-2 text-xs font-medium rounded-md border text-center transition-colors ${
+                    className={`py-1.5 px-2 text-xs font-medium rounded-md border text-center transition-colors cursor-pointer ${
                       transferTargetType === 'bank'
                         ? 'bg-blue-600 text-white border-blue-600 font-bold'
-                        : 'bg-white text-slate-700 border-slate-300'
+                        : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700'
                     }`}
                   >
                     {lang === 'bn' ? 'অন্য ব্যাংক' : 'Another Bank'}
@@ -657,10 +670,10 @@ export const QuickAddModal: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setTransferTargetType('dps')}
-                    className={`py-1.5 px-2 text-xs font-medium rounded-md border text-center transition-colors ${
+                    className={`py-1.5 px-2 text-xs font-medium rounded-md border text-center transition-colors cursor-pointer ${
                       transferTargetType === 'dps'
                         ? 'bg-blue-600 text-white border-blue-600 font-bold'
-                        : 'bg-white text-slate-700 border-slate-300'
+                        : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700'
                     }`}
                   >
                     {lang === 'bn' ? 'ডিপিএস সঞ্চয়' : 'DPS Savings'}
@@ -668,10 +681,10 @@ export const QuickAddModal: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setTransferTargetType('insurance')}
-                    className={`py-1.5 px-2 text-xs font-medium rounded-md border text-center transition-colors ${
+                    className={`py-1.5 px-2 text-xs font-medium rounded-md border text-center transition-colors cursor-pointer ${
                       transferTargetType === 'insurance'
                         ? 'bg-blue-600 text-white border-blue-600 font-bold'
-                        : 'bg-white text-slate-700 border-slate-300'
+                        : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700'
                     }`}
                   >
                     {lang === 'bn' ? 'ইন্সুরেন্স' : 'Insurance'}
@@ -682,7 +695,7 @@ export const QuickAddModal: React.FC = () => {
                   <select
                     value={toBankId}
                     onChange={(e) => setToBankId(e.target.value)}
-                    className="w-full px-3 py-2 text-sm bg-white border border-blue-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border border-blue-300 dark:border-blue-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                   >
                     {data.banks
                       .filter((b) => b.id !== fromBankId)
@@ -698,7 +711,7 @@ export const QuickAddModal: React.FC = () => {
                   <select
                     value={targetSavingsId}
                     onChange={(e) => setTargetSavingsId(e.target.value)}
-                    className="w-full px-3 py-2 text-sm bg-white border border-blue-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border border-blue-300 dark:border-blue-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                   >
                     {data.savingsAccounts
                       .filter((s) => s.type === transferTargetType)
@@ -719,13 +732,13 @@ export const QuickAddModal: React.FC = () => {
             mode !== 'emdad-expense' &&
             mode !== 'kuwait-extra-income' && (
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1">
                   {lang === 'bn' ? 'খাত / ক্যাটাগরি' : 'Category'} <span className="text-rose-500">*</span>
                 </label>
                 <select
                   value={categoryId}
                   onChange={(e) => setCategoryId(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
+                  className={inputCls}
                 >
                   {relevantCategories.map((cat) => (
                     <option key={cat.id} value={cat.id}>
@@ -739,7 +752,7 @@ export const QuickAddModal: React.FC = () => {
           {/* Month for Shaker Bhai Deposit */}
           {mode === 'boss-deposit' && (
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1">
                 {lang === 'bn' ? 'কোন মাসের বেতন?' : 'Month of Salary'}{' '}
                 <span className="text-rose-500">*</span>
               </label>
@@ -748,7 +761,7 @@ export const QuickAddModal: React.FC = () => {
                 value={month}
                 onChange={(e) => setMonth(e.target.value)}
                 required
-                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
+                className={inputCls}
               />
             </div>
           )}
@@ -757,10 +770,10 @@ export const QuickAddModal: React.FC = () => {
           {mode !== 'kuwait-loan' && (
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="block text-xs font-semibold text-slate-700">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200">
                   {lang === 'bn' ? 'ভাউচার / ইনভয়েস নং' : 'Voucher / Invoice #'}
                 </label>
-                <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                <span className="text-[10px] text-emerald-700 dark:text-emerald-300 font-bold bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
                   ⚡ {lang === 'bn' ? 'অটো জেনারেটেড' : 'Auto Generated'}
                 </span>
               </div>
@@ -769,14 +782,14 @@ export const QuickAddModal: React.FC = () => {
                 value={voucherNo}
                 onChange={(e) => setVoucherNo(e.target.value)}
                 placeholder="e.g. 1001"
-                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-emerald-500 font-mono font-bold text-slate-800"
+                className={`${inputCls} font-mono font-bold`}
               />
             </div>
           )}
 
           {/* Note / Description */}
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1">
               {mode === 'emdad-expense'
                 ? lang === 'bn'
                   ? 'ইমদাদ ভাই এর খরচের বিস্তারিত বিবরণ'
@@ -810,7 +823,7 @@ export const QuickAddModal: React.FC = () => {
                   : 'Optional description...'
               }
               required={mode === 'emdad-expense' || mode === 'kuwait-extra-income'}
-              className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
+              className={inputCls}
             />
           </div>
 
@@ -819,13 +832,13 @@ export const QuickAddModal: React.FC = () => {
             <button
               type="button"
               onClick={() => setIsQuickAddOpen(false)}
-              className="px-4 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+              className="px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors cursor-pointer"
             >
               {t('cancel')}
             </button>
             <button
               type="submit"
-              className="px-5 py-2 text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg transition-colors shadow-xs"
+              className="px-5 py-2 text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg transition-colors shadow-xs cursor-pointer"
             >
               {lang === 'bn' ? 'সংরক্ষণ করুন' : 'Save Transaction'}
             </button>

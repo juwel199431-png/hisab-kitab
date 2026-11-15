@@ -41,9 +41,91 @@
     color-scheme: dark;
   }
 
+  /* High-contrast defaults for all form controls in Light & Dark modes */
+  input:not([type="color"]):not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea {
+    color: #0f172a;
+    background-color: #ffffff;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: #64748b;
+    opacity: 1;
+  }
+
+  html.dark input:not([type="color"]):not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  html.dark select,
+  html.dark textarea {
+    color: #f8fafc;
+    background-color: #1e293b;
+    border-color: #334155;
+  }
+
+  html.dark input::placeholder,
+  html.dark textarea::placeholder {
+    color: #94a3b8;
+    opacity: 1;
+  }
+
+  html.dark select option,
+  html.dark select optgroup {
+    background-color: #0f172a;
+    color: #f8fafc;
+  }
+
   .font-mono, .tabular-nums {
     font-family: var(--font-mono);
   }
+}
+
+/* Global Dark-Mode Safeguard:
+   Prevent inherited light text (dark:text-slate-100) from becoming invisible
+   on light-only cards/inputs that do not declare a dark:bg-* utility */
+html.dark .bg-white:not([class*="dark:bg-"]),
+html.dark .bg-slate-50:not([class*="dark:bg-"]),
+html.dark .bg-slate-100:not([class*="dark:bg-"]) {
+  color: #0f172a;
+}
+
+html.dark .bg-white:not([class*="dark:bg-"]) input:not([type="color"]):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([class*="dark:bg-"]),
+html.dark .bg-white:not([class*="dark:bg-"]) select:not([class*="dark:bg-"]),
+html.dark .bg-white:not([class*="dark:bg-"]) textarea:not([class*="dark:bg-"]),
+html.dark .bg-slate-50:not([class*="dark:bg-"]) input:not([type="color"]):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([class*="dark:bg-"]),
+html.dark .bg-slate-50:not([class*="dark:bg-"]) select:not([class*="dark:bg-"]),
+html.dark .bg-slate-50:not([class*="dark:bg-"]) textarea:not([class*="dark:bg-"]),
+html.dark .bg-slate-100:not([class*="dark:bg-"]) input:not([type="color"]):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([class*="dark:bg-"]),
+html.dark .bg-slate-100:not([class*="dark:bg-"]) select:not([class*="dark:bg-"]),
+html.dark .bg-slate-100:not([class*="dark:bg-"]) textarea:not([class*="dark:bg-"]),
+html.dark input.bg-white:not([class*="dark:bg-"]),
+html.dark select.bg-white:not([class*="dark:bg-"]),
+html.dark textarea.bg-white:not([class*="dark:bg-"]),
+html.dark input.bg-slate-50:not([class*="dark:bg-"]),
+html.dark select.bg-slate-50:not([class*="dark:bg-"]),
+html.dark textarea.bg-slate-50:not([class*="dark:bg-"]),
+html.dark input.bg-slate-100:not([class*="dark:bg-"]),
+html.dark select.bg-slate-100:not([class*="dark:bg-"]),
+html.dark textarea.bg-slate-100:not([class*="dark:bg-"]) {
+  color: #0f172a;
+  background-color: #ffffff;
+  color-scheme: light;
+}
+
+html.dark .bg-white:not([class*="dark:bg-"]) input::placeholder,
+html.dark .bg-white:not([class*="dark:bg-"]) textarea::placeholder,
+html.dark input.bg-white:not([class*="dark:bg-"])::placeholder,
+html.dark textarea.bg-white:not([class*="dark:bg-"])::placeholder,
+html.dark input.bg-slate-50:not([class*="dark:bg-"])::placeholder,
+html.dark textarea.bg-slate-50:not([class*="dark:bg-"])::placeholder {
+  color: #64748b;
+}
+
+html.dark .bg-white:not([class*="dark:bg-"]) select option,
+html.dark select.bg-white:not([class*="dark:bg-"]) option,
+html.dark select.bg-slate-50:not([class*="dark:bg-"]) option {
+  background-color: #ffffff;
+  color: #0f172a;
 }
 
 @media print {
