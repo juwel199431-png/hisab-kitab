@@ -320,16 +320,18 @@ export const BossSalaryView: React.FC = () => {
       </div>
 
       {/* Top Banner & Control Zone */}
-      <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-2xs no-print">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-slate-100">
+      <div className="bg-white dark:bg-slate-900 rounded-xl p-5 border border-slate-200 dark:border-slate-800 shadow-2xs no-print transition-colors">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-slate-100 dark:border-slate-800">
           <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xl">💼</span>
-              <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                <Briefcase className="w-4 h-4" />
+              </div>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
                 {lang === 'bn' ? 'শাকের ভাই এর বেতন হিসাব' : 'Shaker Bhai Salary & Expense Ledger'}
               </h2>
             </div>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               {lang === 'bn'
                 ? 'শাকের ভাই এর মাসিক বেতন জমা, প্রতিদিনের খরচ এবং অবশিষ্ট ব্যালেন্সের নিখুঁত হিসাব ও প্রিন্ট/পিডিএফ স্টেটমেন্ট'
                 : 'Tracks monthly salary received from Shaker Bhai & daily expenses with exact remaining balance'}
@@ -339,15 +341,15 @@ export const BossSalaryView: React.FC = () => {
           <div className="flex flex-wrap items-center gap-2">
             {/* Smart Month Filter Picker */}
             <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs">
-              <Calendar className="w-3.5 h-3.5 text-slate-500" />
+              <Calendar className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
               <select
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
                 className="bg-transparent font-medium text-slate-700 dark:text-slate-200 focus:outline-hidden text-xs cursor-pointer"
               >
-                <option value="all">{lang === 'bn' ? 'সকল মাসের হিসাব (সর্বমোট)' : 'All Months'}</option>
+                <option value="all" className="dark:bg-slate-900">{lang === 'bn' ? 'সকল মাসের হিসাব (সর্বমোট)' : 'All Months'}</option>
                 {availableBossMonths.map((m) => (
-                  <option key={m} value={m}>
+                  <option key={m} value={m} className="dark:bg-slate-900">
                     {formatMonth(m, lang)}
                   </option>
                 ))}
@@ -356,7 +358,7 @@ export const BossSalaryView: React.FC = () => {
 
             <button
               onClick={() => setIsStatementSlipOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-colors cursor-pointer shadow-2xs"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 border border-indigo-200 dark:border-indigo-800 rounded-lg transition-colors cursor-pointer shadow-2xs"
               title={lang === 'bn' ? 'শাকের ভাইয়ের জন্য মান্থলি স্টেটমেন্ট স্লিপ তৈরি করুন' : 'Boss Monthly Statement Slip'}
             >
               <FileText className="w-3.5 h-3.5" />
@@ -375,16 +377,16 @@ export const BossSalaryView: React.FC = () => {
 
             <button
               onClick={handlePrint}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 rounded-lg transition-colors shadow-2xs cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 rounded-lg transition-colors shadow-2xs cursor-pointer"
               title={lang === 'bn' ? 'সরাসরি প্রিন্ট বা PDF ফাইল সেভ করুন' : 'Print or Save PDF'}
             >
-              <Printer className="w-3.5 h-3.5 text-slate-600" />
+              <Printer className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300" />
               <span>{lang === 'bn' ? 'প্রিন্ট / PDF' : 'Print / PDF'}</span>
             </button>
 
             <button
               onClick={handleOpenAddDeposit}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-lg transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-300 dark:border-emerald-800 rounded-lg transition-colors cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>{lang === 'bn' ? '+ বেতন জমা রেকর্ড' : '+ Add Salary Deposit'}</span>
@@ -403,7 +405,7 @@ export const BossSalaryView: React.FC = () => {
         {/* 3 Core Financial Balance KPI Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-5">
           {/* Card 1: Total Salary Deposited */}
-          <div className="bg-linear-to-br from-emerald-600 via-teal-600 to-emerald-800 text-white rounded-2xl p-4.5 border border-emerald-400/30 shadow-md shadow-emerald-500/15 flex flex-col justify-between">
+          <div className="bg-linear-to-br from-emerald-600 via-teal-600 to-emerald-800 text-white rounded-2xl p-4.5 border border-emerald-400/30 shadow-md shadow-emerald-500/15 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-150 flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between text-emerald-100 text-[11px] font-bold uppercase tracking-wider">
                 <span>{lang === 'bn' ? 'বেতন জমা প্রাপ্তি' : 'Total Salary Deposited'}</span>
@@ -475,18 +477,18 @@ export const BossSalaryView: React.FC = () => {
 
         {/* Visual Category Expense Breakdown */}
         {categoryExpenseBreakdown.length > 0 && (
-          <div className="mt-5 pt-4 border-t border-slate-100">
+          <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-slate-700">
+              <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
                 {lang === 'bn' ? 'খাতওয়ারী খরচের বিশ্লেষণ (Category Breakdown)' : 'Monthly Expense Breakdown by Category'}
               </span>
-              <span className="text-[11px] text-slate-500 font-mono">
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
                 {categoryExpenseBreakdown.length} {lang === 'bn' ? 'টি খাত' : 'categories'}
               </span>
             </div>
 
             {/* Segmented bar */}
-            <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden flex mb-3">
+            <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden flex mb-3">
               {categoryExpenseBreakdown.map((cat, idx) => {
                 const colors = ['bg-indigo-500', 'bg-emerald-500', 'bg-amber-500', 'bg-rose-500', 'bg-cyan-500', 'bg-purple-500'];
                 const color = colors[idx % colors.length];
@@ -505,7 +507,14 @@ export const BossSalaryView: React.FC = () => {
             {/* Chips list */}
             <div className="flex flex-wrap gap-2">
               {categoryExpenseBreakdown.map((cat, idx) => {
-                const colors = ['text-indigo-700 bg-indigo-50 border-indigo-200', 'text-emerald-700 bg-emerald-50 border-emerald-200', 'text-amber-700 bg-amber-50 border-amber-200', 'text-rose-700 bg-rose-50 border-rose-200', 'text-cyan-700 bg-cyan-50 border-cyan-200', 'text-purple-700 bg-purple-50 border-purple-200'];
+                const colors = [
+                  'text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 border-indigo-200 dark:border-indigo-800',
+                  'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800',
+                  'text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 border-amber-200 dark:border-amber-800',
+                  'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border-rose-200 dark:border-rose-800',
+                  'text-cyan-700 dark:text-cyan-300 bg-cyan-50 dark:bg-cyan-950/60 border-cyan-200 dark:border-cyan-800',
+                  'text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/60 border-purple-200 dark:border-purple-800',
+                ];
                 const color = colors[idx % colors.length];
                 const pct = totalExpenses > 0 ? (cat.total / totalExpenses) * 100 : 0;
                 return (
@@ -514,8 +523,8 @@ export const BossSalaryView: React.FC = () => {
                     className={`px-2.5 py-1 rounded-md text-[11px] border font-medium flex items-center gap-1.5 ${color}`}
                   >
                     <span>{lang === 'bn' ? cat.nameBn : cat.nameEn}</span>
-                    <span className="font-mono font-bold">{cat.total.toFixed(3)} KD</span>
-                    <span className="text-[9px] opacity-75 font-mono">({pct.toFixed(0)}%)</span>
+                    <span className="font-mono font-bold tabular-nums">{cat.total.toFixed(3)} KD</span>
+                    <span className="text-[9px] opacity-75 font-mono tabular-nums">({pct.toFixed(0)}%)</span>
                   </div>
                 );
               })}
@@ -526,13 +535,13 @@ export const BossSalaryView: React.FC = () => {
 
       {/* Monthly Deposits List (Accordion or Subcard) */}
       {currentMonthDeposits.length > 0 && (
-        <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-2xs no-print">
-          <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-100">
-            <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-              <Receipt className="w-3.5 h-3.5 text-emerald-600" />
+        <div className="bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-200 dark:border-slate-800 shadow-2xs no-print transition-colors">
+          <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-100 dark:border-slate-800">
+            <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+              <Receipt className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
               <span>{lang === 'bn' ? 'এই মাসের বেতন জমার রেকর্ড' : 'Salary Deposit Entries'}</span>
             </h3>
-            <span className="text-xs font-mono font-bold text-emerald-800">
+            <span className="text-xs font-mono tabular-nums font-bold text-emerald-800 dark:text-emerald-400">
               {formatCurrency(totalDeposited, 'KWD', lang)}
             </span>
           </div>
@@ -541,19 +550,19 @@ export const BossSalaryView: React.FC = () => {
             {currentMonthDeposits.map((dep) => (
               <div
                 key={dep.id}
-                className="flex items-center justify-between text-xs py-1.5 px-2.5 bg-slate-50 rounded border border-slate-200"
+                className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 text-xs py-1.5 px-2.5 bg-slate-50 dark:bg-slate-800/60 rounded border border-slate-200 dark:border-slate-700"
               >
-                <div className="flex items-center gap-3">
-                  <span className="font-semibold text-slate-600">{formatDate(dep.depositDate, lang)}</span>
-                  <span className="text-slate-900 font-medium">{dep.note || 'মাসিক বেতন জমা'}</span>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <span className="font-semibold text-slate-600 dark:text-slate-400 font-mono tabular-nums">{formatDate(dep.depositDate, lang)}</span>
+                  <span className="text-slate-900 dark:text-white font-medium">{dep.note || 'মাসিক বেতন জমা'}</span>
                   {dep.receiptNumber && (
-                    <span className="text-[11px] font-mono text-slate-500 bg-slate-200/70 px-1 rounded">
+                    <span className="text-[11px] font-mono text-slate-500 dark:text-slate-300 bg-slate-200/70 dark:bg-slate-700 px-1.5 rounded">
                       #{dep.receiptNumber}
                     </span>
                   )}
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="font-mono font-bold text-emerald-800 mr-1">{dep.amount.toFixed(3)} KD</span>
+                <div className="flex items-center gap-1.5 ml-auto">
+                  <span className="font-mono tabular-nums font-bold text-emerald-800 dark:text-emerald-400 mr-1">{dep.amount.toFixed(3)} KD</span>
                   <button
                     type="button"
                     onClick={() =>
@@ -571,7 +580,7 @@ export const BossSalaryView: React.FC = () => {
                         note: dep.note || 'মাসিক বেতন জমা',
                       })
                     }
-                    className="p-1 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-100 rounded cursor-pointer transition-colors"
+                    className="p-1 text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-950/60 rounded cursor-pointer transition-colors"
                     title={lang === 'bn' ? 'ভাউচার ছবি হোয়াটসঅ্যাপে পাঠান' : 'Send Voucher Image to WhatsApp'}
                   >
                     <MessageCircle className="w-3.5 h-3.5" />
@@ -579,7 +588,7 @@ export const BossSalaryView: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setEditTarget({ id: dep.id, sourceType: 'boss-deposit' })}
-                    className="p-1 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded cursor-pointer transition-colors"
+                    className="p-1 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 rounded cursor-pointer transition-colors"
                     title={lang === 'bn' ? 'সংশোধন / এডিট করুন' : 'Edit deposit'}
                   >
                     <Edit2 className="w-3.5 h-3.5" />
@@ -590,7 +599,7 @@ export const BossSalaryView: React.FC = () => {
                         deleteBossDeposit(dep.id);
                       }
                     }}
-                    className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded cursor-pointer transition-colors"
+                    className="p-1 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/60 rounded cursor-pointer transition-colors"
                     title={lang === 'bn' ? 'মুছে ফেলুন' : 'Delete'}
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -603,14 +612,14 @@ export const BossSalaryView: React.FC = () => {
       )}
 
       {/* Daily Expenses Ledger & Statement Table */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden print-shadow-none">
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs overflow-hidden print-shadow-none transition-colors">
         {/* Table Filter & Control Bar */}
-        <div className="p-4 border-b border-slate-200 bg-slate-50/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3 no-print">
+        <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 no-print">
           <div>
-            <h3 className="text-sm font-bold text-slate-900">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white">
               {lang === 'bn' ? 'দৈনিক সাইট ও দাপ্তরিক খরচের বিবরণী' : 'Daily Site & Office Expense Statement'}
             </h3>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               {lang === 'bn'
                 ? `বসের ফান্ড থেকে মোট ${currentMonthExpenses.length}টি খরচ লিপিবদ্ধ করা হয়েছে`
                 : `Itemized vouchers list (${currentMonthExpenses.length} entries)`}
@@ -625,15 +634,15 @@ export const BossSalaryView: React.FC = () => {
                 placeholder={lang === 'bn' ? 'ভাউচার নং বা নোট খুঁজুন...' : 'Search voucher or note...'}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 pr-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded-md focus:outline-hidden focus:ring-1 focus:ring-indigo-500"
+                className="pl-8 pr-2.5 py-1.5 text-xs bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 rounded-md focus:outline-hidden focus:ring-1 focus:ring-indigo-500"
               />
             </div>
 
             <button
               onClick={handleExportCSV}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 rounded-md shadow-2xs"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 rounded-md shadow-2xs cursor-pointer"
             >
-              <Download className="w-3.5 h-3.5 text-slate-600" />
+              <Download className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300" />
               <span>CSV</span>
             </button>
           </div>
@@ -643,7 +652,7 @@ export const BossSalaryView: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-slate-100/80 border-b border-slate-300 text-slate-700 font-bold">
+              <tr className="bg-slate-100/80 dark:bg-slate-800/80 border-b border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold">
                 <th className="py-2.5 px-3.5 whitespace-nowrap">{lang === 'bn' ? 'তারিখ' : 'Date'}</th>
                 <th className="py-2.5 px-3.5 whitespace-nowrap">{lang === 'bn' ? 'ভাউচার / মেমো #' : 'Voucher #'}</th>
                 <th className="py-2.5 px-3.5 whitespace-nowrap">{lang === 'bn' ? 'খরচের খাত' : 'Category'}</th>
@@ -652,10 +661,10 @@ export const BossSalaryView: React.FC = () => {
                 <th className="py-2.5 px-3.5 text-center whitespace-nowrap w-24 no-print">{lang === 'bn' ? 'অ্যাকশন' : 'Action'}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 text-slate-800">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-800 dark:text-slate-200">
               {currentMonthExpenses.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-8 text-slate-400">
+                  <td colSpan={6} className="text-center py-8 text-slate-400 dark:text-slate-500">
                     {lang === 'bn'
                       ? 'এই মাসে এখনো কোন খরচের এন্ট্রি নেই। "+ দৈনিক খরচ যোগ" বাটনে ক্লিক করে যুক্ত করুন।'
                       : 'No expenses recorded for this month.'}
@@ -663,20 +672,20 @@ export const BossSalaryView: React.FC = () => {
                 </tr>
               ) : (
                 currentMonthExpenses.map((tx) => (
-                  <tr key={tx.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-2.5 px-3.5 whitespace-nowrap font-medium text-slate-600">
+                  <tr key={tx.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                    <td className="py-2.5 px-3.5 whitespace-nowrap font-medium text-slate-600 dark:text-slate-400 font-mono tabular-nums">
                       {formatDate(tx.date, lang)}
                     </td>
-                    <td className="py-2.5 px-3.5 whitespace-nowrap font-mono text-slate-700 font-semibold">
+                    <td className="py-2.5 px-3.5 whitespace-nowrap font-mono text-slate-700 dark:text-slate-300 font-semibold">
                       {tx.voucherNo ? tx.voucherNo : '-'}
                     </td>
-                    <td className="py-2.5 px-3.5 whitespace-nowrap font-semibold text-slate-900">
+                    <td className="py-2.5 px-3.5 whitespace-nowrap font-semibold text-slate-900 dark:text-white">
                       {lang === 'bn' ? tx.categoryNameBn || '-' : tx.categoryNameEn || tx.categoryNameBn || '-'}
                     </td>
-                    <td className="py-2.5 px-3.5 text-slate-700 max-w-sm">
+                    <td className="py-2.5 px-3.5 text-slate-700 dark:text-slate-300 max-w-sm">
                       {tx.note || '-'}
                     </td>
-                    <td className="py-2.5 px-3.5 text-right font-mono tabular-nums font-bold text-slate-900 whitespace-nowrap">
+                    <td className="py-2.5 px-3.5 text-right font-mono tabular-nums font-bold text-slate-900 dark:text-white whitespace-nowrap">
                       {tx.amount.toFixed(3)} KD
                     </td>
                     <td className="py-2.5 px-3.5 text-center whitespace-nowrap no-print">
@@ -698,7 +707,7 @@ export const BossSalaryView: React.FC = () => {
                               note: tx.note,
                             })
                           }
-                          className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-md transition-colors cursor-pointer"
+                          className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-800 rounded-md transition-colors cursor-pointer"
                           title={lang === 'bn' ? 'ইনভয়েস / ভাউচার ছবি হোয়াটসঅ্যাপে পাঠান' : 'Send Invoice Image to WhatsApp'}
                         >
                           <MessageCircle className="w-3.5 h-3.5" />
@@ -707,7 +716,7 @@ export const BossSalaryView: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => setEditTarget({ id: tx.id, sourceType: 'transaction' })}
-                          className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors cursor-pointer"
+                          className="p-1.5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 rounded-md transition-colors cursor-pointer"
                           title={lang === 'bn' ? 'সংশোধন / এডিট করুন' : 'Edit'}
                         >
                           <Edit2 className="w-3.5 h-3.5" />
@@ -719,7 +728,7 @@ export const BossSalaryView: React.FC = () => {
                               deleteTransaction(tx.id);
                             }
                           }}
-                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors cursor-pointer"
+                          className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/60 rounded-md transition-colors cursor-pointer"
                           title={lang === 'bn' ? 'মুছে ফেলুন' : 'Delete'}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -733,20 +742,20 @@ export const BossSalaryView: React.FC = () => {
 
             {/* Official Accounting Footer with Running Balance */}
             <tfoot>
-              <tr className="bg-slate-100/80 border-t-2 border-slate-300 font-bold text-slate-900">
+              <tr className="bg-slate-100/80 dark:bg-slate-800/80 border-t-2 border-slate-300 dark:border-slate-700 font-bold text-slate-900 dark:text-white">
                 <td colSpan={4} className="py-2 px-3.5 text-right uppercase tracking-wider text-xs">
                   {lang === 'bn' ? 'মোট খরচ (Total Expenses):' : 'Total Expenses:'}
                 </td>
-                <td className="py-2 px-3.5 text-right font-mono tabular-nums text-xs text-rose-700">
+                <td className="py-2 px-3.5 text-right font-mono tabular-nums text-xs text-rose-700 dark:text-rose-400">
                   {totalExpenses.toFixed(3)} KD
                 </td>
                 <td className="no-print"></td>
               </tr>
-              <tr className="bg-emerald-50/70 border-t border-emerald-200 font-bold text-emerald-950">
+              <tr className="bg-emerald-50/70 dark:bg-emerald-950/40 border-t border-emerald-200 dark:border-emerald-800 font-bold text-emerald-950 dark:text-emerald-200">
                 <td colSpan={4} className="py-2.5 px-3.5 text-right uppercase tracking-wider text-xs">
                   {lang === 'bn' ? 'বেতন ফান্ড থেকে অবশিষ্ট ব্যালেন্স (Remaining Balance):' : 'Remaining Balance:'}
                 </td>
-                <td className="py-2.5 px-3.5 text-right font-mono tabular-nums text-sm font-bold text-emerald-900">
+                <td className="py-2.5 px-3.5 text-right font-mono tabular-nums text-sm font-bold text-emerald-900 dark:text-emerald-300">
                   {remainingBalance.toFixed(3)} KD
                 </td>
                 <td className="no-print"></td>
@@ -774,15 +783,15 @@ export const BossSalaryView: React.FC = () => {
       {/* Modal: Add Salary Deposit */}
       {showAddDepositModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md border border-slate-200 overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between bg-emerald-50">
-              <h3 className="text-sm font-bold text-emerald-900 flex items-center gap-2">
-                <Receipt className="w-4 h-4 text-emerald-700" />
+          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl w-full max-w-md border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-emerald-50 dark:bg-emerald-950/50">
+              <h3 className="text-sm font-bold text-emerald-900 dark:text-emerald-300 flex items-center gap-2">
+                <Receipt className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
                 <span>{lang === 'bn' ? 'শাকের ভাই এর বেতন জমা রেকর্ড' : 'Record Salary Deposit'}</span>
               </h3>
               <button
                 onClick={() => setShowAddDepositModal(false)}
-                className="text-slate-400 hover:text-slate-600 p-1"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -790,7 +799,7 @@ export const BossSalaryView: React.FC = () => {
 
             <form onSubmit={handleDepositSubmit} className="p-5 space-y-3.5 text-xs">
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {lang === 'bn' ? 'কোন মাসের বেতন?' : 'Month'} <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -798,12 +807,12 @@ export const BossSalaryView: React.FC = () => {
                   value={depMonth}
                   onChange={(e) => setDepMonth(e.target.value)}
                   required
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md font-medium"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 rounded-md font-medium"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {lang === 'bn' ? 'প্রাপ্তির তারিখ' : 'Deposit Date'} <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -811,12 +820,12 @@ export const BossSalaryView: React.FC = () => {
                   value={depDate}
                   onChange={(e) => setDepDate(e.target.value)}
                   required
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 rounded-md"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {lang === 'bn' ? 'বেতন জমার পরিমাণ (KWD দিনার)' : 'Amount (KWD)'} <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -826,16 +835,16 @@ export const BossSalaryView: React.FC = () => {
                   value={depAmount}
                   onChange={(e) => setDepAmount(e.target.value)}
                   required
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md font-mono text-sm"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 rounded-md font-mono text-sm"
                 />
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="block font-semibold text-slate-700">
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300">
                     {lang === 'bn' ? 'রসিদ বা ভাউচার নম্বর' : 'Receipt / Voucher #'}
                   </label>
-                  <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                  <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
                     ⚡ {lang === 'bn' ? 'অটো জেনারেটেড' : 'Auto Generated'}
                   </span>
                 </div>
@@ -844,12 +853,12 @@ export const BossSalaryView: React.FC = () => {
                   placeholder="e.g. 1001"
                   value={depVoucher}
                   onChange={(e) => setDepVoucher(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md font-mono font-bold text-slate-800"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 rounded-md font-mono font-bold"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {lang === 'bn' ? 'নোট / বিবরণ' : 'Note'}
                 </label>
                 <input
@@ -857,7 +866,7 @@ export const BossSalaryView: React.FC = () => {
                   placeholder={lang === 'bn' ? 'বসের নগদ ফান্ড হস্তান্তর' : 'Cash received from boss'}
                   value={depNote}
                   onChange={(e) => setDepNote(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 rounded-md"
                 />
               </div>
 
@@ -865,13 +874,13 @@ export const BossSalaryView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowAddDepositModal(false)}
-                  className="px-3 py-1.5 text-slate-600 bg-slate-100 rounded-md hover:bg-slate-200"
+                  className="px-3 py-1.5 text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer"
                 >
                   {t('cancel')}
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 font-bold text-white bg-emerald-700 hover:bg-emerald-800 rounded-md shadow-xs"
+                  className="px-4 py-1.5 font-bold text-white bg-emerald-700 hover:bg-emerald-800 rounded-md shadow-xs cursor-pointer"
                 >
                   {lang === 'bn' ? 'জমা সংরক্ষণ' : 'Save Deposit'}
                 </button>
@@ -884,15 +893,15 @@ export const BossSalaryView: React.FC = () => {
       {/* Modal: Add Daily Expense */}
       {showAddExpenseModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md border border-slate-200 overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between bg-indigo-50">
-              <h3 className="text-sm font-bold text-indigo-950 flex items-center gap-2">
-                <Briefcase className="w-4 h-4 text-indigo-700" />
+          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl w-full max-w-md border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-indigo-50 dark:bg-indigo-950/50">
+              <h3 className="text-sm font-bold text-indigo-950 dark:text-indigo-200 flex items-center gap-2">
+                <Briefcase className="w-4 h-4 text-indigo-700 dark:text-indigo-400" />
                 <span>{lang === 'bn' ? 'বসের ফান্ড থেকে খরচ যোগ' : 'Add Expense from Boss Fund'}</span>
               </h3>
               <button
                 onClick={() => setShowAddExpenseModal(false)}
-                className="text-slate-400 hover:text-slate-600 p-1"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -901,7 +910,7 @@ export const BossSalaryView: React.FC = () => {
             <form onSubmit={handleExpenseSubmit} className="p-5 space-y-3.5 text-xs">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     {lang === 'bn' ? 'খরচের পরিমাণ (KWD)' : 'Amount (KWD)'} <span className="text-rose-500">*</span>
                   </label>
                   <input
@@ -911,11 +920,11 @@ export const BossSalaryView: React.FC = () => {
                     value={expAmount}
                     onChange={(e) => setExpAmount(e.target.value)}
                     required
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md font-mono text-sm"
+                    className="w-full px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 rounded-md font-mono text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     {lang === 'bn' ? 'তারিখ' : 'Date'} <span className="text-rose-500">*</span>
                   </label>
                   <input
@@ -923,20 +932,20 @@ export const BossSalaryView: React.FC = () => {
                     value={expDate}
                     onChange={(e) => setExpDate(e.target.value)}
                     required
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md"
+                    className="w-full px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 rounded-md"
                   />
                 </div>
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="font-semibold text-slate-700">
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">
                     {lang === 'bn' ? 'খরচের খাত / ক্যাটাগরি' : 'Category'} <span className="text-rose-500">*</span>
                   </label>
                   <button
                     type="button"
                     onClick={() => setShowNewCategoryBox(!showNewCategoryBox)}
-                    className="text-[11px] font-bold text-indigo-700 hover:text-indigo-900 flex items-center gap-1 hover:underline"
+                    className="text-[11px] font-bold text-indigo-700 dark:text-indigo-400 hover:text-indigo-900 flex items-center gap-1 hover:underline cursor-pointer"
                   >
                     <Plus className="w-3 h-3" />
                     <span>{showNewCategoryBox ? (lang === 'bn' ? 'বন্ধ করুন' : 'Close') : (lang === 'bn' ? '+ নতুন ক্যাটাগরি এড' : '+ Add Category')}</span>
@@ -944,9 +953,9 @@ export const BossSalaryView: React.FC = () => {
                 </div>
 
                 {showNewCategoryBox && (
-                  <div className="mb-2.5 p-3 bg-indigo-50/80 border border-indigo-200 rounded-lg space-y-2">
-                    <p className="text-[11px] font-bold text-indigo-950 flex items-center gap-1">
-                      <Plus className="w-3.5 h-3.5 text-indigo-700" />
+                  <div className="mb-2.5 p-3 bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 rounded-lg space-y-2">
+                    <p className="text-[11px] font-bold text-indigo-950 dark:text-indigo-200 flex items-center gap-1">
+                      <Plus className="w-3.5 h-3.5 text-indigo-700 dark:text-indigo-400" />
                       <span>{lang === 'bn' ? 'নতুন খরচের ক্যাটাগরি তৈরি করুন:' : 'Add new expense category:'}</span>
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -955,21 +964,21 @@ export const BossSalaryView: React.FC = () => {
                         placeholder={lang === 'bn' ? 'ক্যাটাগরির নাম (যেমন: গাড়ি তেল)' : 'Category Name (Bangla)'}
                         value={newCatNameBn}
                         onChange={(e) => setNewCatNameBn(e.target.value)}
-                        className="px-2.5 py-1.5 text-xs bg-white border border-indigo-200 rounded-md focus:outline-hidden focus:ring-1 focus:ring-indigo-500"
+                        className="px-2.5 py-1.5 text-xs bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-indigo-200 dark:border-slate-700 rounded-md focus:outline-hidden focus:ring-1 focus:ring-indigo-500"
                       />
                       <input
                         type="text"
                         placeholder={lang === 'bn' ? 'ইংরেজি নাম (ঐচ্ছিক)' : 'English Name (Optional)'}
                         value={newCatNameEn}
                         onChange={(e) => setNewCatNameEn(e.target.value)}
-                        className="px-2.5 py-1.5 text-xs bg-white border border-indigo-200 rounded-md focus:outline-hidden focus:ring-1 focus:ring-indigo-500"
+                        className="px-2.5 py-1.5 text-xs bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-indigo-200 dark:border-slate-700 rounded-md focus:outline-hidden focus:ring-1 focus:ring-indigo-500"
                       />
                     </div>
                     <div className="flex justify-end gap-2 pt-1">
                       <button
                         type="button"
                         onClick={() => setShowNewCategoryBox(false)}
-                        className="px-2.5 py-1 text-[11px] text-slate-600 hover:text-slate-800 bg-white border border-slate-200 rounded-md"
+                        className="px-2.5 py-1 text-[11px] text-slate-600 dark:text-slate-300 hover:text-slate-800 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md cursor-pointer"
                       >
                         {lang === 'bn' ? 'বাতিল' : 'Cancel'}
                       </button>
@@ -977,7 +986,7 @@ export const BossSalaryView: React.FC = () => {
                         type="button"
                         onClick={handleCreateCustomCategory}
                         disabled={!newCatNameBn.trim()}
-                        className="px-3 py-1 text-[11px] font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 rounded-md flex items-center gap-1 shadow-2xs"
+                        className="px-3 py-1 text-[11px] font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 rounded-md flex items-center gap-1 shadow-2xs cursor-pointer"
                       >
                         <Plus className="w-3 h-3" />
                         <span>{lang === 'bn' ? 'ক্যাটাগরি যুক্ত ও সিলেক্ট' : 'Add & Select'}</span>
@@ -989,7 +998,7 @@ export const BossSalaryView: React.FC = () => {
                 <select
                   value={expCatId}
                   onChange={(e) => setExpCatId(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md font-medium"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 rounded-md font-medium"
                 >
                   {bossCategories.map((c) => (
                     <option key={c.id} value={c.id}>
@@ -1001,10 +1010,10 @@ export const BossSalaryView: React.FC = () => {
 
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="block font-semibold text-slate-700">
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300">
                     {lang === 'bn' ? 'ভাউচার / মেমো / ক্যাশ রসিদ নং' : 'Voucher / Bill #'}
                   </label>
-                  <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                  <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
                     ⚡ {lang === 'bn' ? 'অটো জেনারেটেড' : 'Auto Generated'}
                   </span>
                 </div>
@@ -1013,12 +1022,12 @@ export const BossSalaryView: React.FC = () => {
                   placeholder="e.g. 1001"
                   value={expVoucher}
                   onChange={(e) => setExpVoucher(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md font-mono font-bold text-slate-800"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 rounded-md font-mono font-bold"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {lang === 'bn' ? 'মালামাল বা কাজের বিস্তারিত বিবরণ' : 'Description'}
                 </label>
                 <input
@@ -1026,7 +1035,7 @@ export const BossSalaryView: React.FC = () => {
                   placeholder={lang === 'bn' ? 'সাইটের তার ও বোর্ড ক্রয়' : 'Items purchased...'}
                   value={expNote}
                   onChange={(e) => setExpNote(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 rounded-md"
                 />
               </div>
 
@@ -1034,13 +1043,13 @@ export const BossSalaryView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowAddExpenseModal(false)}
-                  className="px-3 py-1.5 text-slate-600 bg-slate-100 rounded-md hover:bg-slate-200"
+                  className="px-3 py-1.5 text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer"
                 >
                   {t('cancel')}
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 font-bold text-white bg-indigo-700 hover:bg-indigo-800 rounded-md shadow-xs"
+                  className="px-4 py-1.5 font-bold text-white bg-indigo-700 hover:bg-indigo-800 rounded-md shadow-xs cursor-pointer"
                 >
                   {lang === 'bn' ? 'খরচ সংরক্ষণ' : 'Save Expense'}
                 </button>
@@ -1053,34 +1062,34 @@ export const BossSalaryView: React.FC = () => {
       {/* MODAL: Boss Monthly Statement Slip */}
       {isStatementSlipOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs no-print">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[90vh]">
             {/* Modal Header */}
-            <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between bg-gradient-to-r from-indigo-50 to-slate-50">
+            <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-linear-to-r from-indigo-50 to-slate-50 dark:from-indigo-950/60 dark:to-slate-900">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center">
                   <Receipt className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900">
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">
                     {lang === 'bn' ? 'বস মান্থলি স্টেটমেন্ট স্লিপ' : 'Boss Monthly Statement Slip'}
                   </h3>
-                  <p className="text-[11px] text-slate-500 font-mono">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
                     {formatMonth(selectedMonth, lang)} • {selectedMonth}
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setIsStatementSlipOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Slip Content */}
-            <div className="p-5 overflow-y-auto space-y-4 text-xs font-sans">
+            {/* Slip Content (Crisp Paper Voucher) */}
+            <div className="p-5 overflow-y-auto space-y-4 text-xs font-sans bg-slate-100/70 dark:bg-slate-950/60">
               {/* Slip Printable Voucher Card */}
-              <div className="border border-slate-300 rounded-xl p-4 bg-slate-50/50 space-y-3">
+              <div className="border border-slate-300 rounded-xl p-4 bg-white text-slate-900 space-y-3 shadow-xs">
                 <div className="text-center pb-3 border-b border-dashed border-slate-300">
                   <h4 className="text-sm font-black uppercase tracking-wider text-slate-900">
                     MONTHLY EXPENSE STATEMENT SLIP
@@ -1095,14 +1104,14 @@ export const BossSalaryView: React.FC = () => {
                 </div>
 
                 {/* 3 Metrics */}
-                <div className="grid grid-cols-3 gap-2 text-center py-2 bg-white rounded-lg border border-slate-200">
-                  <div className="p-2 border-r border-slate-100">
+                <div className="grid grid-cols-3 gap-2 text-center py-2 bg-slate-50 rounded-lg border border-slate-200">
+                  <div className="p-2 border-r border-slate-200">
                     <span className="text-[10px] text-slate-500 font-semibold block uppercase">বেতন জমা</span>
                     <span className="font-mono text-xs font-bold text-emerald-700 block mt-0.5">
                       {totalDeposited.toFixed(3)} KD
                     </span>
                   </div>
-                  <div className="p-2 border-r border-slate-100">
+                  <div className="p-2 border-r border-slate-200">
                     <span className="text-[10px] text-slate-500 font-semibold block uppercase">মোট খরচ</span>
                     <span className="font-mono text-xs font-bold text-rose-700 block mt-0.5">
                       {totalExpenses.toFixed(3)} KD
@@ -1152,7 +1161,7 @@ export const BossSalaryView: React.FC = () => {
             </div>
 
             {/* Modal Actions */}
-            <div className="px-5 py-3 border-t border-slate-200 bg-slate-50 flex items-center justify-between gap-2">
+            <div className="px-5 py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 flex items-center justify-between gap-2">
               <button
                 type="button"
                 onClick={() => handleSendWhatsAppBossStatement()}
@@ -1166,7 +1175,7 @@ export const BossSalaryView: React.FC = () => {
                 <button
                   type="button"
                   onClick={handlePrint}
-                  className="px-3 py-2 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 rounded-lg flex items-center gap-1 cursor-pointer"
+                  className="px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 rounded-lg flex items-center gap-1 cursor-pointer"
                 >
                   <Printer className="w-3.5 h-3.5" />
                   <span>{lang === 'bn' ? 'প্রিন্ট' : 'Print'}</span>
@@ -1174,7 +1183,7 @@ export const BossSalaryView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsStatementSlipOpen(false)}
-                  className="px-3 py-2 text-xs font-medium text-slate-600 bg-slate-200 hover:bg-slate-300 rounded-lg cursor-pointer"
+                  className="px-3 py-2 text-xs font-medium text-slate-600 dark:text-slate-300 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 rounded-lg cursor-pointer"
                 >
                   {t('cancel')}
                 </button>

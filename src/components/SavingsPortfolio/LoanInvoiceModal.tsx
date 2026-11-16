@@ -45,8 +45,8 @@ export const LoanInvoiceModal: React.FC<LoanInvoiceModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl border border-slate-200 overflow-hidden my-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/75 backdrop-blur-xs overflow-y-auto">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-2xl border border-slate-200 dark:border-slate-800 overflow-hidden my-6">
         {/* Action Header / Top bar (Hidden on Print) */}
         <div className="px-6 py-3.5 bg-slate-900 text-white flex items-center justify-between print:hidden">
           <div className="flex items-center gap-2">
@@ -246,13 +246,13 @@ export const LoanInvoiceModal: React.FC<LoanInvoiceModalProps> = ({
         </div>
 
         {/* Modal Bottom Bar */}
-        <div className="px-6 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between print:hidden">
-          <p className="text-xs text-slate-500">
+        <div className="px-6 py-3 bg-slate-50 dark:bg-slate-800/70 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between print:hidden">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             {lang === 'bn' ? 'কোনো ভুল হলে "ভাউচার এডিট" বাটনে ক্লিক করে সংশোধন করতে পারবেন।' : 'Click "Edit Voucher" to correct any mistakes.'}
           </p>
           <button
             onClick={onClose}
-            className="px-4 py-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 rounded-lg transition-colors cursor-pointer"
+            className="px-4 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 rounded-lg transition-colors cursor-pointer"
           >
             {lang === 'bn' ? 'বন্ধ করুন' : 'Close'}
           </button>

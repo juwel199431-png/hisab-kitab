@@ -15,6 +15,8 @@ import {
   Plus,
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '../../utils/formatters';
+import { DashboardCharts } from './DashboardCharts';
+import { LiveGreetingClock } from '../Common/LiveGreetingClock';
 
 export const DashboardView: React.FC = () => {
   const {
@@ -28,6 +30,8 @@ export const DashboardView: React.FC = () => {
     getTotalInsuranceSavings,
     setActiveSection,
     setIsQuickAddOpen,
+    setIsWelcomeIntroOpen,
+    themePrefs,
   } = useFinance();
 
   // Recent transactions across all sections
@@ -97,6 +101,22 @@ export const DashboardView: React.FC = () => {
 
   return (
     <div className="space-y-6 pb-12 animate-fade-in">
+      {/* Compact Personalized Greeting Bar (Mobile / Tablet View) */}
+      <div className="flex lg:hidden items-center justify-between gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 shadow-2xs">
+        <LiveGreetingClock
+          lang={lang}
+          userName={themePrefs.userName}
+          profileTitle={themePrefs.profileTitle}
+          onReplayIntro={() => setIsWelcomeIntroOpen(true)}
+          className="bg-transparent dark:bg-transparent border-0 px-0 py-0 hover:bg-transparent"
+        />
+        {themePrefs.profileTitle?.trim() && (
+          <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 truncate max-w-[140px]">
+            {themePrefs.profileTitle}
+          </span>
+        )}
+      </div>
+
       {/* SECTION 1: BD BANK ACCOUNTS */}
       <section className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/80 dark:border-slate-800 pb-2">
@@ -140,23 +160,23 @@ export const DashboardView: React.FC = () => {
             return (
               <div
                 key={bank.id}
-                className={`relative overflow-hidden rounded-2xl bg-linear-to-br ${theme.gradient} text-white p-5 shadow-lg flex flex-col justify-between transition-all hover:translate-y-[-2px] hover:shadow-xl`}
+                className={`relative overflow-hidden rounded-2xl bg-linear-to-br ${theme.gradient} text-white p-4 sm:p-5 shadow-md flex flex-col justify-between transition-all duration-150 hover:-translate-y-0.5 hover:shadow-xl`}
               >
                 {/* Background Card Chip Graphic */}
                 <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-white/5 rounded-full pointer-events-none" />
 
                 {/* Card Top */}
                 <div className="flex items-start justify-between gap-3 mb-3">
-                  <div className="space-y-1">
+                  <div className="space-y-1 min-w-0">
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/20 backdrop-blur-md border border-white/25">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse" />
+                      <Building2 className="w-3 h-3 text-emerald-200 shrink-0" />
                       <span>{lang === 'bn' ? 'সেভিংস অ্যাকাউন্ট' : 'Savings Account'}</span>
                     </div>
-                    <h3 className="font-extrabold text-base text-white tracking-wide leading-snug">
+                    <h3 className="font-extrabold text-base text-white tracking-wide leading-snug truncate">
                       {bank.name}
                     </h3>
-                    <p className="text-xs text-white/90 font-medium flex items-center gap-1">
-                      <span>🏛️</span>
+                    <p className="text-xs text-white/90 font-medium flex items-center gap-1.5">
+                      <Building2 className="w-3 h-3 text-white/75 shrink-0" />
                       <span>{lang === 'bn' ? 'শাখা: লোকাল শাখা' : 'Branch: Local Branch'}</span>
                     </p>
                   </div>
@@ -166,14 +186,14 @@ export const DashboardView: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="mb-4" />
+                <div className="mb-3" />
 
                 {/* Card Bottom: Current Balance */}
                 <div className="pt-3 border-t border-white/15">
                   <span className="text-[10px] font-semibold uppercase tracking-wider text-white/70 block mb-0.5">
                     {lang === 'bn' ? 'কারেন্ট ব্যালেন্স (Current Balance)' : 'Current Balance'}
                   </span>
-                  <div className="text-xl md:text-2xl font-black font-mono tracking-tight text-white">
+                  <div className="text-xl md:text-2xl font-black font-mono tabular-nums tracking-tight text-white">
                     {formatCurrency(currentBal, 'BDT', lang, isPrivacyMode)}
                   </div>
                 </div>
@@ -185,16 +205,16 @@ export const DashboardView: React.FC = () => {
 
       {/* SECTION 2: DPS & INSURANCE ACCOUNTS */}
       <section className="space-y-4 pt-2">
-        <div className="flex items-center justify-between border-b border-slate-200/80 pb-2">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/80 dark:border-slate-800 pb-2">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-800 flex items-center justify-center font-bold shadow-2xs">
+            <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 flex items-center justify-center font-bold shadow-2xs shrink-0">
               <PiggyBank className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-900">
+              <h2 className="text-base font-bold text-slate-900 dark:text-white">
                 {lang === 'bn' ? 'ডিপিএস ও ইন্স্যুরেন্স সঞ্চয় স্থিতি' : 'DPS & Insurance Savings'}
               </h2>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 {lang === 'bn'
                   ? 'কারেন্ট ব্যালেন্স এবং মাসিক কিস্তির পরিমাণ'
                   : 'Current accumulated balance and monthly installment amount'}
@@ -204,8 +224,8 @@ export const DashboardView: React.FC = () => {
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setActiveSection('bd-bank')}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-700 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-3 py-1.5 rounded-lg transition-colors"
+              onClick={() => setActiveSection('savings-portfolio')}
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-700 dark:text-blue-300 hover:text-blue-800 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
             >
               <span>{lang === 'bn' ? 'বিস্তারিত দেখুন' : 'View Full Details'}</span>
               <ArrowUpRight className="w-3.5 h-3.5" />
@@ -397,16 +417,16 @@ export const DashboardView: React.FC = () => {
 
       {/* SECTION 3: SHAKER BHAI SALARY - CASH IN HAND */}
       <section className="space-y-4 pt-2">
-        <div className="flex items-center justify-between border-b border-slate-200/80 pb-2">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/80 dark:border-slate-800 pb-2">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center font-bold shadow-2xs">
+            <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 flex items-center justify-center font-bold shadow-2xs shrink-0">
               <Briefcase className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-900">
+              <h2 className="text-base font-bold text-slate-900 dark:text-white">
                 {lang === 'bn' ? 'শাকের ভাই এর বেতন হিসাব - ক্যাশ ইন হ্যান্ড' : 'Shaker Bhai Salary - Cash in Hand'}
               </h2>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 {lang === 'bn'
                   ? 'বসের থেকে প্রাপ্ত বেতন ফান্ড এবং খরচের পর হাতে অবশিষ্ট নগদ টাকা (KWD)'
                   : 'Total Boss Fund received minus expenses = Net Cash in Hand (KWD)'}
@@ -416,7 +436,7 @@ export const DashboardView: React.FC = () => {
 
           <button
             onClick={() => setActiveSection('boss-salary')}
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-800 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-3 py-1.5 rounded-lg transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-800 dark:text-amber-300 hover:text-amber-900 bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/60 border border-amber-200 dark:border-amber-800 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
           >
             <span>{lang === 'bn' ? 'বেতন ফান্ড বিবরণী' : 'Salary Ledger'}</span>
             <ArrowUpRight className="w-3.5 h-3.5" />
@@ -502,6 +522,9 @@ export const DashboardView: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* SECTION 3.5: INTERACTIVE FINANCIAL ANALYTICS CHARTS */}
+      <DashboardCharts />
 
       {/* SECTION 4: RECENT TRANSACTIONS LEDGER (সর্বশেষ লেনদেনসমূহ) */}
       <section className="space-y-3 pt-2">

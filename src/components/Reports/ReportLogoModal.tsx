@@ -344,8 +344,8 @@ export const ReportLogoModal: React.FC<ReportLogoModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/75 backdrop-blur-xs animate-in fade-in duration-200">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden">
         {/* Header */}
         <div className="px-6 py-4 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
@@ -372,9 +372,9 @@ export const ReportLogoModal: React.FC<ReportLogoModalProps> = ({
 
         {/* Scrollable Body */}
         <div className="p-6 overflow-y-auto space-y-6 flex-1">
-          {/* Live Preview Card */}
-          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 shadow-2xs">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-2.5">
+          {/* Live Preview Card (Paper Preview stays crisp light paper) */}
+          <div className="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-2xs">
+            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-2.5">
               {lang === 'bn' ? 'লাইভ প্রিভিউ (লেটারহেডে যেভাবে দেখাবে)' : 'Live Letterhead Preview'}
             </span>
             <div className="bg-white border border-slate-200 rounded-xl p-3 flex items-center gap-3 shadow-xs">
@@ -408,15 +408,15 @@ export const ReportLogoModal: React.FC<ReportLogoModalProps> = ({
           {/* Option 1: Upload Custom Logo */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                <Upload className="w-4 h-4 text-indigo-600" />
+              <label className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+                <Upload className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                 <span>{lang === 'bn' ? '১. নিজের ডিভাইস থেকে লোগো আপলোড করুন' : '1. Upload Custom Image/Logo'}</span>
               </label>
               {customLogoUrl && (
                 <button
                   type="button"
                   onClick={handleRemoveCustomLogo}
-                  className="text-xs text-rose-600 hover:text-rose-700 font-semibold cursor-pointer underline"
+                  className="text-xs text-rose-600 dark:text-rose-400 hover:text-rose-700 font-semibold cursor-pointer underline"
                 >
                   {lang === 'bn' ? 'আপলোডকৃত ছবি মুছুন' : 'Remove Uploaded Image'}
                 </button>
@@ -436,8 +436,8 @@ export const ReportLogoModal: React.FC<ReportLogoModalProps> = ({
               onClick={() => fileInputRef.current?.click()}
               className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all ${
                 selectedType === 'custom' && customLogoUrl
-                  ? 'border-emerald-500 bg-emerald-50/40'
-                  : 'border-slate-300 hover:border-indigo-400 hover:bg-slate-50'
+                  ? 'border-emerald-500 bg-emerald-50/40 dark:bg-emerald-950/30'
+                  : 'border-slate-300 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-slate-50 dark:hover:bg-slate-800/50'
               }`}
             >
               {customLogoUrl ? (
@@ -445,38 +445,38 @@ export const ReportLogoModal: React.FC<ReportLogoModalProps> = ({
                   <img
                     src={customLogoUrl}
                     alt="Preview"
-                    className="w-14 h-14 object-contain rounded-lg border border-slate-200 bg-white p-1 shadow-2xs"
+                    className="w-14 h-14 object-contain rounded-lg border border-slate-200 dark:border-slate-700 bg-white p-1 shadow-2xs"
                   />
                   <div className="text-left">
-                    <p className="text-xs font-bold text-emerald-800 flex items-center gap-1">
-                      <Check className="w-4 h-4 text-emerald-600" />
+                    <p className="text-xs font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-1">
+                      <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                       {lang === 'bn' ? 'কাস্টম লোগো আপলোড সম্পন্ন হয়েছে' : 'Custom Logo Uploaded'}
                     </p>
-                    <p className="text-[11px] text-slate-500 mt-0.5">
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                       {lang === 'bn' ? 'অন্য ছবি আপলোড করতে এখানে ক্লিক করুন' : 'Click to replace with a different image'}
                     </p>
                   </div>
                 </div>
               ) : (
                 <div className="py-2">
-                  <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 mx-auto flex items-center justify-center mb-2">
+                  <div className="w-10 h-10 rounded-full bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-300 mx-auto flex items-center justify-center mb-2">
                     <ImageIcon className="w-5 h-5" />
                   </div>
-                  <p className="text-xs font-bold text-slate-700">
+                  <p className="text-xs font-bold text-slate-700 dark:text-slate-200">
                     {lang === 'bn' ? 'লোগো বা ছবি নির্বাচন করতে ক্লিক করুন' : 'Click to select logo file'}
                   </p>
-                  <p className="text-[10px] text-slate-400 mt-1">
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
                     PNG, JPG, SVG, WebP (Max 4MB)
                   </p>
                 </div>
               )}
             </div>
-            {uploadError && <p className="text-xs text-rose-600 font-medium">{uploadError}</p>}
+            {uploadError && <p className="text-xs text-rose-600 dark:text-rose-400 font-medium">{uploadError}</p>}
           </div>
 
           {/* Option 2: Choose from Preset Logos */}
           <div className="space-y-3">
-            <label className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+            <label className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
               <Sparkles className="w-4 h-4 text-amber-500" />
               <span>{lang === 'bn' ? '২. অথবা আকর্ষণীয় প্রিমিয়াম ডিজাইন থেকে পছন্দ করুন' : '2. Or Choose From Designed Presets'}</span>
             </label>
@@ -491,16 +491,16 @@ export const ReportLogoModal: React.FC<ReportLogoModalProps> = ({
                     onClick={() => setSelectedType(preset.id)}
                     className={`flex items-center gap-3 p-3 rounded-xl border text-left transition-all cursor-pointer relative ${
                       isSelected
-                        ? 'border-emerald-600 bg-emerald-50/50 ring-2 ring-emerald-500/30 shadow-xs'
-                        : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50/60'
+                        ? 'border-emerald-600 bg-emerald-50/50 dark:bg-emerald-950/40 ring-2 ring-emerald-500/30 shadow-xs'
+                        : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50/60 dark:hover:bg-slate-800/60 bg-white dark:bg-slate-900'
                     }`}
                   >
                     {renderReportLogoIcon(preset.id, undefined, 'w-11 h-11')}
                     <div className="flex-1 min-w-0 pr-4">
-                      <p className={`text-xs font-bold truncate ${isSelected ? 'text-emerald-950' : 'text-slate-800'}`}>
+                      <p className={`text-xs font-bold truncate ${isSelected ? 'text-emerald-950 dark:text-emerald-200' : 'text-slate-800 dark:text-slate-200'}`}>
                         {lang === 'bn' ? preset.nameBn : preset.nameEn}
                       </p>
-                      <p className="text-[10.5px] text-slate-500 truncate mt-0.5">
+                      <p className="text-[10.5px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
                         {lang === 'bn' ? preset.descBn : preset.descEn}
                       </p>
                     </div>
@@ -516,14 +516,14 @@ export const ReportLogoModal: React.FC<ReportLogoModalProps> = ({
           </div>
 
           {/* Option 3: Brand Text Customization */}
-          <div className="space-y-3 pt-2 border-t border-slate-200">
-            <label className="text-xs font-bold text-slate-800 uppercase tracking-wider block">
+          <div className="space-y-3 pt-2 border-t border-slate-200 dark:border-slate-800">
+            <label className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider block">
               {lang === 'bn' ? '৩. নাম ও ট্যাগলাইন কাস্টমাইজেশন (ঐচ্ছিক)' : '3. Brand Name & Tagline Customization'}
             </label>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="sm:col-span-2">
-                <label className="text-[11px] font-semibold text-slate-600 block mb-1">
+                <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 block mb-1">
                   {lang === 'bn' ? 'কোম্পানি / ব্র্যান্ডের নাম' : 'Brand Name'}
                 </label>
                 <input
@@ -531,12 +531,12 @@ export const ReportLogoModal: React.FC<ReportLogoModalProps> = ({
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
                   placeholder="Hisab Kitab"
-                  className="w-full px-3 py-1.5 text-xs font-bold border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full px-3 py-1.5 text-xs font-bold border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
 
               <div>
-                <label className="text-[11px] font-semibold text-slate-600 block mb-1">
+                <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 block mb-1">
                   {lang === 'bn' ? 'ব্যাজ (Badge)' : 'Badge Text'}
                 </label>
                 <input
@@ -544,12 +544,12 @@ export const ReportLogoModal: React.FC<ReportLogoModalProps> = ({
                   value={companyBadge}
                   onChange={(e) => setCompanyBadge(e.target.value)}
                   placeholder="PRO"
-                  className="w-full px-3 py-1.5 text-xs font-bold border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full px-3 py-1.5 text-xs font-bold border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
 
               <div className="sm:col-span-3">
-                <label className="text-[11px] font-semibold text-slate-600 block mb-1">
+                <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 block mb-1">
                   {lang === 'bn' ? 'ট্যাগলাইন / উপ-শিরোনাম' : 'Tagline / Subtitle'}
                 </label>
                 <input
@@ -557,7 +557,7 @@ export const ReportLogoModal: React.FC<ReportLogoModalProps> = ({
                   value={companyTagline}
                   onChange={(e) => setCompanyTagline(e.target.value)}
                   placeholder="Personal & Work Finance"
-                  className="w-full px-3 py-1.5 text-xs font-medium border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full px-3 py-1.5 text-xs font-medium border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
             </div>
@@ -565,11 +565,11 @@ export const ReportLogoModal: React.FC<ReportLogoModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between shrink-0">
+        <div className="px-6 py-3.5 bg-slate-50 dark:bg-slate-800/60 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0">
           <button
             type="button"
             onClick={handleResetToDefault}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white border border-slate-300 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span>{lang === 'bn' ? 'ডিফল্ট রিসেট' : 'Reset to Default'}</span>
@@ -579,7 +579,7 @@ export const ReportLogoModal: React.FC<ReportLogoModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-1.5 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer"
+              className="px-4 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer"
             >
               {lang === 'bn' ? 'বাতিল' : 'Cancel'}
             </button>

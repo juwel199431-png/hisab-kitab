@@ -314,16 +314,16 @@ export const SavingsPortfolioView: React.FC = () => {
       </div>
 
       {/* Top Banner & Grand Net Worth */}
-      <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-2xs no-print">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-slate-100">
+      <div className="bg-white dark:bg-slate-900 rounded-xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-2xs no-print">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-slate-100 dark:border-slate-800">
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xl">💰</span>
-              <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
                 {lang === 'bn' ? 'ডিপিএস ও ইন্সুরেন্স সঞ্চয় পোর্টফোলিও' : 'DPS & Insurance Savings Portfolio'}
               </h2>
             </div>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               {lang === 'bn'
                 ? 'ব্যাংক থেকে প্রতি মাসে ট্রান্সফারকৃত ডিপিএস ও ইন্সুরেন্সের সঞ্চিত টাকার নিখুঁত হিসাব'
                 : 'Tracks accumulated savings transferred from banks into multiple DPS and Insurance schemes'}
@@ -333,102 +333,102 @@ export const SavingsPortfolioView: React.FC = () => {
           <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={() => window.print()}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 rounded-lg transition-colors shadow-2xs cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 rounded-lg transition-colors shadow-2xs cursor-pointer"
               title={lang === 'bn' ? 'পোর্টফোলিও স্টেটমেন্ট প্রিন্ট বা PDF তৈরি করুন' : 'Print or Save PDF Statement'}
             >
-              <Printer className="w-3.5 h-3.5 text-slate-600" />
+              <Printer className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300 shrink-0" />
               <span>{lang === 'bn' ? 'প্রিন্ট / PDF স্টেটমেন্ট' : 'Print / PDF'}</span>
             </button>
 
             <button
               onClick={() => handleOpenQuickInstallment()}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-lg transition-colors cursor-pointer shadow-2xs"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-300 dark:border-emerald-800/60 rounded-lg transition-colors cursor-pointer shadow-2xs"
               title={lang === 'bn' ? 'ব্যাংক ব্যালেন্স থেকে ডিপিএস বা ইন্সুরেন্স কিস্তি জমা দিন' : 'Pay Installment from BD Bank'}
             >
-              <CreditCard className="w-3.5 h-3.5 text-emerald-700" />
+              <CreditCard className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400 shrink-0" />
               <span>{lang === 'bn' ? 'ব্যাংক থেকে কিস্তি দিন' : 'Pay Installment'}</span>
             </button>
 
             <button
               onClick={() => openQuickAddWithSection('savings-portfolio')}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-blue-700 hover:bg-blue-800 rounded-lg transition-colors shadow-2xs"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-blue-700 hover:bg-blue-800 rounded-lg transition-colors shadow-2xs cursor-pointer"
             >
-              <ArrowRightLeft className="w-3.5 h-3.5" />
+              <ArrowRightLeft className="w-3.5 h-3.5 shrink-0" />
               <span>{lang === 'bn' ? 'ব্যাংক থেকে সঞ্চয়ে ট্রান্সফার' : 'Transfer to Savings'}</span>
             </button>
 
             <button
               onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-lg transition-colors cursor-pointer"
             >
-              <Plus className="w-3.5 h-3.5 text-slate-600" />
+              <Plus className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300 shrink-0" />
               <span>{lang === 'bn' ? '+ নতুন ডিপিএস / ইন্সুরেন্স' : '+ New DPS / Insurance'}</span>
             </button>
           </div>
         </div>
 
         {/* Global Asset Statistics with Advanced Colors */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 pt-5">
-          <div className="bg-linear-to-br from-indigo-50 via-purple-50/70 to-indigo-100/50 rounded-xl p-4 border border-indigo-200 shadow-2xs hover:shadow-xs transition-shadow">
-            <p className="text-[11px] font-bold text-indigo-950 uppercase tracking-wider flex items-center justify-between">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-5">
+          <div className="bg-linear-to-br from-indigo-50 via-purple-50/70 to-indigo-100/50 dark:from-indigo-950/60 dark:via-purple-950/40 dark:to-slate-900 rounded-xl p-4 border border-indigo-200 dark:border-indigo-800/60 shadow-2xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-150">
+            <p className="text-[11px] font-bold text-indigo-950 dark:text-indigo-200 uppercase tracking-wider flex items-center justify-between">
               <span className="flex items-center gap-1.5">
-                <PiggyBank className="w-3.5 h-3.5 text-indigo-600" />
+                <PiggyBank className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
                 <span>{lang === 'bn' ? 'মোট ডিপিএস সঞ্চয়' : 'Total DPS Savings'}</span>
               </span>
-              <span className="text-[10px] bg-indigo-200/80 text-indigo-900 px-1.5 py-0.2 rounded font-mono font-bold">DPS</span>
+              <span className="text-[10px] bg-indigo-200/80 dark:bg-indigo-900/70 text-indigo-900 dark:text-indigo-200 px-1.5 py-0.2 rounded font-mono font-bold">DPS</span>
             </p>
-            <p className="text-2xl font-black text-indigo-950 font-mono tabular-nums mt-1.5">
+            <p className="text-2xl font-black text-indigo-950 dark:text-white font-mono tabular-nums mt-1.5">
               {formatCurrency(totalDps, 'BDT', lang)}
             </p>
-            <p className="text-[11px] text-indigo-700 mt-1 font-medium">
+            <p className="text-[11px] text-indigo-700 dark:text-indigo-300 mt-1 font-medium">
               {data.savingsAccounts.filter((s) => s.type === 'dps').length} {lang === 'bn' ? 'টি একাউন্ট' : 'accounts'} · {lang === 'bn' ? 'কিস্তি:' : 'Paid:'} {formatNumber(totalDpsInstallments, lang)}/{formatNumber(totalDpsTargetInstallments, lang)}
             </p>
           </div>
 
-          <div className="bg-linear-to-br from-emerald-50 via-teal-50/70 to-emerald-100/50 rounded-xl p-4 border border-emerald-200 shadow-2xs hover:shadow-xs transition-shadow">
-            <p className="text-[11px] font-bold text-emerald-950 uppercase tracking-wider flex items-center justify-between">
+          <div className="bg-linear-to-br from-emerald-50 via-teal-50/70 to-emerald-100/50 dark:from-emerald-950/60 dark:via-teal-950/40 dark:to-slate-900 rounded-xl p-4 border border-emerald-200 dark:border-emerald-800/60 shadow-2xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-150">
+            <p className="text-[11px] font-bold text-emerald-950 dark:text-emerald-200 uppercase tracking-wider flex items-center justify-between">
               <span className="flex items-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                 <span>{lang === 'bn' ? 'মোট ইন্সুরেন্স জমা' : 'Total Insurance'}</span>
               </span>
-              <span className="text-[10px] bg-emerald-200/80 text-emerald-900 px-1.5 py-0.2 rounded font-mono font-bold">INS</span>
+              <span className="text-[10px] bg-emerald-200/80 dark:bg-emerald-900/70 text-emerald-900 dark:text-emerald-200 px-1.5 py-0.2 rounded font-mono font-bold">INS</span>
             </p>
-            <p className="text-2xl font-black text-emerald-950 font-mono tabular-nums mt-1.5">
+            <p className="text-2xl font-black text-emerald-950 dark:text-white font-mono tabular-nums mt-1.5">
               {formatCurrency(totalInsurance, 'BDT', lang)}
             </p>
-            <p className="text-[11px] text-emerald-700 mt-1 font-medium">
+            <p className="text-[11px] text-emerald-700 dark:text-emerald-300 mt-1 font-medium">
               {data.savingsAccounts.filter((s) => s.type === 'insurance').length} {lang === 'bn' ? 'টি পলিসি' : 'policies'} · {lang === 'bn' ? 'কিস্তি:' : 'Paid:'} {formatNumber(totalInsuranceInstallments, lang)}/{formatNumber(totalInsuranceTargetInstallments, lang)}
             </p>
           </div>
 
-          <div className="bg-linear-to-br from-cyan-50 via-blue-50/70 to-cyan-100/50 rounded-xl p-4 border border-cyan-200 shadow-2xs hover:shadow-xs transition-shadow">
-            <p className="text-[11px] font-bold text-cyan-950 uppercase tracking-wider flex items-center justify-between">
+          <div className="bg-linear-to-br from-cyan-50 via-blue-50/70 to-cyan-100/50 dark:from-cyan-950/60 dark:via-blue-950/40 dark:to-slate-900 rounded-xl p-4 border border-cyan-200 dark:border-cyan-800/60 shadow-2xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-150">
+            <p className="text-[11px] font-bold text-cyan-950 dark:text-cyan-200 uppercase tracking-wider flex items-center justify-between">
               <span className="flex items-center gap-1.5">
-                <Landmark className="w-3.5 h-3.5 text-cyan-700" />
+                <Landmark className="w-3.5 h-3.5 text-cyan-700 dark:text-cyan-400 shrink-0" />
                 <span>{lang === 'bn' ? '৩টি ব্যাংক ব্যালেন্স' : 'Liquid Bank Balance'}</span>
               </span>
-              <span className="text-[10px] bg-cyan-200/80 text-cyan-900 px-1.5 py-0.2 rounded font-mono font-bold">BANKS</span>
+              <span className="text-[10px] bg-cyan-200/80 dark:bg-cyan-900/70 text-cyan-900 dark:text-cyan-200 px-1.5 py-0.2 rounded font-mono font-bold">BANKS</span>
             </p>
-            <p className="text-2xl font-black text-cyan-950 font-mono tabular-nums mt-1.5">
+            <p className="text-2xl font-black text-cyan-950 dark:text-white font-mono tabular-nums mt-1.5">
               {formatCurrency(totalBanks, 'BDT', lang)}
             </p>
-            <p className="text-[11px] text-cyan-700 mt-1 font-medium">
+            <p className="text-[11px] text-cyan-700 dark:text-cyan-300 mt-1 font-medium">
               {lang === 'bn' ? 'চলতি ব্যাংক অ্যাকাউন্টে জমা' : 'Available in banks'}
             </p>
           </div>
 
-          <div className="bg-linear-to-br from-amber-50 via-orange-50/70 to-yellow-100/50 rounded-xl p-4 border border-amber-200 shadow-2xs hover:shadow-xs transition-shadow">
-            <p className="text-[11px] font-bold text-amber-950 uppercase tracking-wider flex items-center justify-between">
+          <div className="bg-linear-to-br from-amber-50 via-orange-50/70 to-yellow-100/50 dark:from-amber-950/60 dark:via-orange-950/40 dark:to-slate-900 rounded-xl p-4 border border-amber-200 dark:border-amber-800/60 shadow-2xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-150">
+            <p className="text-[11px] font-bold text-amber-950 dark:text-amber-200 uppercase tracking-wider flex items-center justify-between">
               <span className="flex items-center gap-1.5">
-                <TrendingUp className="w-3.5 h-3.5 text-amber-700" />
+                <TrendingUp className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400 shrink-0" />
                 <span>{lang === 'bn' ? 'সর্বমোট সম্পদ (Net Savings)' : 'Total Net Savings'}</span>
               </span>
-              <span className="text-[10px] bg-amber-200/80 text-amber-950 px-1.5 py-0.2 rounded font-mono font-bold">TOTAL</span>
+              <span className="text-[10px] bg-amber-200/80 dark:bg-amber-900/70 text-amber-950 dark:text-amber-200 px-1.5 py-0.2 rounded font-mono font-bold">TOTAL</span>
             </p>
-            <p className="text-2xl font-black text-amber-950 font-mono tabular-nums mt-1.5">
+            <p className="text-2xl font-black text-amber-950 dark:text-white font-mono tabular-nums mt-1.5">
               {formatCurrency(grandTotal, 'BDT', lang)}
             </p>
-            <p className="text-[11px] text-amber-800 mt-1 font-medium">
+            <p className="text-[11px] text-amber-800 dark:text-amber-300 mt-1 font-medium">
               {lang === 'bn' ? 'ব্যাংক + ডিপিএস + ইন্সুরেন্স' : 'Banks + DPS + Insurance'}
             </p>
           </div>
@@ -437,12 +437,12 @@ export const SavingsPortfolioView: React.FC = () => {
 
       {/* DPS Accounts Section */}
       <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-            <PiggyBank className="w-4 h-4 text-blue-600" />
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <PiggyBank className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
             <span>{lang === 'bn' ? 'ব্যাংক ডিপিএস হিসাবসমূহ (Bank DPS Schemes)' : 'Bank DPS Accounts'}</span>
           </h3>
-          <span className="text-xs text-slate-500">
+          <span className="text-xs text-slate-500 dark:text-slate-400">
             {lang === 'bn' ? 'প্রতি মাসের কিস্তি ব্যাংক থেকে ডেবিট হয়' : 'Monthly savings transfers'}
           </span>
         </div>
@@ -466,10 +466,10 @@ export const SavingsPortfolioView: React.FC = () => {
               return (
                 <div
                   key={dps.id}
-                  className="bg-white rounded-xl p-4 border border-slate-200 shadow-2xs hover:border-slate-300 transition-all flex flex-col justify-between"
+                  className="bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-200 dark:border-slate-800 shadow-2xs hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-md hover:-translate-y-0.5 transition-all duration-150 flex flex-col justify-between"
                 >
                   <div>
-                    <div className="flex items-start justify-between pb-2 border-b border-slate-100">
+                    <div className="flex items-start justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
                       <div className="flex-1 mr-2">
                         {isEditing ? (
                           <div className="space-y-1 mb-1">
@@ -477,7 +477,7 @@ export const SavingsPortfolioView: React.FC = () => {
                               type="text"
                               value={editName}
                               onChange={(e) => setEditName(e.target.value)}
-                              className="text-xs font-bold border rounded px-1.5 py-0.5 w-full"
+                              className="text-xs font-bold border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded px-1.5 py-0.5 w-full"
                               placeholder="ডিপিএস এর নাম"
                             />
                             <div className="flex gap-2">
@@ -485,14 +485,14 @@ export const SavingsPortfolioView: React.FC = () => {
                                 type="text"
                                 value={editInst}
                                 onChange={(e) => setEditInst(e.target.value)}
-                                className="text-[11px] border rounded px-1.5 py-0.5 flex-1"
+                                className="text-[11px] border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded px-1.5 py-0.5 flex-1"
                                 placeholder="ব্যাংক / প্রতিষ্ঠান"
                               />
                               <input
                                 type="text"
                                 value={editAccNo}
                                 onChange={(e) => setEditAccNo(e.target.value)}
-                                className="text-[11px] border rounded px-1.5 py-0.5 flex-1 font-mono"
+                                className="text-[11px] border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded px-1.5 py-0.5 flex-1 font-mono"
                                 placeholder="অ্যাকাউন্ট নং"
                               />
                             </div>
@@ -500,13 +500,13 @@ export const SavingsPortfolioView: React.FC = () => {
                         ) : (
                           <>
                             <div className="flex flex-wrap items-center gap-2">
-                              <h4 className="text-sm font-bold text-slate-900">{dps.name}</h4>
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-100 text-blue-800 border border-blue-200/80">
-                                <CheckCircle2 className="w-3 h-3 text-blue-600" />
+                              <h4 className="text-sm font-bold text-slate-900 dark:text-white">{dps.name}</h4>
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800/60">
+                                <CheckCircle2 className="w-3 h-3 text-blue-600 dark:text-blue-400 shrink-0" />
                                 <span>{formatNumber(paidInstallments, lang)}/{formatNumber(totalInstallments, lang)} {lang === 'bn' ? 'কিস্তি' : 'Inst.'}</span>
                               </span>
                             </div>
-                            <p className="text-xs text-slate-500 font-medium mt-0.5">
+                            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
                               {dps.institution} · <span className="font-mono">{dps.accountNumber}</span>
                             </p>
                           </>
@@ -517,13 +517,13 @@ export const SavingsPortfolioView: React.FC = () => {
                           <>
                             <button
                               onClick={() => saveEdit(dps.id)}
-                              className="p-1 text-emerald-700 hover:bg-emerald-50 rounded"
+                              className="p-1 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 rounded cursor-pointer"
                             >
                               <Check className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => setEditingId(null)}
-                              className="p-1 text-slate-400 hover:bg-slate-100 rounded"
+                              className="p-1 text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded cursor-pointer"
                             >
                               <X className="w-4 h-4" />
                             </button>
@@ -531,7 +531,7 @@ export const SavingsPortfolioView: React.FC = () => {
                         ) : (
                           <button
                             onClick={() => startEdit(dps)}
-                            className="p-1 text-slate-400 hover:text-slate-700 rounded"
+                            className="p-1 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 rounded cursor-pointer"
                             title="সম্পাদনা"
                           >
                             <Edit2 className="w-3.5 h-3.5" />
@@ -540,40 +540,40 @@ export const SavingsPortfolioView: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* 3-Pill Installment Breakdown: টোটাল কয়টা জমা করতে হবে, কয়টা করছি, কয়টা বাকি */}
-                    <div className="grid grid-cols-3 gap-2 my-2.5 p-2 bg-blue-50/70 border border-blue-200/80 rounded-lg">
-                      <div className="text-center p-1.5 bg-white rounded-md border border-blue-100 shadow-2xs">
-                        <span className="text-[10px] font-semibold text-slate-500 block">
+                    {/* 3-Pill Installment Breakdown */}
+                    <div className="grid grid-cols-3 gap-2 my-2.5 p-2 bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-800/50 rounded-lg">
+                      <div className="text-center p-1.5 bg-white dark:bg-slate-800/80 rounded-md border border-blue-100 dark:border-slate-700 shadow-2xs">
+                        <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 block">
                           {lang === 'bn' ? 'মোট কিস্তি' : 'Total'}
                         </span>
-                        <span className="text-sm font-bold font-mono text-slate-800 block">
+                        <span className="text-sm font-bold font-mono tabular-nums text-slate-800 dark:text-slate-100 block">
                           {formatNumber(totalInstallments, lang)} {lang === 'bn' ? 'টি' : ''}
                         </span>
-                        <span className="text-[9px] text-slate-400 block">
+                        <span className="text-[9px] text-slate-400 dark:text-slate-500 block">
                           {lang === 'bn' ? 'টার্গেট' : 'Target'}
                         </span>
                       </div>
 
-                      <div className="text-center p-1.5 bg-white rounded-md border border-emerald-200 shadow-2xs">
-                        <span className="text-[10px] font-bold text-emerald-800 block">
+                      <div className="text-center p-1.5 bg-white dark:bg-slate-800/80 rounded-md border border-emerald-200 dark:border-emerald-800/50 shadow-2xs">
+                        <span className="text-[10px] font-bold text-emerald-800 dark:text-emerald-300 block">
                           {lang === 'bn' ? 'জমা করেছি' : 'Paid'}
                         </span>
-                        <span className="text-sm font-bold font-mono text-emerald-700 block">
+                        <span className="text-sm font-bold font-mono tabular-nums text-emerald-700 dark:text-emerald-400 block">
                           {formatNumber(paidInstallments, lang)} {lang === 'bn' ? 'টি' : ''}
                         </span>
-                        <span className="text-[9px] text-emerald-600 font-semibold block">
+                        <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-semibold block">
                           {progressPct}% {lang === 'bn' ? 'সম্পন্ন' : 'done'}
                         </span>
                       </div>
 
-                      <div className="text-center p-1.5 bg-white rounded-md border border-amber-200 shadow-2xs">
-                        <span className="text-[10px] font-bold text-amber-900 block">
+                      <div className="text-center p-1.5 bg-white dark:bg-slate-800/80 rounded-md border border-amber-200 dark:border-amber-800/50 shadow-2xs">
+                        <span className="text-[10px] font-bold text-amber-900 dark:text-amber-300 block">
                           {lang === 'bn' ? 'আরো বাকি' : 'Remaining'}
                         </span>
-                        <span className="text-sm font-bold font-mono text-amber-700 block">
+                        <span className="text-sm font-bold font-mono tabular-nums text-amber-700 dark:text-amber-400 block">
                           {formatNumber(remainingInstallments, lang)} {lang === 'bn' ? 'টি' : ''}
                         </span>
-                        <span className="text-[9px] text-amber-600 block">
+                        <span className="text-[9px] text-amber-600 dark:text-amber-400 block">
                           {lang === 'bn' ? 'বাকি কিস্তি' : 'left'}
                         </span>
                       </div>
@@ -581,14 +581,14 @@ export const SavingsPortfolioView: React.FC = () => {
 
                     {/* Visual Progress Bar */}
                     <div className="space-y-1 mb-2.5">
-                      <div className="flex justify-between items-center text-[10px] text-slate-500">
+                      <div className="flex justify-between items-center text-[10px] text-slate-500 dark:text-slate-400">
                         <span>
                           {lang === 'bn' ? 'কিস্তি পরিশোধের অগ্রগতি:' : 'Installment Progress:'}{' '}
-                          <strong className="text-blue-900 font-mono">{formatNumber(paidInstallments, lang)} / {formatNumber(totalInstallments, lang)}</strong>
+                          <strong className="text-blue-900 dark:text-blue-300 font-mono tabular-nums">{formatNumber(paidInstallments, lang)} / {formatNumber(totalInstallments, lang)}</strong>
                         </span>
-                        <span className="font-mono font-bold text-blue-700">{progressPct}%</span>
+                        <span className="font-mono tabular-nums font-bold text-blue-700 dark:text-blue-400">{progressPct}%</span>
                       </div>
-                      <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                      <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
                         <div
                           className="bg-blue-600 h-full rounded-full transition-all duration-300"
                           style={{ width: `${Math.min(100, Math.max(0, progressPct))}%` }}
@@ -598,94 +598,94 @@ export const SavingsPortfolioView: React.FC = () => {
 
                     <div className="py-1 space-y-1.5 text-xs">
                       <div className="flex justify-between">
-                        <span className="text-slate-500">{lang === 'bn' ? 'ওপেনিং ব্যালেন্স:' : 'Opening Balance:'}</span>
+                        <span className="text-slate-500 dark:text-slate-400">{lang === 'bn' ? 'ওপেনিং ব্যালেন্স:' : 'Opening Balance:'}</span>
                         {isEditing ? (
                           <input
                             type="number"
                             value={editOpeningBal}
                             onChange={(e) => setEditOpeningBal(e.target.value)}
-                            className="w-24 border rounded text-right px-1 font-mono"
+                            className="w-24 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded text-right px-1 font-mono"
                           />
                         ) : (
-                          <span className="font-mono tabular-nums text-slate-700">
+                          <span className="font-mono tabular-nums text-slate-700 dark:text-slate-200">
                             {formatCurrency(dps.openingBalance, 'BDT', lang)}
                           </span>
                         )}
                       </div>
 
                       <div className="flex justify-between">
-                        <span className="text-slate-500">{lang === 'bn' ? 'মাসিক কিস্তির লক্ষ্যমাত্রা:' : 'Monthly Target:'}</span>
+                        <span className="text-slate-500 dark:text-slate-400">{lang === 'bn' ? 'মাসিক কিস্তির লক্ষ্যমাত্রা:' : 'Monthly Target:'}</span>
                         {isEditing ? (
                           <input
                             type="number"
                             value={editMonthlyAmt}
                             onChange={(e) => setEditMonthlyAmt(e.target.value)}
-                            className="w-24 border rounded text-right px-1 font-mono"
+                            className="w-24 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded text-right px-1 font-mono"
                           />
                         ) : (
-                          <span className="font-mono tabular-nums font-semibold text-slate-800">
+                          <span className="font-mono tabular-nums font-semibold text-slate-800 dark:text-slate-100">
                             {formatCurrency(dps.monthlyAmount, 'BDT', lang)} / মাস
                           </span>
                         )}
                       </div>
 
                       <div className="flex justify-between">
-                        <span className="text-blue-700">{lang === 'bn' ? 'ব্যাংক থেকে জমা হয়েছে:' : 'Transfers from Banks:'}</span>
-                        <span className="font-mono tabular-nums font-bold text-blue-700">
+                        <span className="text-blue-700 dark:text-blue-400">{lang === 'bn' ? 'ব্যাংক থেকে জমা হয়েছে:' : 'Transfers from Banks:'}</span>
+                        <span className="font-mono tabular-nums font-bold text-blue-700 dark:text-blue-400">
                           {transfersIn > 0 ? `+${formatCurrency(transfersIn, 'BDT', lang)}` : formatCurrency(0, 'BDT', lang)}
                         </span>
                       </div>
 
                       {isEditing && (
-                        <div className="flex justify-between items-center bg-blue-50/50 p-1 rounded">
-                          <span className="text-blue-900 font-semibold">{lang === 'bn' ? 'মোট কিস্তির সংখ্যা:' : 'Total Installments:'}</span>
+                        <div className="flex justify-between items-center bg-blue-50/50 dark:bg-blue-950/40 p-1 rounded">
+                          <span className="text-blue-900 dark:text-blue-300 font-semibold">{lang === 'bn' ? 'মোট কিস্তির সংখ্যা:' : 'Total Installments:'}</span>
                           <input
                             type="number"
                             value={editTotalInstallments}
                             onChange={(e) => setEditTotalInstallments(e.target.value)}
-                            className="w-20 border rounded text-right px-1 font-mono text-xs"
+                            className="w-20 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded text-right px-1 font-mono text-xs"
                             placeholder="60"
                           />
                         </div>
                       )}
 
-                      <div className="flex justify-between pt-1 border-t border-slate-100">
-                        <span className="text-slate-500">
+                      <div className="flex justify-between pt-1 border-t border-slate-100 dark:border-slate-800">
+                        <span className="text-slate-500 dark:text-slate-400">
                           {lang === 'bn' ? `মোট সঞ্চয় লক্ষ্যমাত্রা (${formatNumber(totalInstallments, lang)} কিস্তি):` : `Total Target (${totalInstallments} inst):`}
                         </span>
-                        <span className="font-mono tabular-nums font-semibold text-slate-700">
+                        <span className="font-mono tabular-nums font-semibold text-slate-700 dark:text-slate-200">
                           {formatCurrency(totalTargetAmount, 'BDT', lang)}
                         </span>
                       </div>
 
                       <div className="flex justify-between">
-                        <span className="text-amber-800 font-medium">
+                        <span className="text-amber-800 dark:text-amber-400 font-medium">
                           {lang === 'bn' ? `অবশিষ্ট জমা লক্ষ্যমাত্রা (${formatNumber(remainingInstallments, lang)} কিস্তি):` : `Remaining Target (${remainingInstallments} inst):`}
                         </span>
-                        <span className="font-mono tabular-nums font-bold text-amber-800">
+                        <span className="font-mono tabular-nums font-bold text-amber-800 dark:text-amber-400">
                           {formatCurrency(remainingTargetAmount, 'BDT', lang)}
                         </span>
                       </div>
 
                       {installmentRemainder > 0 && (
-                        <div className="text-[11px] text-blue-600 font-medium">
+                        <div className="text-[11px] text-blue-600 dark:text-blue-400 font-medium">
                           {lang === 'bn' ? `অতিরিক্ত জমা: +${formatCurrency(installmentRemainder, 'BDT', lang)}` : `Extra balance: +${formatCurrency(installmentRemainder, 'BDT', lang)}`}
                         </div>
                       )}
 
-                      {dps.notes && <p className="text-[11px] text-slate-400 pt-0.5 italic">{dps.notes}</p>}
+                      {dps.notes && <p className="text-[11px] text-slate-400 dark:text-slate-500 pt-0.5 italic">{dps.notes}</p>}
 
-                      <div className="flex justify-between items-center text-[11px] text-slate-500 pt-0.5">
+                      <div className="flex justify-between items-center text-[11px] text-slate-500 dark:text-slate-400 pt-0.5">
                         <span>{lang === 'bn' ? 'মেয়াদ উত্তীর্ণের তারিখ:' : 'Maturity:'}</span>
                         {isEditing ? (
                           <input
                             type="date"
                             value={editMaturity}
                             onChange={(e) => setEditMaturity(e.target.value)}
-                            className="border rounded px-1.5 py-0.5 text-xs text-slate-700"
+                            className="border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 rounded px-1.5 py-0.5 text-xs text-slate-700 dark:text-slate-200"
                           />
                         ) : (
-                          <span className="font-medium text-slate-700">
+                          <span className="font-medium text-slate-700 dark:text-slate-200">
                             {dps.maturityDate ? formatDate(dps.maturityDate, lang) : (lang === 'bn' ? 'নির্ধারিত নেই' : 'N/A')}
                           </span>
                         )}
@@ -693,20 +693,20 @@ export const SavingsPortfolioView: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="pt-3 border-t border-slate-100 bg-blue-50/60 p-2.5 rounded-lg space-y-1.5">
+                  <div className="pt-3 border-t border-slate-100 dark:border-slate-800 bg-blue-50/60 dark:bg-blue-950/30 p-2.5 rounded-lg space-y-1.5 mt-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-blue-950">
+                      <span className="text-xs font-bold text-blue-950 dark:text-blue-200">
                         {lang === 'bn' ? 'ডিপিএসে মোট সঞ্চয় জমা:' : 'Total DPS Accumulated:'}
                       </span>
-                      <span className="font-mono tabular-nums text-base font-bold text-blue-950">
+                      <span className="font-mono tabular-nums text-base font-bold text-blue-950 dark:text-white">
                         {formatCurrency(currentTotal, 'BDT', lang)}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between text-[11px] pt-1.5 border-t border-blue-200/60 text-blue-900">
-                      <span className="font-medium text-blue-800">
+                    <div className="flex items-center justify-between text-[11px] pt-1.5 border-t border-blue-200/60 dark:border-blue-800/50 text-blue-900 dark:text-blue-200">
+                      <span className="font-medium text-blue-800 dark:text-blue-300">
                         {lang === 'bn' ? 'কিস্তি জমার অগ্রগতি:' : 'Installment Breakdown:'}
                       </span>
-                      <span className="font-bold font-mono text-blue-950 bg-white px-2 py-0.5 rounded border border-blue-200 shadow-2xs">
+                      <span className="font-bold font-mono text-blue-950 dark:text-blue-200 bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800/60 shadow-2xs">
                         {formatNumber(paidInstallments, lang)} / {formatNumber(totalInstallments, lang)} {lang === 'bn' ? 'টি জমা' : 'paid'} · {formatNumber(remainingInstallments, lang)} {lang === 'bn' ? 'টি বাকি' : 'left'}
                       </span>
                     </div>
@@ -716,7 +716,7 @@ export const SavingsPortfolioView: React.FC = () => {
                       onClick={() => handleOpenQuickInstallment(dps)}
                       className="w-full mt-2 py-1.5 px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg text-xs flex items-center justify-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
                     >
-                      <ArrowRightLeft className="w-3.5 h-3.5" />
+                      <ArrowRightLeft className="w-3.5 h-3.5 shrink-0" />
                       <span>{lang === 'bn' ? 'ব্যাংক থেকে কিস্তি জমা দিন' : 'Pay Installment from Bank'}</span>
                     </button>
                   </div>
@@ -728,12 +728,12 @@ export const SavingsPortfolioView: React.FC = () => {
 
       {/* Insurance Section */}
       <div className="space-y-3 pt-2">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-emerald-600" />
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
             <span>{lang === 'bn' ? 'ইন্সুরেন্স হিসাব বিবরণী (Insurance Policies)' : 'Insurance Policies'}</span>
           </h3>
-          <span className="text-xs text-slate-500">
+          <span className="text-xs text-slate-500 dark:text-slate-400">
             {lang === 'bn' ? 'জীবন বীমা ও সঞ্চয় স্কিম' : 'Life insurance & protection'}
           </span>
         </div>
@@ -757,10 +757,10 @@ export const SavingsPortfolioView: React.FC = () => {
               return (
                 <div
                   key={ins.id}
-                  className="bg-white rounded-xl p-4 border border-slate-200 shadow-2xs hover:border-slate-300 transition-all flex flex-col justify-between"
+                  className="bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-200 dark:border-slate-800 shadow-2xs hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-md hover:-translate-y-0.5 transition-all duration-150 flex flex-col justify-between"
                 >
                   <div>
-                    <div className="flex items-start justify-between pb-2 border-b border-slate-100">
+                    <div className="flex items-start justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
                       <div className="flex-1 mr-2">
                         {isEditing ? (
                           <div className="space-y-1 mb-1">
@@ -768,7 +768,7 @@ export const SavingsPortfolioView: React.FC = () => {
                               type="text"
                               value={editName}
                               onChange={(e) => setEditName(e.target.value)}
-                              className="text-xs font-bold border rounded px-1.5 py-0.5 w-full"
+                              className="text-xs font-bold border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded px-1.5 py-0.5 w-full"
                               placeholder="বীমার নাম"
                             />
                             <div className="flex gap-2">
@@ -776,14 +776,14 @@ export const SavingsPortfolioView: React.FC = () => {
                                 type="text"
                                 value={editInst}
                                 onChange={(e) => setEditInst(e.target.value)}
-                                className="text-[11px] border rounded px-1.5 py-0.5 flex-1"
+                                className="text-[11px] border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded px-1.5 py-0.5 flex-1"
                                 placeholder="বীমা কোম্পানি"
                               />
                               <input
                                 type="text"
                                 value={editAccNo}
                                 onChange={(e) => setEditAccNo(e.target.value)}
-                                className="text-[11px] border rounded px-1.5 py-0.5 flex-1 font-mono"
+                                className="text-[11px] border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded px-1.5 py-0.5 flex-1 font-mono"
                                 placeholder="পলিসি নং"
                               />
                             </div>
@@ -791,13 +791,13 @@ export const SavingsPortfolioView: React.FC = () => {
                         ) : (
                           <>
                             <div className="flex flex-wrap items-center gap-2">
-                              <h4 className="text-sm font-bold text-slate-900">{ins.name}</h4>
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200/80">
-                                <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                              <h4 className="text-sm font-bold text-slate-900 dark:text-white">{ins.name}</h4>
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60">
+                                <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
                                 <span>{formatNumber(paidInstallments, lang)}/{formatNumber(totalInstallments, lang)} {lang === 'bn' ? 'কিস্তি' : 'Inst.'}</span>
                               </span>
                             </div>
-                            <p className="text-xs text-slate-500 font-medium mt-0.5">
+                            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
                               {ins.institution} · পলিসি নং: <span className="font-mono">{ins.accountNumber}</span>
                             </p>
                           </>
@@ -808,13 +808,13 @@ export const SavingsPortfolioView: React.FC = () => {
                           <>
                             <button
                               onClick={() => saveEdit(ins.id)}
-                              className="p-1 text-emerald-700 hover:bg-emerald-50 rounded"
+                              className="p-1 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 rounded cursor-pointer"
                             >
                               <Check className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => setEditingId(null)}
-                              className="p-1 text-slate-400 hover:bg-slate-100 rounded"
+                              className="p-1 text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded cursor-pointer"
                             >
                               <X className="w-4 h-4" />
                             </button>
@@ -822,7 +822,7 @@ export const SavingsPortfolioView: React.FC = () => {
                         ) : (
                           <button
                             onClick={() => startEdit(ins)}
-                            className="p-1 text-slate-400 hover:text-slate-700 rounded"
+                            className="p-1 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 rounded cursor-pointer"
                             title="সম্পাদনা"
                           >
                             <Edit2 className="w-3.5 h-3.5" />
@@ -831,40 +831,40 @@ export const SavingsPortfolioView: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* 3-Pill Installment Breakdown: টোটাল কয়টা জমা করতে হবে, কয়টা করছি, কয়টা বাকি */}
-                    <div className="grid grid-cols-3 gap-2 my-2.5 p-2 bg-emerald-50/70 border border-emerald-200/80 rounded-lg">
-                      <div className="text-center p-1.5 bg-white rounded-md border border-emerald-100 shadow-2xs">
-                        <span className="text-[10px] font-semibold text-slate-500 block">
+                    {/* 3-Pill Installment Breakdown */}
+                    <div className="grid grid-cols-3 gap-2 my-2.5 p-2 bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-800/50 rounded-lg">
+                      <div className="text-center p-1.5 bg-white dark:bg-slate-800/80 rounded-md border border-emerald-100 dark:border-slate-700 shadow-2xs">
+                        <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 block">
                           {lang === 'bn' ? 'মোট কিস্তি' : 'Total'}
                         </span>
-                        <span className="text-sm font-bold font-mono text-slate-800 block">
+                        <span className="text-sm font-bold font-mono tabular-nums text-slate-800 dark:text-slate-100 block">
                           {formatNumber(totalInstallments, lang)} {lang === 'bn' ? 'টি' : ''}
                         </span>
-                        <span className="text-[9px] text-slate-400 block">
+                        <span className="text-[9px] text-slate-400 dark:text-slate-500 block">
                           {lang === 'bn' ? 'টার্গেট' : 'Target'}
                         </span>
                       </div>
 
-                      <div className="text-center p-1.5 bg-white rounded-md border border-emerald-200 shadow-2xs">
-                        <span className="text-[10px] font-bold text-emerald-800 block">
+                      <div className="text-center p-1.5 bg-white dark:bg-slate-800/80 rounded-md border border-emerald-200 dark:border-emerald-800/50 shadow-2xs">
+                        <span className="text-[10px] font-bold text-emerald-800 dark:text-emerald-300 block">
                           {lang === 'bn' ? 'জমা করেছি' : 'Paid'}
                         </span>
-                        <span className="text-sm font-bold font-mono text-emerald-700 block">
+                        <span className="text-sm font-bold font-mono tabular-nums text-emerald-700 dark:text-emerald-400 block">
                           {formatNumber(paidInstallments, lang)} {lang === 'bn' ? 'টি' : ''}
                         </span>
-                        <span className="text-[9px] text-emerald-600 font-semibold block">
+                        <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-semibold block">
                           {progressPct}% {lang === 'bn' ? 'সম্পন্ন' : 'done'}
                         </span>
                       </div>
 
-                      <div className="text-center p-1.5 bg-white rounded-md border border-amber-200 shadow-2xs">
-                        <span className="text-[10px] font-bold text-amber-900 block">
+                      <div className="text-center p-1.5 bg-white dark:bg-slate-800/80 rounded-md border border-amber-200 dark:border-amber-800/50 shadow-2xs">
+                        <span className="text-[10px] font-bold text-amber-900 dark:text-amber-300 block">
                           {lang === 'bn' ? 'আরো বাকি' : 'Remaining'}
                         </span>
-                        <span className="text-sm font-bold font-mono text-amber-700 block">
+                        <span className="text-sm font-bold font-mono tabular-nums text-amber-700 dark:text-amber-400 block">
                           {formatNumber(remainingInstallments, lang)} {lang === 'bn' ? 'টি' : ''}
                         </span>
-                        <span className="text-[9px] text-amber-600 block">
+                        <span className="text-[9px] text-amber-600 dark:text-amber-400 block">
                           {lang === 'bn' ? 'বাকি কিস্তি' : 'left'}
                         </span>
                       </div>
@@ -872,14 +872,14 @@ export const SavingsPortfolioView: React.FC = () => {
 
                     {/* Visual Progress Bar */}
                     <div className="space-y-1 mb-2.5">
-                      <div className="flex justify-between items-center text-[10px] text-slate-500">
+                      <div className="flex justify-between items-center text-[10px] text-slate-500 dark:text-slate-400">
                         <span>
                           {lang === 'bn' ? 'প্রিমিয়াম জমার অগ্রগতি:' : 'Premium Progress:'}{' '}
-                          <strong className="text-emerald-900 font-mono">{formatNumber(paidInstallments, lang)} / {formatNumber(totalInstallments, lang)}</strong>
+                          <strong className="text-emerald-900 dark:text-emerald-300 font-mono tabular-nums">{formatNumber(paidInstallments, lang)} / {formatNumber(totalInstallments, lang)}</strong>
                         </span>
-                        <span className="font-mono font-bold text-emerald-700">{progressPct}%</span>
+                        <span className="font-mono tabular-nums font-bold text-emerald-700 dark:text-emerald-400">{progressPct}%</span>
                       </div>
-                      <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                      <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
                         <div
                           className="bg-emerald-600 h-full rounded-full transition-all duration-300"
                           style={{ width: `${Math.min(100, Math.max(0, progressPct))}%` }}
@@ -889,94 +889,94 @@ export const SavingsPortfolioView: React.FC = () => {
 
                     <div className="py-1 space-y-1.5 text-xs">
                       <div className="flex justify-between">
-                        <span className="text-slate-500">{lang === 'bn' ? 'ওপেনিং ব্যালেন্স:' : 'Opening Balance:'}</span>
+                        <span className="text-slate-500 dark:text-slate-400">{lang === 'bn' ? 'ওপেনিং ব্যালেন্স:' : 'Opening Balance:'}</span>
                         {isEditing ? (
                           <input
                             type="number"
                             value={editOpeningBal}
                             onChange={(e) => setEditOpeningBal(e.target.value)}
-                            className="w-24 border rounded text-right px-1 font-mono"
+                            className="w-24 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded text-right px-1 font-mono"
                           />
                         ) : (
-                          <span className="font-mono tabular-nums text-slate-700">
+                          <span className="font-mono tabular-nums text-slate-700 dark:text-slate-200">
                             {formatCurrency(ins.openingBalance, 'BDT', lang)}
                           </span>
                         )}
                       </div>
 
                       <div className="flex justify-between">
-                        <span className="text-slate-500">{lang === 'bn' ? 'প্রিমিয়াম লক্ষ্যমাত্রা:' : 'Premium:'}</span>
+                        <span className="text-slate-500 dark:text-slate-400">{lang === 'bn' ? 'প্রিমিয়াম লক্ষ্যমাত্রা:' : 'Premium:'}</span>
                         {isEditing ? (
                           <input
                             type="number"
                             value={editMonthlyAmt}
                             onChange={(e) => setEditMonthlyAmt(e.target.value)}
-                            className="w-24 border rounded text-right px-1 font-mono"
+                            className="w-24 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded text-right px-1 font-mono"
                           />
                         ) : (
-                          <span className="font-mono tabular-nums font-semibold text-slate-800">
+                          <span className="font-mono tabular-nums font-semibold text-slate-800 dark:text-slate-100">
                             {formatCurrency(ins.monthlyAmount, 'BDT', lang)} / কিস্তি
                           </span>
                         )}
                       </div>
 
                       <div className="flex justify-between">
-                        <span className="text-emerald-700">{lang === 'bn' ? 'ব্যাংক থেকে প্রিমিয়াম জমা:' : 'Transfers from Banks:'}</span>
-                        <span className="font-mono tabular-nums font-bold text-emerald-700">
+                        <span className="text-emerald-700 dark:text-emerald-400">{lang === 'bn' ? 'ব্যাংক থেকে প্রিমিয়াম জমা:' : 'Transfers from Banks:'}</span>
+                        <span className="font-mono tabular-nums font-bold text-emerald-700 dark:text-emerald-400">
                           {transfersIn > 0 ? `+${formatCurrency(transfersIn, 'BDT', lang)}` : formatCurrency(0, 'BDT', lang)}
                         </span>
                       </div>
 
                       {isEditing && (
-                        <div className="flex justify-between items-center bg-emerald-50/50 p-1 rounded">
-                          <span className="text-emerald-900 font-semibold">{lang === 'bn' ? 'মোট কিস্তির সংখ্যা:' : 'Total Installments:'}</span>
+                        <div className="flex justify-between items-center bg-emerald-50/50 dark:bg-emerald-950/40 p-1 rounded">
+                          <span className="text-emerald-900 dark:text-emerald-300 font-semibold">{lang === 'bn' ? 'মোট কিস্তির সংখ্যা:' : 'Total Installments:'}</span>
                           <input
                             type="number"
                             value={editTotalInstallments}
                             onChange={(e) => setEditTotalInstallments(e.target.value)}
-                            className="w-20 border rounded text-right px-1 font-mono text-xs"
+                            className="w-20 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded text-right px-1 font-mono text-xs"
                             placeholder="144"
                           />
                         </div>
                       )}
 
-                      <div className="flex justify-between pt-1 border-t border-slate-100">
-                        <span className="text-slate-500">
+                      <div className="flex justify-between pt-1 border-t border-slate-100 dark:border-slate-800">
+                        <span className="text-slate-500 dark:text-slate-400">
                           {lang === 'bn' ? `মোট প্রিমিয়াম টার্গেট (${formatNumber(totalInstallments, lang)} কিস্তি):` : `Total Target (${totalInstallments} inst):`}
                         </span>
-                        <span className="font-mono tabular-nums font-semibold text-slate-700">
+                        <span className="font-mono tabular-nums font-semibold text-slate-700 dark:text-slate-200">
                           {formatCurrency(totalTargetAmount, 'BDT', lang)}
                         </span>
                       </div>
 
                       <div className="flex justify-between">
-                        <span className="text-amber-800 font-medium">
+                        <span className="text-amber-800 dark:text-amber-400 font-medium">
                           {lang === 'bn' ? `অবশিষ্ট জমা লক্ষ্যমাত্রা (${formatNumber(remainingInstallments, lang)} কিস্তি):` : `Remaining Target (${remainingInstallments} inst):`}
                         </span>
-                        <span className="font-mono tabular-nums font-bold text-amber-800">
+                        <span className="font-mono tabular-nums font-bold text-amber-800 dark:text-amber-400">
                           {formatCurrency(remainingTargetAmount, 'BDT', lang)}
                         </span>
                       </div>
 
                       {installmentRemainder > 0 && (
-                        <div className="text-[11px] text-emerald-600 font-medium">
+                        <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
                           {lang === 'bn' ? `অতিরিক্ত জমা: +${formatCurrency(installmentRemainder, 'BDT', lang)}` : `Extra balance: +${formatCurrency(installmentRemainder, 'BDT', lang)}`}
                         </div>
                       )}
 
-                      {ins.notes && <p className="text-[11px] text-slate-400 pt-0.5 italic">{ins.notes}</p>}
+                      {ins.notes && <p className="text-[11px] text-slate-400 dark:text-slate-500 pt-0.5 italic">{ins.notes}</p>}
 
-                      <div className="flex justify-between items-center text-[11px] text-slate-500 pt-0.5">
+                      <div className="flex justify-between items-center text-[11px] text-slate-500 dark:text-slate-400 pt-0.5">
                         <span>{lang === 'bn' ? 'মেয়াদ উত্তীর্ণের তারিখ:' : 'Maturity:'}</span>
                         {isEditing ? (
                           <input
                             type="date"
                             value={editMaturity}
                             onChange={(e) => setEditMaturity(e.target.value)}
-                            className="border rounded px-1.5 py-0.5 text-xs text-slate-700"
+                            className="border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 rounded px-1.5 py-0.5 text-xs text-slate-700 dark:text-slate-200"
                           />
                         ) : (
-                          <span className="font-medium text-slate-700">
+                          <span className="font-medium text-slate-700 dark:text-slate-200">
                             {ins.maturityDate ? formatDate(ins.maturityDate, lang) : (lang === 'bn' ? 'নির্ধারিত নেই' : 'N/A')}
                           </span>
                         )}
@@ -984,20 +984,20 @@ export const SavingsPortfolioView: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="pt-3 border-t border-slate-100 bg-emerald-50/60 p-2.5 rounded-lg space-y-1.5">
+                  <div className="pt-3 border-t border-slate-100 dark:border-slate-800 bg-emerald-50/60 dark:bg-emerald-950/30 p-2.5 rounded-lg space-y-1.5 mt-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-emerald-950">
+                      <span className="text-xs font-bold text-emerald-950 dark:text-emerald-200">
                         {lang === 'bn' ? 'ইন্সুরেন্সে মোট সঞ্চিত তহবিল:' : 'Total Insurance Accumulated:'}
                       </span>
-                      <span className="font-mono tabular-nums text-base font-bold text-emerald-950">
+                      <span className="font-mono tabular-nums text-base font-bold text-emerald-950 dark:text-white">
                         {formatCurrency(currentTotal, 'BDT', lang)}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between text-[11px] pt-1.5 border-t border-emerald-200/60 text-emerald-900">
-                      <span className="font-medium text-emerald-800">
+                    <div className="flex items-center justify-between text-[11px] pt-1.5 border-t border-emerald-200/60 dark:border-emerald-800/50 text-emerald-900 dark:text-emerald-200">
+                      <span className="font-medium text-emerald-800 dark:text-emerald-300">
                         {lang === 'bn' ? 'প্রিমিয়াম জমার অগ্রগতি:' : 'Premium Breakdown:'}
                       </span>
-                      <span className="font-bold font-mono text-emerald-950 bg-white px-2 py-0.5 rounded border border-emerald-200 shadow-2xs">
+                      <span className="font-bold font-mono text-emerald-950 dark:text-emerald-200 bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800/60 shadow-2xs">
                         {formatNumber(paidInstallments, lang)} / {formatNumber(totalInstallments, lang)} {lang === 'bn' ? 'টি জমা' : 'paid'} · {formatNumber(remainingInstallments, lang)} {lang === 'bn' ? 'টি বাকি' : 'left'}
                       </span>
                     </div>
@@ -1007,7 +1007,7 @@ export const SavingsPortfolioView: React.FC = () => {
                       onClick={() => handleOpenQuickInstallment(ins)}
                       className="w-full mt-2 py-1.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs flex items-center justify-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
                     >
-                      <ArrowRightLeft className="w-3.5 h-3.5" />
+                      <ArrowRightLeft className="w-3.5 h-3.5 shrink-0" />
                       <span>{lang === 'bn' ? 'ব্যাংক থেকে প্রিমিয়াম জমা দিন' : 'Pay Premium from Bank'}</span>
                     </button>
                   </div>
@@ -1019,22 +1019,22 @@ export const SavingsPortfolioView: React.FC = () => {
 
       {/* Loans Section */}
       <div className="space-y-3 pt-2">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-            <CreditCard className="w-4 h-4 text-rose-600" />
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <CreditCard className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
             <span>{lang === 'bn' ? 'ব্যাংক লোন ও কিস্তি হিসাব (Loan Tracking)' : 'Loan & Liability Records'}</span>
           </h3>
           <button
             onClick={() => setShowAddLoanModal(true)}
-            className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-md transition-colors"
+            className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 dark:hover:bg-rose-900/60 border border-rose-200 dark:border-rose-800/60 rounded-md transition-colors cursor-pointer"
           >
-            <Plus className="w-3.5 h-3.5" />
+            <Plus className="w-3.5 h-3.5 shrink-0" />
             <span>{lang === 'bn' ? '+ নতুন লোন যোগ' : '+ Add Loan'}</span>
           </button>
         </div>
 
         {data.loans.length === 0 ? (
-          <div className="bg-white rounded-xl p-6 border border-slate-200 text-center text-slate-400 text-xs">
+          <div className="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-200 dark:border-slate-800 text-center text-slate-400 dark:text-slate-500 text-xs">
             {lang === 'bn'
               ? 'বর্তমানে কোনো লোনের হিসাব নেই। প্রয়োজন হলে "+ নতুন লোন যোগ" বাটনে ক্লিক করে যুক্ত করুন।'
               : 'No loans currently tracked. Click "+ Add Loan" to add one.'}
@@ -1048,9 +1048,9 @@ export const SavingsPortfolioView: React.FC = () => {
               const progress = loanBal.progress;
 
               return (
-                <div key={loan.id} className="bg-white rounded-xl p-4 border border-slate-200 shadow-2xs flex flex-col justify-between">
+                <div key={loan.id} className="bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-200 dark:border-slate-800 shadow-2xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-150 flex flex-col justify-between">
                   <div>
-                    <div className="flex justify-between items-start pb-2 border-b border-slate-100">
+                    <div className="flex justify-between items-start pb-2 border-b border-slate-100 dark:border-slate-800">
                       <div>
                         {isEditing ? (
                           <div className="space-y-1">
@@ -1059,20 +1059,20 @@ export const SavingsPortfolioView: React.FC = () => {
                               value={editLoanName}
                               onChange={(e) => setEditLoanName(e.target.value)}
                               placeholder="লোনের নাম"
-                              className="text-xs font-bold border border-slate-300 rounded px-1.5 py-0.5 w-full"
+                              className="text-xs font-bold border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded px-1.5 py-0.5 w-full"
                             />
                             <input
                               type="text"
                               value={editLoanLender}
                               onChange={(e) => setEditLoanLender(e.target.value)}
                               placeholder="ব্যাংক বা প্রতিষ্ঠান"
-                              className="text-[11px] border border-slate-300 rounded px-1.5 py-0.5 w-full"
+                              className="text-[11px] border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded px-1.5 py-0.5 w-full"
                             />
                           </div>
                         ) : (
                           <>
-                            <h4 className="text-sm font-bold text-slate-900">{loan.name}</h4>
-                            <p className="text-xs text-slate-500">{loan.lender}</p>
+                            <h4 className="text-sm font-bold text-slate-900 dark:text-white">{loan.name}</h4>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">{loan.lender}</p>
                           </>
                         )}
                       </div>
@@ -1082,14 +1082,14 @@ export const SavingsPortfolioView: React.FC = () => {
                           <>
                             <button
                               onClick={() => saveEditLoan(loan.id)}
-                              className="p-1 text-emerald-700 hover:bg-emerald-50 rounded"
+                              className="p-1 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 rounded cursor-pointer"
                               title="সংরক্ষণ"
                             >
                               <Check className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => setEditingLoanId(null)}
-                              className="p-1 text-slate-400 hover:bg-slate-100 rounded"
+                              className="p-1 text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded cursor-pointer"
                               title="বাতিল"
                             >
                               <X className="w-4 h-4" />
@@ -1099,7 +1099,7 @@ export const SavingsPortfolioView: React.FC = () => {
                           <>
                             <button
                               onClick={() => startEditLoan(loan)}
-                              className="p-1 text-slate-400 hover:text-slate-700 rounded"
+                              className="p-1 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 rounded cursor-pointer"
                               title="লোন হিসাব সম্পাদনা"
                             >
                               <Edit2 className="w-3.5 h-3.5" />
@@ -1110,7 +1110,7 @@ export const SavingsPortfolioView: React.FC = () => {
                                   deleteLoan(loan.id);
                                 }
                               }}
-                              className="p-1 text-slate-400 hover:text-rose-600 rounded"
+                              className="p-1 text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 rounded cursor-pointer"
                               title="মুছে ফেলুন"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -1122,25 +1122,25 @@ export const SavingsPortfolioView: React.FC = () => {
 
                     <div className="py-3 space-y-2 text-xs">
                       <div className="flex justify-between items-center">
-                        <span className="text-slate-500">{lang === 'bn' ? 'মোট ঋণের পরিমাণ:' : 'Total Loan:'}</span>
+                        <span className="text-slate-500 dark:text-slate-400">{lang === 'bn' ? 'মোট ঋণের পরিমাণ:' : 'Total Loan:'}</span>
                         {isEditing ? (
                           <input
                             type="number"
                             value={editLoanTotal}
                             onChange={(e) => setEditLoanTotal(e.target.value)}
-                            className="w-28 text-right font-mono text-xs border border-slate-300 rounded px-1.5 py-0.5"
+                            className="w-28 text-right font-mono text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded px-1.5 py-0.5"
                           />
                         ) : (
-                          <span className="font-mono font-bold">{formatCurrency(loan.totalAmount, 'BDT', lang)}</span>
+                          <span className="font-mono tabular-nums font-bold text-slate-900 dark:text-white">{formatCurrency(loan.totalAmount, 'BDT', lang)}</span>
                         )}
                       </div>
 
                       {loanBal.repaidFromBanks > 0 && (
                         <div className="flex justify-between items-center">
-                          <span className="text-emerald-700 font-medium">
+                          <span className="text-emerald-700 dark:text-emerald-400 font-medium">
                             {lang === 'bn' ? 'ব্যাংক থেকে পরিশোধিত:' : 'Repaid From Banks:'}
                           </span>
-                          <span className="font-mono font-bold text-emerald-700">
+                          <span className="font-mono tabular-nums font-bold text-emerald-700 dark:text-emerald-400">
                             +{formatCurrency(loanBal.repaidFromBanks, 'BDT', lang)}{' '}
                             <span className="text-[10px] font-normal">
                               ({formatNumber(loanBal.repaymentsCount, lang)} {lang === 'bn' ? 'কিস্তি' : 'inst'})
@@ -1150,50 +1150,50 @@ export const SavingsPortfolioView: React.FC = () => {
                       )}
 
                       <div className="flex justify-between items-center">
-                        <span className="text-slate-700 font-semibold">{lang === 'bn' ? 'সর্বমোট পরিশোধিত:' : 'Total Paid So Far:'}</span>
+                        <span className="text-slate-700 dark:text-slate-300 font-semibold">{lang === 'bn' ? 'সর্বমোট পরিশোধিত:' : 'Total Paid So Far:'}</span>
                         {isEditing ? (
                           <input
                             type="number"
                             value={editLoanPaid}
                             onChange={(e) => setEditLoanPaid(e.target.value)}
-                            className="w-28 text-right font-mono text-xs border border-slate-300 rounded px-1.5 py-0.5"
+                            className="w-28 text-right font-mono text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded px-1.5 py-0.5"
                           />
                         ) : (
-                          <span className="font-mono font-bold text-emerald-800">
+                          <span className="font-mono tabular-nums font-bold text-emerald-800 dark:text-emerald-400">
                             {formatCurrency(loanBal.totalPaid, 'BDT', lang)}
                           </span>
                         )}
                       </div>
 
                       <div className="flex justify-between items-center">
-                        <span className="text-slate-500">{lang === 'bn' ? 'মাসিক কিস্তির পরিমাণ:' : 'Installment:'}</span>
+                        <span className="text-slate-500 dark:text-slate-400">{lang === 'bn' ? 'মাসিক কিস্তির পরিমাণ:' : 'Installment:'}</span>
                         {isEditing ? (
                           <input
                             type="number"
                             value={editLoanInstallment}
                             onChange={(e) => setEditLoanInstallment(e.target.value)}
-                            className="w-28 text-right font-mono text-xs border border-slate-300 rounded px-1.5 py-0.5"
+                            className="w-28 text-right font-mono text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded px-1.5 py-0.5"
                           />
                         ) : (
-                          <span className="font-mono font-semibold text-rose-700">
+                          <span className="font-mono tabular-nums font-semibold text-rose-700 dark:text-rose-400">
                             {formatCurrency(loan.installmentAmount, 'BDT', lang)} / কিস্তি
                           </span>
                         )}
                       </div>
 
-                      <div className="flex justify-between items-center pt-1 border-t border-slate-100">
-                        <span className="text-rose-700 font-bold">{lang === 'bn' ? 'অবশিষ্ট বকেয়া ঋণ:' : 'Remaining Debt:'}</span>
-                        <span className="font-mono font-bold text-rose-700 text-sm">
+                      <div className="flex justify-between items-center pt-1 border-t border-slate-100 dark:border-slate-800">
+                        <span className="text-rose-700 dark:text-rose-400 font-bold">{lang === 'bn' ? 'অবশিষ্ট বকেয়া ঋণ:' : 'Remaining Debt:'}</span>
+                        <span className="font-mono tabular-nums font-bold text-rose-700 dark:text-rose-400 text-sm">
                           {formatCurrency(remaining, 'BDT', lang)}
                         </span>
                       </div>
 
                       <div className="space-y-1 pt-1">
-                        <div className="flex justify-between text-[10px] text-slate-500 font-mono">
+                        <div className="flex justify-between text-[10px] text-slate-500 dark:text-slate-400 font-mono">
                           <span>{lang === 'bn' ? 'পরিশোধের অগ্রগতি' : 'Repayment Progress'}</span>
-                          <span className="font-bold text-emerald-700">{progress.toFixed(1)}%</span>
+                          <span className="font-bold text-emerald-700 dark:text-emerald-400 tabular-nums">{progress.toFixed(1)}%</span>
                         </div>
-                        <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                        <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
                           <div
                             className="bg-emerald-600 h-full rounded-full transition-all duration-300"
                             style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
@@ -1202,7 +1202,7 @@ export const SavingsPortfolioView: React.FC = () => {
                       </div>
                     </div>
 
-                    {loan.note && <p className="text-[11px] text-slate-400 italic mb-2">{loan.note}</p>}
+                    {loan.note && <p className="text-[11px] text-slate-400 dark:text-slate-500 italic mb-2">{loan.note}</p>}
                   </div>
 
                   {/* Repayment Button */}
@@ -1214,7 +1214,7 @@ export const SavingsPortfolioView: React.FC = () => {
                     }}
                     className="w-full mt-2 flex items-center justify-center gap-1.5 py-2 px-3 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-lg transition-colors shadow-2xs cursor-pointer"
                   >
-                    <Receipt className="w-3.5 h-3.5" />
+                    <Receipt className="w-3.5 h-3.5 shrink-0" />
                     <span>{lang === 'bn' ? 'কিস্তি পরিশোধ ও ইনভয়েস তৈরি' : 'Pay Installment & Generate Invoice'}</span>
                   </button>
                 </div>
@@ -1224,21 +1224,21 @@ export const SavingsPortfolioView: React.FC = () => {
         )}
 
         {/* Loan Repayments Invoices & Ledger Table */}
-        <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden mt-4">
-          <div className="p-3.5 border-b border-slate-200 bg-rose-50/60 flex justify-between items-center">
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs overflow-hidden mt-4">
+          <div className="p-3.5 border-b border-slate-200 dark:border-slate-800 bg-rose-50/60 dark:bg-rose-950/30 flex justify-between items-center">
             <div className="flex items-center gap-2">
-              <Receipt className="w-4 h-4 text-rose-700" />
-              <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+              <Receipt className="w-4 h-4 text-rose-700 dark:text-rose-400 shrink-0" />
+              <h4 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
                 {lang === 'bn' ? 'ব্যাংক লোন কিস্তি পরিশোধ ও ইনভয়েস খতিয়ান' : 'Loan Repayment Invoices & Ledger'}
               </h4>
             </div>
-            <span className="text-xs text-rose-800 font-semibold">
+            <span className="text-xs text-rose-800 dark:text-rose-300 font-semibold tabular-nums">
               {loanRepayments.length} {lang === 'bn' ? 'টি পরিশোধ ভাউচার' : 'vouchers'}
             </span>
           </div>
 
           {loanRepayments.length === 0 ? (
-            <div className="p-6 text-center text-slate-400 text-xs">
+            <div className="p-6 text-center text-slate-400 dark:text-slate-500 text-xs">
               {lang === 'bn'
                 ? 'এখনও কোনো ব্যাংক লোন কিস্তি পরিশোধ করা হয়নি। কিস্তি পরিশোধ করতে উপরের লোন কার্ড থেকে "কিস্তি পরিশোধ ও ইনভয়েস তৈরি" বাটনে ক্লিক করুন।'
                 : 'No loan repayments made yet. Click "Pay Installment & Generate Invoice" on any loan card to make a payment.'}
@@ -1247,7 +1247,7 @@ export const SavingsPortfolioView: React.FC = () => {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="bg-slate-100/70 border-b border-slate-200 text-slate-600 font-bold">
+                  <tr className="bg-slate-100/70 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 font-bold">
                     <th className="py-2.5 px-3.5 whitespace-nowrap">{lang === 'bn' ? 'ইনভয়েস / ভাউচার' : 'Voucher No'}</th>
                     <th className="py-2.5 px-3.5 whitespace-nowrap">{lang === 'bn' ? 'তারিখ' : 'Date'}</th>
                     <th className="py-2.5 px-3.5 whitespace-nowrap">{lang === 'bn' ? 'কোন লোনে পরিশোধ' : 'Loan Account'}</th>
@@ -1257,35 +1257,35 @@ export const SavingsPortfolioView: React.FC = () => {
                     <th className="py-2.5 px-3.5 text-center whitespace-nowrap">{lang === 'bn' ? 'অ্যাকশন' : 'Actions'}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {loanRepayments.map((tx) => {
                     const targetLoan = data.loans.find((l) => l.id === tx.targetLoanId);
                     const sourceBank = data.banks.find((b) => b.id === tx.fromBankId);
 
                     return (
-                      <tr key={tx.id} className="hover:bg-rose-50/20 transition-colors">
-                        <td className="py-2.5 px-3.5 font-mono font-bold text-indigo-700 whitespace-nowrap">
+                      <tr key={tx.id} className="hover:bg-rose-50/20 dark:hover:bg-rose-950/20 transition-colors">
+                        <td className="py-2.5 px-3.5 font-mono font-bold text-indigo-700 dark:text-indigo-400 whitespace-nowrap">
                           {tx.voucherNo || '—'}
                         </td>
-                        <td className="py-2.5 px-3.5 whitespace-nowrap text-slate-600">
+                        <td className="py-2.5 px-3.5 whitespace-nowrap text-slate-600 dark:text-slate-300">
                           {formatDate(tx.date, lang)}
                         </td>
-                        <td className="py-2.5 px-3.5 font-semibold text-slate-900 whitespace-nowrap">
+                        <td className="py-2.5 px-3.5 font-semibold text-slate-900 dark:text-slate-100 whitespace-nowrap">
                           {targetLoan?.name || 'Loan'}
                           {targetLoan?.lender && (
-                            <span className="block text-[10px] text-slate-400 font-normal">{targetLoan.lender}</span>
+                            <span className="block text-[10px] text-slate-400 dark:text-slate-500 font-normal">{targetLoan.lender}</span>
                           )}
                         </td>
-                        <td className="py-2.5 px-3.5 whitespace-nowrap text-slate-700">
+                        <td className="py-2.5 px-3.5 whitespace-nowrap text-slate-700 dark:text-slate-300">
                           <span className="font-medium">{sourceBank?.name || 'Bank'}</span>
                           {sourceBank?.accountNumber && (
-                            <span className="block text-[10px] text-slate-400 font-mono">{sourceBank.accountNumber}</span>
+                            <span className="block text-[10px] text-slate-400 dark:text-slate-500 font-mono">{sourceBank.accountNumber}</span>
                           )}
                         </td>
-                        <td className="py-2.5 px-3.5 text-right font-mono font-bold text-rose-600 whitespace-nowrap">
+                        <td className="py-2.5 px-3.5 text-right font-mono tabular-nums font-bold text-rose-600 dark:text-rose-400 whitespace-nowrap">
                           {formatCurrency(tx.amount, 'BDT', lang)}
                         </td>
-                        <td className="py-2.5 px-3.5 text-slate-500 max-w-xs truncate">
+                        <td className="py-2.5 px-3.5 text-slate-500 dark:text-slate-400 max-w-xs truncate">
                           {tx.note || '—'}
                         </td>
                         <td className="py-2.5 px-3.5 text-center whitespace-nowrap">
@@ -1297,10 +1297,10 @@ export const SavingsPortfolioView: React.FC = () => {
                                 setSelectedInvoiceLoan(targetLoan || null);
                                 setShowInvoiceModal(true);
                               }}
-                              className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded transition-colors cursor-pointer"
+                              className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 border border-indigo-200 dark:border-indigo-800/60 rounded transition-colors cursor-pointer"
                               title={lang === 'bn' ? 'ইনভয়েস দেখুন ও প্রিন্ট করুন' : 'View & Print Invoice'}
                             >
-                              <Eye className="w-3 h-3" />
+                              <Eye className="w-3 h-3 shrink-0" />
                               <span>{lang === 'bn' ? 'ভাউচার' : 'Invoice'}</span>
                             </button>
                             <button
@@ -1310,10 +1310,10 @@ export const SavingsPortfolioView: React.FC = () => {
                                 setSelectedEditLoan(targetLoan || null);
                                 setShowEditRepayModal(true);
                               }}
-                              className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded transition-colors cursor-pointer"
+                              className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 hover:bg-amber-100 dark:hover:bg-amber-900/60 border border-amber-200 dark:border-amber-800/60 rounded transition-colors cursor-pointer"
                               title={lang === 'bn' ? 'সংশোধন করুন' : 'Edit Repayment'}
                             >
-                              <Edit2 className="w-3 h-3" />
+                              <Edit2 className="w-3 h-3 shrink-0" />
                               <span>{lang === 'bn' ? 'এডিট' : 'Edit'}</span>
                             </button>
                             <button
@@ -1329,7 +1329,7 @@ export const SavingsPortfolioView: React.FC = () => {
                                   deleteLoanRepayment(tx.id);
                                 }
                               }}
-                              className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors cursor-pointer"
+                              className="p-1 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded transition-colors cursor-pointer"
                               title={lang === 'bn' ? 'মুছে ফেলুন' : 'Delete'}
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -1347,12 +1347,12 @@ export const SavingsPortfolioView: React.FC = () => {
       </div>
 
       {/* Savings Transfers History Table */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
-        <div className="p-3.5 border-b border-slate-200 bg-slate-50/70 flex justify-between items-center">
-          <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs overflow-hidden">
+        <div className="p-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/50 flex justify-between items-center">
+          <h4 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
             {lang === 'bn' ? 'ব্যাংক থেকে ডিপিএস ও ইন্সুরেন্সে টাকা জমার স্টেটমেন্ট' : 'Savings Transfers Ledger'}
           </h4>
-          <span className="text-xs text-slate-500">
+          <span className="text-xs text-slate-500 dark:text-slate-400 tabular-nums">
             {savingsTransactions.length} {lang === 'bn' ? 'টি লেনদেন' : 'records'}
           </span>
         </div>
@@ -1360,7 +1360,7 @@ export const SavingsPortfolioView: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-slate-100/70 border-b border-slate-200 text-slate-600 font-bold">
+              <tr className="bg-slate-100/70 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 font-bold">
                 <th className="py-2.5 px-3.5 whitespace-nowrap">{lang === 'bn' ? 'তারিখ' : 'Date'}</th>
                 <th className="py-2.5 px-3.5 whitespace-nowrap">{lang === 'bn' ? 'কোন ব্যাংক থেকে কর্তন' : 'From Bank'}</th>
                 <th className="py-2.5 px-3.5 whitespace-nowrap">{lang === 'bn' ? 'কোন সঞ্চয়ে জমা' : 'Target Savings'}</th>
@@ -1368,10 +1368,10 @@ export const SavingsPortfolioView: React.FC = () => {
                 <th className="py-2.5 px-3.5 text-right whitespace-nowrap">{lang === 'bn' ? 'জমা পরিমাণ' : 'Amount (BDT)'}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 text-slate-800">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-800 dark:text-slate-200">
               {savingsTransactions.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-6 text-slate-400">
+                  <td colSpan={5} className="text-center py-6 text-slate-400 dark:text-slate-500">
                     {lang === 'bn'
                       ? 'এখনো ব্যাংক থেকে ডিপিএস বা ইন্সুরেন্সে ট্রান্সফারের এন্ট্রি নেই।'
                       : 'No savings transfers recorded yet.'}
@@ -1383,14 +1383,14 @@ export const SavingsPortfolioView: React.FC = () => {
                   const targetSavings = data.savingsAccounts.find((s) => s.id === tx.targetSavingsId)?.name || 'Savings';
 
                   return (
-                    <tr key={tx.id} className="hover:bg-slate-50/80">
-                      <td className="py-2 px-3.5 whitespace-nowrap font-medium text-slate-600">
+                    <tr key={tx.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
+                      <td className="py-2 px-3.5 whitespace-nowrap font-medium text-slate-600 dark:text-slate-300">
                         {formatDate(tx.date, lang)}
                       </td>
-                      <td className="py-2 px-3.5 text-slate-700 font-medium">{fromBank}</td>
-                      <td className="py-2 px-3.5 text-blue-900 font-bold">{targetSavings}</td>
-                      <td className="py-2 px-3.5 text-slate-500">{tx.note || '-'}</td>
-                      <td className="py-2 px-3.5 text-right font-mono tabular-nums font-bold text-emerald-800 whitespace-nowrap">
+                      <td className="py-2 px-3.5 text-slate-700 dark:text-slate-300 font-medium">{fromBank}</td>
+                      <td className="py-2 px-3.5 text-blue-900 dark:text-blue-400 font-bold">{targetSavings}</td>
+                      <td className="py-2 px-3.5 text-slate-500 dark:text-slate-400">{tx.note || '-'}</td>
+                      <td className="py-2 px-3.5 text-right font-mono tabular-nums font-bold text-emerald-800 dark:text-emerald-400 whitespace-nowrap">
                         +{formatCurrency(tx.amount, 'BDT', lang)}
                       </td>
                     </tr>
@@ -1404,20 +1404,20 @@ export const SavingsPortfolioView: React.FC = () => {
 
       {/* Add New DPS / Insurance Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md border border-slate-200 overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
-              <h3 className="text-sm font-bold text-slate-900">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/75 backdrop-blur-xs">
+          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl w-full max-w-md border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/80">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">
                 {lang === 'bn' ? 'নতুন সঞ্চয় হিসাব যুক্ত করুন' : 'Add New Savings Account'}
               </h3>
-              <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-slate-600 p-1">
+              <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 cursor-pointer">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <form onSubmit={handleAddSubmit} className="p-5 space-y-3 text-xs">
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {lang === 'bn' ? 'হিসাবের ধরণ' : 'Type'}
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -1427,10 +1427,10 @@ export const SavingsPortfolioView: React.FC = () => {
                       setNewType('dps');
                       if (newTotalInstallments === '144') setNewTotalInstallments('60');
                     }}
-                    className={`py-1.5 px-3 rounded-md font-bold border transition-colors ${
+                    className={`py-1.5 px-3 rounded-md font-bold border transition-colors cursor-pointer ${
                       newType === 'dps'
                         ? 'bg-blue-600 text-white border-blue-600'
-                        : 'bg-slate-50 text-slate-700 border-slate-300'
+                        : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'
                     }`}
                   >
                     ব্যাংক ডিপিএস (DPS)
@@ -1441,10 +1441,10 @@ export const SavingsPortfolioView: React.FC = () => {
                       setNewType('insurance');
                       if (newTotalInstallments === '60') setNewTotalInstallments('144');
                     }}
-                    className={`py-1.5 px-3 rounded-md font-bold border transition-colors ${
+                    className={`py-1.5 px-3 rounded-md font-bold border transition-colors cursor-pointer ${
                       newType === 'insurance'
                         ? 'bg-emerald-600 text-white border-emerald-600'
-                        : 'bg-slate-50 text-slate-700 border-slate-300'
+                        : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'
                     }`}
                   >
                     ইন্সুরেন্স (Insurance)
@@ -1453,7 +1453,7 @@ export const SavingsPortfolioView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {lang === 'bn' ? 'হিসাবের নাম' : 'Scheme Name'} <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -1462,13 +1462,13 @@ export const SavingsPortfolioView: React.FC = () => {
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
                   required
-                  className="w-full px-3 py-1.5 border border-slate-300 rounded-md"
+                  className="w-full px-3 py-1.5 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-md focus:outline-hidden focus:ring-2 focus:ring-blue-500/40"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     {lang === 'bn' ? 'ব্যাংক বা প্রতিষ্ঠান' : 'Institution'}
                   </label>
                   <input
@@ -1476,11 +1476,11 @@ export const SavingsPortfolioView: React.FC = () => {
                     placeholder="যেমন: মার্কেন্টাইল ব্যাংক"
                     value={newInst}
                     onChange={(e) => setNewInst(e.target.value)}
-                    className="w-full px-3 py-1.5 border border-slate-300 rounded-md"
+                    className="w-full px-3 py-1.5 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-md focus:outline-hidden focus:ring-2 focus:ring-blue-500/40"
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     {lang === 'bn' ? 'অ্যাকাউন্ট / পলিসি নং' : 'Account / Policy #'}
                   </label>
                   <input
@@ -1488,14 +1488,14 @@ export const SavingsPortfolioView: React.FC = () => {
                     placeholder="DPS-1234"
                     value={newAccNo}
                     onChange={(e) => setNewAccNo(e.target.value)}
-                    className="w-full px-3 py-1.5 border border-slate-300 rounded-md font-mono"
+                    className="w-full px-3 py-1.5 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-md font-mono focus:outline-hidden focus:ring-2 focus:ring-blue-500/40"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-2">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     {lang === 'bn' ? 'ওপেনিং ব্যালেন্স' : 'Opening Bal'}
                   </label>
                   <input
@@ -1503,11 +1503,11 @@ export const SavingsPortfolioView: React.FC = () => {
                     placeholder="0"
                     value={newOpeningBal}
                     onChange={(e) => setNewOpeningBal(e.target.value)}
-                    className="w-full px-3 py-1.5 border border-slate-300 rounded-md font-mono"
+                    className="w-full px-3 py-1.5 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-md font-mono tabular-nums focus:outline-hidden focus:ring-2 focus:ring-blue-500/40"
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     {lang === 'bn' ? 'মাসিক কিস্তি' : 'Monthly Amt'}
                   </label>
                   <input
@@ -1515,11 +1515,11 @@ export const SavingsPortfolioView: React.FC = () => {
                     placeholder="5000"
                     value={newMonthlyAmt}
                     onChange={(e) => setNewMonthlyAmt(e.target.value)}
-                    className="w-full px-3 py-1.5 border border-slate-300 rounded-md font-mono"
+                    className="w-full px-3 py-1.5 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-md font-mono tabular-nums focus:outline-hidden focus:ring-2 focus:ring-blue-500/40"
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     {lang === 'bn' ? 'মোট কিস্তির সংখ্যা' : 'Total Inst.'}
                   </label>
                   <input
@@ -1527,20 +1527,20 @@ export const SavingsPortfolioView: React.FC = () => {
                     placeholder={newType === 'dps' ? '60' : '144'}
                     value={newTotalInstallments}
                     onChange={(e) => setNewTotalInstallments(e.target.value)}
-                    className="w-full px-3 py-1.5 border border-slate-300 rounded-md font-mono"
+                    className="w-full px-3 py-1.5 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-md font-mono tabular-nums focus:outline-hidden focus:ring-2 focus:ring-blue-500/40"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {lang === 'bn' ? 'মেয়াদ শেষের তারিখ (ঐচ্ছিক)' : 'Maturity Date'}
                 </label>
                 <input
                   type="date"
                   value={newMaturity}
                   onChange={(e) => setNewMaturity(e.target.value)}
-                  className="w-full px-3 py-1.5 border border-slate-300 rounded-md"
+                  className="w-full px-3 py-1.5 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-md focus:outline-hidden focus:ring-2 focus:ring-blue-500/40"
                 />
               </div>
 
@@ -1548,13 +1548,13 @@ export const SavingsPortfolioView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="px-3 py-1.5 text-slate-600 bg-slate-100 rounded-md"
+                  className="px-3 py-1.5 text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md cursor-pointer"
                 >
                   {t('cancel')}
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 font-bold text-white bg-blue-700 hover:bg-blue-800 rounded-md"
+                  className="px-4 py-1.5 font-bold text-white bg-blue-700 hover:bg-blue-800 rounded-md cursor-pointer"
                 >
                   {lang === 'bn' ? 'সংরক্ষণ করুন' : 'Save'}
                 </button>
@@ -1566,21 +1566,21 @@ export const SavingsPortfolioView: React.FC = () => {
 
       {/* Add New Loan Modal */}
       {showAddLoanModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md border border-slate-200 overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between bg-rose-50">
-              <h3 className="text-sm font-bold text-rose-950 flex items-center gap-1.5">
-                <CreditCard className="w-4 h-4 text-rose-600" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/75 backdrop-blur-xs">
+          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl w-full max-w-md border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-rose-50 dark:bg-rose-950/50">
+              <h3 className="text-sm font-bold text-rose-950 dark:text-rose-200 flex items-center gap-1.5">
+                <CreditCard className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
                 <span>{lang === 'bn' ? 'নতুন ব্যাংক লোন যোগ করুন' : 'Add New Loan Record'}</span>
               </h3>
-              <button onClick={() => setShowAddLoanModal(false)} className="text-slate-400 hover:text-slate-600 p-1">
+              <button onClick={() => setShowAddLoanModal(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 cursor-pointer">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <form onSubmit={handleAddLoanSubmit} className="p-5 space-y-3 text-xs">
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {lang === 'bn' ? 'লোনের বিবরণ / নাম' : 'Loan Title'} <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -1589,12 +1589,12 @@ export const SavingsPortfolioView: React.FC = () => {
                   value={newLoanName}
                   onChange={(e) => setNewLoanName(e.target.value)}
                   required
-                  className="w-full px-3 py-1.5 border border-slate-300 rounded-md"
+                  className="w-full px-3 py-1.5 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-md focus:outline-hidden focus:ring-2 focus:ring-rose-500/40"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {lang === 'bn' ? 'ব্যাংক বা ঋণদানকারী প্রতিষ্ঠান' : 'Lender / Bank'}
                 </label>
                 <input
@@ -1602,13 +1602,13 @@ export const SavingsPortfolioView: React.FC = () => {
                   placeholder="যেমন: ব্র্যাক ব্যাংক লিমিটেড"
                   value={newLoanLender}
                   onChange={(e) => setNewLoanLender(e.target.value)}
-                  className="w-full px-3 py-1.5 border border-slate-300 rounded-md"
+                  className="w-full px-3 py-1.5 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-md focus:outline-hidden focus:ring-2 focus:ring-rose-500/40"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     {lang === 'bn' ? 'মোট ঋণের পরিমাণ (BDT)' : 'Total Loan (BDT)'} <span className="text-rose-500">*</span>
                   </label>
                   <input
@@ -1617,11 +1617,11 @@ export const SavingsPortfolioView: React.FC = () => {
                     value={newLoanTotal}
                     onChange={(e) => setNewLoanTotal(e.target.value)}
                     required
-                    className="w-full px-3 py-1.5 border border-slate-300 rounded-md font-mono"
+                    className="w-full px-3 py-1.5 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-md font-mono tabular-nums focus:outline-hidden focus:ring-2 focus:ring-rose-500/40"
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     {lang === 'bn' ? 'মাসিক কিস্তি (BDT)' : 'Installment'}
                   </label>
                   <input
@@ -1629,13 +1629,13 @@ export const SavingsPortfolioView: React.FC = () => {
                     placeholder="8500"
                     value={newLoanInstallment}
                     onChange={(e) => setNewLoanInstallment(e.target.value)}
-                    className="w-full px-3 py-1.5 border border-slate-300 rounded-md font-mono"
+                    className="w-full px-3 py-1.5 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-md font-mono tabular-nums focus:outline-hidden focus:ring-2 focus:ring-rose-500/40"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {lang === 'bn' ? 'ইতিমধ্যে পরিশোধিত কিস্তির মোট টাকা (BDT)' : 'Already Paid Amount'}
                 </label>
                 <input
@@ -1643,12 +1643,12 @@ export const SavingsPortfolioView: React.FC = () => {
                   placeholder="0"
                   value={newLoanPaid}
                   onChange={(e) => setNewLoanPaid(e.target.value)}
-                  className="w-full px-3 py-1.5 border border-slate-300 rounded-md font-mono"
+                  className="w-full px-3 py-1.5 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-md font-mono tabular-nums focus:outline-hidden focus:ring-2 focus:ring-rose-500/40"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {lang === 'bn' ? 'নোট বা মন্তব্য' : 'Note'}
                 </label>
                 <input
@@ -1656,7 +1656,7 @@ export const SavingsPortfolioView: React.FC = () => {
                   placeholder="মাসিক কিস্তি ব্যাংক থেকে অটো-ডেবিট"
                   value={newLoanNote}
                   onChange={(e) => setNewLoanNote(e.target.value)}
-                  className="w-full px-3 py-1.5 border border-slate-300 rounded-md"
+                  className="w-full px-3 py-1.5 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-md focus:outline-hidden focus:ring-2 focus:ring-rose-500/40"
                 />
               </div>
 
@@ -1664,13 +1664,13 @@ export const SavingsPortfolioView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowAddLoanModal(false)}
-                  className="px-3 py-1.5 text-slate-600 bg-slate-100 rounded-md"
+                  className="px-3 py-1.5 text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md cursor-pointer"
                 >
                   {t('cancel')}
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 font-bold text-white bg-rose-700 hover:bg-rose-800 rounded-md shadow-xs"
+                  className="px-4 py-1.5 font-bold text-white bg-rose-700 hover:bg-rose-800 rounded-md shadow-xs cursor-pointer"
                 >
                   {lang === 'bn' ? 'সংরক্ষণ করুন' : 'Save Loan'}
                 </button>
@@ -1716,25 +1716,25 @@ export const SavingsPortfolioView: React.FC = () => {
 
       {/* Quick Installment from Bank Modal */}
       {isInstallmentModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs no-print">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md border border-slate-200 overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between bg-gradient-to-r from-emerald-50 to-blue-50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/75 backdrop-blur-xs no-print">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-linear-to-r from-emerald-50 to-blue-50 dark:from-emerald-950/60 dark:to-blue-950/60">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0">
                   <CreditCard className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900">
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">
                     {lang === 'bn' ? 'ব্যাংক থেকে কিস্তি পরিশোধ' : 'Pay Monthly Installment from Bank'}
                   </h3>
-                  <p className="text-[11px] text-slate-500">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
                     {lang === 'bn' ? 'ব্যাংক থেকে টাকা কেটে সরাসরি ডিপিএস/ইন্সুরেন্সে জমা' : 'Auto-deduct from BD bank and deposit to savings'}
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setIsInstallmentModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-1"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1743,13 +1743,13 @@ export const SavingsPortfolioView: React.FC = () => {
             <form onSubmit={handleInstallmentSubmit} className="p-5 space-y-3.5 text-xs">
               {/* Select Bank */}
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {lang === 'bn' ? 'যে ব্যাংক থেকে টাকা কাটা হবে' : 'Deduct from BD Bank Account'} <span className="text-rose-500">*</span>
                 </label>
                 <select
                   value={instBankId}
                   onChange={(e) => setInstBankId(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg font-medium"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg font-medium focus:outline-hidden focus:ring-2 focus:ring-emerald-500/40"
                   required
                 >
                   {data.banks.map((b) => (
@@ -1762,7 +1762,7 @@ export const SavingsPortfolioView: React.FC = () => {
 
               {/* Select Savings Account */}
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {lang === 'bn' ? 'ডিপিএস / ইন্সুরেন্স অ্যাকাউন্ট' : 'Target Savings Account'} <span className="text-rose-500">*</span>
                 </label>
                 <select
@@ -1776,7 +1776,7 @@ export const SavingsPortfolioView: React.FC = () => {
                       setInstNote(lang === 'bn' ? `${found.name} কিস্তি পরিশোধ` : `Monthly installment for ${found.name}`);
                     }
                   }}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg font-medium"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg font-medium focus:outline-hidden focus:ring-2 focus:ring-emerald-500/40"
                   required
                 >
                   {data.savingsAccounts.map((s) => (
@@ -1790,7 +1790,7 @@ export const SavingsPortfolioView: React.FC = () => {
               {/* Amount & Date */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     {lang === 'bn' ? 'কিস্তির পরিমাণ (BDT ৳)' : 'Amount (BDT ৳)'} <span className="text-rose-500">*</span>
                   </label>
                   <input
@@ -1800,11 +1800,11 @@ export const SavingsPortfolioView: React.FC = () => {
                     value={instAmount}
                     onChange={(e) => setInstAmount(e.target.value)}
                     required
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg font-mono font-bold"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg font-mono tabular-nums font-bold focus:outline-hidden focus:ring-2 focus:ring-emerald-500/40"
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     {lang === 'bn' ? 'তারিখ' : 'Date'} <span className="text-rose-500">*</span>
                   </label>
                   <input
@@ -1812,7 +1812,7 @@ export const SavingsPortfolioView: React.FC = () => {
                     value={instDate}
                     onChange={(e) => setInstDate(e.target.value)}
                     required
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg font-medium"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg font-medium focus:outline-hidden focus:ring-2 focus:ring-emerald-500/40"
                   />
                 </div>
               </div>
@@ -1820,10 +1820,10 @@ export const SavingsPortfolioView: React.FC = () => {
               {/* Voucher / Txn Ref */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="block font-semibold text-slate-700">
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300">
                     {lang === 'bn' ? 'ভাউচার / রেফারেন্স নং' : 'Voucher / Ref #'}
                   </label>
-                  <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                  <span className="text-[10px] text-emerald-700 dark:text-emerald-300 font-bold bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800/60">
                     ⚡ {lang === 'bn' ? 'অটো জেনারেটেড' : 'Auto Generated'}
                   </span>
                 </div>
@@ -1832,29 +1832,29 @@ export const SavingsPortfolioView: React.FC = () => {
                   placeholder="e.g. 1001"
                   value={instVoucher}
                   onChange={(e) => setInstVoucher(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg font-mono font-bold text-slate-800"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg font-mono font-bold text-slate-800 dark:text-slate-100 focus:outline-hidden focus:ring-2 focus:ring-emerald-500/40"
                 />
               </div>
 
               {/* Note */}
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {lang === 'bn' ? 'নোট বা বিবরণ' : 'Note / Description'}
                 </label>
                 <input
                   type="text"
                   value={instNote}
                   onChange={(e) => setInstNote(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-emerald-500/40"
                 />
               </div>
 
               {/* Modal Actions */}
-              <div className="pt-3 flex justify-end gap-2 border-t border-slate-100">
+              <div className="pt-3 flex justify-end gap-2 border-t border-slate-100 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => setIsInstallmentModalOpen(false)}
-                  className="px-3.5 py-2 text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 cursor-pointer font-medium"
+                  className="px-3.5 py-2 text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer font-medium"
                 >
                   {t('cancel')}
                 </button>
@@ -1862,7 +1862,7 @@ export const SavingsPortfolioView: React.FC = () => {
                   type="submit"
                   className="px-4 py-2 font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-2xs cursor-pointer flex items-center gap-1.5"
                 >
-                  <Check className="w-3.5 h-3.5" />
+                  <Check className="w-3.5 h-3.5 shrink-0" />
                   <span>{lang === 'bn' ? 'কিস্তি জমা নিশ্চিত করুন' : 'Confirm Deposit'}</span>
                 </button>
               </div>

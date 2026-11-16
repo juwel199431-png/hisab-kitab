@@ -14,6 +14,7 @@ import {
   Check,
   RotateCcw,
   Sparkles,
+  UserCircle2,
 } from 'lucide-react';
 
 export const ThemeCustomizer: React.FC = () => {
@@ -32,6 +33,9 @@ export const ThemeCustomizer: React.FC = () => {
   const activeFont =
     FONT_PRESETS.find((f) => f.id === themePrefs.fontId) || FONT_PRESETS[0];
 
+  const previewName = themePrefs.userName?.trim();
+  const previewTitle = themePrefs.profileTitle?.trim();
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4 no-print animate-fade-in">
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-xl w-full shadow-2xl overflow-hidden max-h-[92vh] flex flex-col transition-colors">
@@ -47,13 +51,13 @@ export const ThemeCustomizer: React.FC = () => {
             <div>
               <h2 className="text-sm font-bold text-slate-900 dark:text-white">
                 {lang === 'bn'
-                  ? 'থিম, কালার ও ফন্ট কাস্টমাইজার'
-                  : 'Theme, Brand Color & Font Studio'}
+                  ? 'প্রোফাইল, থিম, কালার ও ফন্ট কাস্টমাইজার'
+                  : 'Profile, Theme Color & Font Studio'}
               </h2>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 {lang === 'bn'
-                  ? 'অ্যাপের রঙ, ফন্ট এবং লাইট/ডার্ক মোড নিজের মতো সাজান'
-                  : 'Customize primary brand color, font family & appearance mode'}
+                  ? 'আপনার নাম, প্রোফাইল টাইটেল, ব্র্যান্ড কালার, ফন্ট ও মোড সাজান'
+                  : 'Customize display name, profile title, colors, fonts & theme mode'}
               </p>
             </div>
           </div>
@@ -80,7 +84,7 @@ export const ThemeCustomizer: React.FC = () => {
             }}
           >
             <div className="flex items-center justify-between gap-3">
-              <div>
+              <div className="min-w-0">
                 <span
                   className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md mb-1.5"
                   style={{
@@ -98,22 +102,28 @@ export const ThemeCustomizer: React.FC = () => {
                   {lang === 'bn' ? 'লাইভ প্রিভিউ' : 'Live Preview'}
                 </span>
                 <p
-                  className="text-sm font-bold"
+                  className="text-sm font-bold truncate"
                   style={{
                     color: themePrefs.mode === 'dark' ? '#f8fafc' : '#0f172a',
                   }}
                 >
-                  {lang === 'bn'
+                  {previewName
+                    ? lang === 'bn'
+                      ? `শুভ সকাল, ${previewName} • হিসাব কিতাব`
+                      : `Good Morning, ${previewName} • Hisab Kitab`
+                    : lang === 'bn'
                     ? 'হিসাব কিতাব • দৈনন্দিন আয় ও ব্যয়ের নির্ভুল হিসাব'
                     : 'Hisab Kitab • Personal & Business Ledger'}
                 </p>
                 <p
-                  className="text-xs mt-0.5"
+                  className="text-xs mt-0.5 truncate"
                   style={{
                     color: themePrefs.mode === 'dark' ? '#94a3b8' : '#475569',
                   }}
                 >
-                  {lang === 'bn'
+                  {previewTitle
+                    ? `${previewTitle} • ${lang === 'bn' ? activeFont.nameBn : activeFont.nameEn}`
+                    : lang === 'bn'
                     ? `ফন্ট: ${activeFont.nameBn} • মোট ব্যালেন্স: ৳ ১,২৫,৪০০`
                     : `Font: ${activeFont.nameEn} • Balance: 125,400 BDT`}
                 </p>
@@ -123,15 +133,55 @@ export const ThemeCustomizer: React.FC = () => {
                 className="px-3 py-1.5 rounded-lg text-xs font-bold text-white shadow-xs shrink-0"
                 style={{ backgroundColor: activePalette['700'] }}
               >
-                {lang === 'bn' ? 'প্রাইমারি বাটন' : 'Action'}
+                {lang === 'bn' ? 'প্রাইমারি' : 'Action'}
               </span>
             </div>
           </div>
 
-          {/* 1. Light / Dark Mode Toggle */}
+          {/* 0. User Name & Profile Title */}
+          <div className="p-3.5 rounded-xl bg-slate-50/90 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/70 space-y-3">
+            <label className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200">
+              <UserCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              <span>
+                {lang === 'bn'
+                  ? '১. প্রোফাইল ও পরিচিতি (গ্রিটিংস ও রিপোর্ট হেডারে দেখাবে)'
+                  : '1. User Name & Profile Title (Shown in Greetings & Report Header)'}
+              </span>
+            </label>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">
+                  {lang === 'bn' ? 'আপনার নাম (Display Name)' : 'Display Name'}
+                </label>
+                <input
+                  type="text"
+                  value={themePrefs.userName}
+                  onChange={(e) => updateThemePrefs({ userName: e.target.value })}
+                  placeholder={lang === 'bn' ? 'যেমন: মোঃ জুয়েল রানা' : 'e.g., Juwel Rana'}
+                  className="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-emerald-500/40"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">
+                  {lang === 'bn' ? 'প্রোফাইল / পদবি টাইটেল (Profile Title)' : 'Profile / Business Title'}
+                </label>
+                <input
+                  type="text"
+                  value={themePrefs.profileTitle}
+                  onChange={(e) => updateThemePrefs({ profileTitle: e.target.value })}
+                  placeholder={lang === 'bn' ? 'যেমন: ব্যক্তিগত ও কর্মক্ষেত্র হিসাব' : 'e.g., Personal & Work Finance'}
+                  className="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-emerald-500/40"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* 2. Light / Dark Mode Toggle */}
           <div>
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-2">
-              {lang === 'bn' ? '১. অ্যাপের মোড (Light / Dark)' : '1. Appearance Mode'}
+              {lang === 'bn' ? '২. অ্যাপের মোড (Light / Dark)' : '2. Appearance Mode'}
             </label>
             <div className="grid grid-cols-2 gap-2.5">
               <button
@@ -186,13 +236,13 @@ export const ThemeCustomizer: React.FC = () => {
             </div>
           </div>
 
-          {/* 2. Primary Brand Color Picker */}
+          {/* 3. Primary Brand Color Picker */}
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
                 {lang === 'bn'
-                  ? '২. প্রাইমারি ব্র্যান্ড কালার'
-                  : '2. Primary Brand Color'}
+                  ? '৩. প্রাইমারি ব্র্যান্ড কালার'
+                  : '3. Primary Brand Color'}
               </label>
               <span className="text-[11px] font-mono font-semibold text-slate-500 dark:text-slate-400 uppercase">
                 {activePalette['700']}
@@ -267,14 +317,14 @@ export const ThemeCustomizer: React.FC = () => {
             </div>
           </div>
 
-          {/* 3. Font Family Picker */}
+          {/* 4. Font Family Picker */}
           <div>
             <label className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 mb-2">
               <Type className="w-3.5 h-3.5 text-slate-500" />
               <span>
                 {lang === 'bn'
-                  ? '৩. ফন্ট ফ্যামিলি (বাংলা ও ইংরেজি)'
-                  : '3. App Font Family'}
+                  ? '৪. ফন্ট ফ্যামিলি (বাংলা ও ইংরেজি)'
+                  : '4. App Font Family'}
               </span>
             </label>
 

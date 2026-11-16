@@ -57,6 +57,7 @@ export const Header: React.FC = () => {
     forcePushToCloud,
     setIsWelcomeIntroOpen,
     setIsThemeModalOpen,
+    themePrefs,
   } = useFinance();
 
   const [justSynced, setJustSynced] = useState(false);
@@ -108,10 +109,10 @@ export const Header: React.FC = () => {
       labelEn: 'Dashboard',
       icon: LayoutDashboard,
       activeGradient: 'from-indigo-600 via-violet-600 to-indigo-700 text-white shadow-md shadow-indigo-500/25 border-indigo-400/40',
-      idleBg: 'bg-indigo-50/70 hover:bg-indigo-100/90',
-      idleText: 'text-indigo-950',
-      idleBorder: 'border-indigo-200/90 hover:border-indigo-300',
-      iconIdle: 'text-indigo-600',
+      idleBg: 'bg-indigo-50/70 hover:bg-indigo-100/90 dark:bg-slate-800/80 dark:hover:bg-indigo-950/60',
+      idleText: 'text-indigo-950 dark:text-indigo-200',
+      idleBorder: 'border-indigo-200/90 hover:border-indigo-300 dark:border-slate-700/80 dark:hover:border-indigo-700',
+      iconIdle: 'text-indigo-600 dark:text-indigo-400',
     },
     {
       id: 'bd-bank',
@@ -119,10 +120,10 @@ export const Header: React.FC = () => {
       labelEn: 'BD Bank Accounts',
       icon: Landmark,
       activeGradient: 'from-teal-600 via-emerald-600 to-teal-800 text-white shadow-md shadow-emerald-500/25 border-teal-400/40',
-      idleBg: 'bg-teal-50/70 hover:bg-teal-100/90',
-      idleText: 'text-teal-950',
-      idleBorder: 'border-teal-200/90 hover:border-teal-300',
-      iconIdle: 'text-teal-600',
+      idleBg: 'bg-teal-50/70 hover:bg-teal-100/90 dark:bg-slate-800/80 dark:hover:bg-teal-950/60',
+      idleText: 'text-teal-950 dark:text-teal-200',
+      idleBorder: 'border-teal-200/90 hover:border-teal-300 dark:border-slate-700/80 dark:hover:border-teal-700',
+      iconIdle: 'text-teal-600 dark:text-teal-400',
     },
     {
       id: 'boss-salary',
@@ -130,10 +131,10 @@ export const Header: React.FC = () => {
       labelEn: 'Shaker Bhai Salary',
       icon: Briefcase,
       activeGradient: 'from-amber-500 via-orange-500 to-amber-700 text-white shadow-md shadow-amber-500/25 border-amber-400/40',
-      idleBg: 'bg-amber-50/70 hover:bg-amber-100/90',
-      idleText: 'text-amber-950',
-      idleBorder: 'border-amber-200/90 hover:border-amber-300',
-      iconIdle: 'text-amber-600',
+      idleBg: 'bg-amber-50/70 hover:bg-amber-100/90 dark:bg-slate-800/80 dark:hover:bg-amber-950/50',
+      idleText: 'text-amber-950 dark:text-amber-200',
+      idleBorder: 'border-amber-200/90 hover:border-amber-300 dark:border-slate-700/80 dark:hover:border-amber-700',
+      iconIdle: 'text-amber-600 dark:text-amber-400',
     },
     {
       id: 'emdad-expense',
@@ -141,10 +142,10 @@ export const Header: React.FC = () => {
       labelEn: 'Emdad Bhai Expenses',
       icon: UserCheck,
       activeGradient: 'from-orange-500 via-rose-500 to-red-600 text-white shadow-md shadow-orange-500/25 border-orange-400/40',
-      idleBg: 'bg-orange-50/70 hover:bg-orange-100/90',
-      idleText: 'text-orange-950',
-      idleBorder: 'border-orange-200/90 hover:border-orange-300',
-      iconIdle: 'text-orange-600',
+      idleBg: 'bg-orange-50/70 hover:bg-orange-100/90 dark:bg-slate-800/80 dark:hover:bg-orange-950/50',
+      idleText: 'text-orange-950 dark:text-orange-200',
+      idleBorder: 'border-orange-200/90 hover:border-orange-300 dark:border-slate-700/80 dark:hover:border-orange-700',
+      iconIdle: 'text-orange-600 dark:text-orange-400',
     },
     {
       id: 'kuwait-personal',
@@ -152,10 +153,10 @@ export const Header: React.FC = () => {
       labelEn: 'Kuwait Personal',
       icon: Coins,
       activeGradient: 'from-rose-500 via-pink-600 to-rose-700 text-white shadow-md shadow-rose-500/25 border-rose-400/40',
-      idleBg: 'bg-rose-50/70 hover:bg-rose-100/90',
-      idleText: 'text-rose-950',
-      idleBorder: 'border-rose-200/90 hover:border-rose-300',
-      iconIdle: 'text-rose-600',
+      idleBg: 'bg-rose-50/70 hover:bg-rose-100/90 dark:bg-slate-800/80 dark:hover:bg-rose-950/50',
+      idleText: 'text-rose-950 dark:text-rose-200',
+      idleBorder: 'border-rose-200/90 hover:border-rose-300 dark:border-slate-700/80 dark:hover:border-rose-700',
+      iconIdle: 'text-rose-600 dark:text-rose-400',
     },
     {
       id: 'savings-portfolio',
@@ -163,10 +164,10 @@ export const Header: React.FC = () => {
       labelEn: 'DPS & Savings',
       icon: PiggyBank,
       activeGradient: 'from-purple-600 via-fuchsia-600 to-indigo-800 text-white shadow-md shadow-purple-500/25 border-purple-400/40',
-      idleBg: 'bg-purple-50/70 hover:bg-purple-100/90',
-      idleText: 'text-purple-950',
-      idleBorder: 'border-purple-200/90 hover:border-purple-300',
-      iconIdle: 'text-purple-600',
+      idleBg: 'bg-purple-50/70 hover:bg-purple-100/90 dark:bg-slate-800/80 dark:hover:bg-purple-950/50',
+      idleText: 'text-purple-950 dark:text-purple-200',
+      idleBorder: 'border-purple-200/90 hover:border-purple-300 dark:border-slate-700/80 dark:hover:border-purple-700',
+      iconIdle: 'text-purple-600 dark:text-purple-400',
     },
     {
       id: 'reports',
@@ -174,21 +175,23 @@ export const Header: React.FC = () => {
       labelEn: 'Reports',
       icon: BarChart3,
       activeGradient: 'from-cyan-600 via-blue-600 to-indigo-800 text-white shadow-md shadow-cyan-500/25 border-cyan-400/40',
-      idleBg: 'bg-cyan-50/70 hover:bg-cyan-100/90',
-      idleText: 'text-cyan-950',
-      idleBorder: 'border-cyan-200/90 hover:border-cyan-300',
-      iconIdle: 'text-cyan-600',
+      idleBg: 'bg-cyan-50/70 hover:bg-cyan-100/90 dark:bg-slate-800/80 dark:hover:bg-cyan-950/50',
+      idleText: 'text-cyan-950 dark:text-cyan-200',
+      idleBorder: 'border-cyan-200/90 hover:border-cyan-300 dark:border-slate-700/80 dark:hover:border-cyan-700',
+      iconIdle: 'text-cyan-600 dark:text-cyan-400',
     },
   ];
 
   const hasUnreadOverdueAlerts = smartAlerts.some((a) => a.isOverdue && !isAlertSeen(a.id, true));
+
+  const customSubtitle = themePrefs.profileTitle?.trim();
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 no-print shadow-xs transition-colors duration-200">
       {/* Tier 1: Modern Brand Identity & Control Center */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between gap-4">
         {/* Modern Brand Identity */}
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-3 min-w-0">
           <div className="relative w-11 h-11 rounded-xl shadow-md border border-emerald-500/30 overflow-hidden shrink-0 bg-white dark:bg-slate-800 p-0.5">
             <img
               src="/assets/aistudio/Hisabify_Personal_Finance_Logo_dcec8d4f.png"
@@ -196,18 +199,17 @@ export const Header: React.FC = () => {
               className="w-full h-full object-contain rounded-lg"
             />
           </div>
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-1.5">
-              <h1 className="text-lg md:text-xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-none">
+              <h1 className="text-lg md:text-xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-none truncate">
                 {lang === 'bn' ? 'হিসাব কিতাব' : 'Hisab Kitab'}
               </h1>
-              <span className="text-[9px] font-black px-1.5 py-0.5 rounded-sm bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/80 tracking-wider uppercase">
+              <span className="text-[9px] font-black px-1.5 py-0.5 rounded-sm bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/80 tracking-wider uppercase shrink-0">
                 PRO
               </span>
             </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold flex items-center gap-1.5 mt-0.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse shrink-0" />
-              <span className="truncate">{lang === 'bn' ? 'বাংলাদেশ ও কুয়েত ফাইনান্স ম্যানেজার' : 'Personal & Work Finance'}</span>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold truncate mt-0.5 max-w-[200px] sm:max-w-xs">
+              {customSubtitle || (lang === 'bn' ? 'বাংলাদেশ ও কুয়েত ফাইনান্স ম্যানেজার' : 'Personal & Work Finance')}
             </p>
           </div>
         </div>
@@ -216,6 +218,8 @@ export const Header: React.FC = () => {
         <div className="hidden lg:flex items-center justify-center">
           <LiveGreetingClock
             lang={lang}
+            userName={themePrefs.userName}
+            profileTitle={themePrefs.profileTitle}
             onReplayIntro={() => setIsWelcomeIntroOpen(true)}
           />
         </div>
@@ -361,7 +365,7 @@ export const Header: React.FC = () => {
                 >
                   <span className="flex items-center gap-2.5">
                     <Palette className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                    <span>{lang === 'bn' ? 'থিম, কালার ও ফন্ট' : 'Theme, Color & Font'}</span>
+                    <span>{lang === 'bn' ? 'প্রোফাইল, থিম ও ফন্ট' : 'Profile, Theme & Font'}</span>
                   </span>
                 </button>
 

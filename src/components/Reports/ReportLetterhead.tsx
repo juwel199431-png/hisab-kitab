@@ -1,5 +1,5 @@
 import React from 'react';
-import { Mail, Phone, MapPin, Camera } from 'lucide-react';
+import { Mail, Phone, MapPin, Camera, UserCheck } from 'lucide-react';
 import { renderReportLogoIcon, LogoType } from './ReportLogoModal';
 
 interface ReportLetterheadProps {
@@ -17,15 +17,17 @@ interface ReportLetterheadProps {
   companyName?: string;
   companyTagline?: string;
   companyBadge?: string;
+  userName?: string;
+  profileTitle?: string;
+  adaptiveDark?: boolean;
   onOpenLogoModal?: () => void;
 }
 
 /**
- * Modern, aesthetic letterhead matching user's exact specification:
- * - Left: Customizable Logo lockup with brand name, badge, and tagline
- * - Right: Contact & location card with modern colored badges for Email, Phone, and Address (Icons BEFORE text)
- * - Green separator line rendered via vector SVG (guaranteed to render in PDF & print)
- * - Completely uncluttered, no duplicate headers
+ * Modern, aesthetic letterhead:
+ * - Left: Customizable Logo lockup with brand name, badge, profile title, and optional account holder name
+ * - Right: Contact & location card with modern colored badges
+ * - Vector SVG divider guaranteed to render cleanly in PDF & print
  */
 export const ReportLetterhead: React.FC<ReportLetterheadProps> = ({
   className = '',
@@ -35,12 +37,19 @@ export const ReportLetterhead: React.FC<ReportLetterheadProps> = ({
   companyName = 'Hisab Kitab',
   companyTagline = 'Personal & Work Finance',
   companyBadge = 'PRO',
+  userName = '',
+  profileTitle = '',
+  adaptiveDark = false,
   onOpenLogoModal,
 }) => {
+  const cleanUserName = userName.trim();
+  const cleanProfileTitle = profileTitle.trim();
+  const effectiveTagline = cleanProfileTitle || companyTagline || 'Personal & Work Finance';
+
   return (
     <div className={`w-full pb-1 ${className}`}>
       {/* Top Main Letterhead Row */}
-      <div className="flex justify-between items-center gap-4">
+      <div className="flex flex-wrap justify-between items-center gap-4">
         {/* Left: Brand Identity */}
         <div className="flex items-center gap-3 relative group">
           <div className="relative">
@@ -49,17 +58,21 @@ export const ReportLetterhead: React.FC<ReportLetterheadProps> = ({
               <button
                 type="button"
                 onClick={onOpenLogoModal}
-                className="no-print absolute -bottom-1 -right-1 bg-white hover:bg-emerald-50 text-emerald-700 p-1 rounded-full shadow-md border border-slate-200 transition-all cursor-pointer group-hover:scale-110"
+                className="no-print absolute -bottom-1 -right-1 bg-white dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-slate-700 text-emerald-700 dark:text-emerald-400 p-1 rounded-full shadow-md border border-slate-200 dark:border-slate-700 transition-all cursor-pointer group-hover:scale-110"
                 title={lang === 'bn' ? 'লোগো পরিবর্তন করুন' : 'Change Logo'}
               >
-                <Camera className="w-3 h-3 text-emerald-600" />
+                <Camera className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
               </button>
             )}
           </div>
 
           <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight font-sans">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span
+                className={`text-xl sm:text-2xl font-black tracking-tight font-sans ${
+                  adaptiveDark ? 'text-slate-900 dark:text-white' : 'text-slate-900'
+                }`}
+              >
                 {companyName || 'Hisab Kitab'}
               </span>
               {(companyBadge || 'PRO') && (
@@ -77,22 +90,42 @@ export const ReportLetterhead: React.FC<ReportLetterheadProps> = ({
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-slate-600 font-medium mt-0.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
-              <span>{companyTagline || 'Personal & Work Finance'}</span>
+            <div
+              className={`flex items-center gap-1.5 text-xs font-medium mt-0.5 ${
+                adaptiveDark ? 'text-slate-600 dark:text-slate-300' : 'text-slate-600'
+              }`}
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block shrink-0" />
+              <span>{effectiveTagline}</span>
             </div>
+            {cleanUserName && (
+              <div
+                className={`flex items-center gap-1.5 text-[11px] font-bold mt-1 ${
+                  adaptiveDark ? 'text-emerald-800 dark:text-emerald-300' : 'text-emerald-800'
+                }`}
+              >
+                <UserCheck className="w-3 h-3 shrink-0" />
+                <span>
+                  {lang === 'bn' ? 'হিসাবধারী:' : 'Account Holder:'} {cleanUserName}
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Right: Contact & Location Info Card with Modern Harmonized Color System */}
+        {/* Right: Contact & Location Info Card */}
         <div
-          className="bg-white/95 rounded-xl border border-slate-200 shadow-xs px-3.5 py-2 text-left space-y-1.5 shrink-0"
+          className={`rounded-xl border shadow-xs px-3.5 py-2 text-left space-y-1.5 shrink-0 ${
+            adaptiveDark
+              ? 'bg-white/95 dark:bg-slate-800/90 border-slate-200 dark:border-slate-700'
+              : 'bg-white/95 border-slate-200'
+          }`}
           style={{
             WebkitPrintColorAdjust: 'exact',
             printColorAdjust: 'exact',
           }}
         >
-          {/* Email row with Cyan-Teal theme */}
+          {/* Email row */}
           <div className="flex items-center gap-2 text-xs font-mono">
             <span
               className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
@@ -106,12 +139,16 @@ export const ReportLetterhead: React.FC<ReportLetterheadProps> = ({
             >
               <Mail className="w-3 h-3 text-[#0f766e]" />
             </span>
-            <span className="text-[#0f766e] font-semibold text-[11.5px] tracking-tight">
+            <span
+              className={`font-semibold text-[11.5px] tracking-tight ${
+                adaptiveDark ? 'text-[#0f766e] dark:text-teal-300' : 'text-[#0f766e]'
+              }`}
+            >
               Juwel199431@gmail.com
             </span>
           </div>
 
-          {/* Mobile row with Emerald theme */}
+          {/* Mobile row */}
           <div className="flex items-center gap-2 text-xs font-mono">
             <span
               className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
@@ -125,12 +162,16 @@ export const ReportLetterhead: React.FC<ReportLetterheadProps> = ({
             >
               <Phone className="w-3 h-3 text-[#065f46]" />
             </span>
-            <span className="text-slate-900 font-bold text-[12px] tracking-tight">
+            <span
+              className={`font-bold text-[12px] tracking-tight ${
+                adaptiveDark ? 'text-slate-900 dark:text-white' : 'text-slate-900'
+              }`}
+            >
               +96569031679
             </span>
           </div>
 
-          {/* Address row with Sky-Blue theme */}
+          {/* Address row */}
           <div className="flex items-center gap-2 text-[11px]">
             <span
               className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
@@ -144,7 +185,11 @@ export const ReportLetterhead: React.FC<ReportLetterheadProps> = ({
             >
               <MapPin className="w-3 h-3 text-[#0369a1]" />
             </span>
-            <span className="text-slate-700 font-medium tracking-tight">
+            <span
+              className={`font-medium tracking-tight ${
+                adaptiveDark ? 'text-slate-700 dark:text-slate-300' : 'text-slate-700'
+              }`}
+            >
               Fahaheel, Al Ahmedi, Kuwait
             </span>
           </div>

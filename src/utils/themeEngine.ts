@@ -8,6 +8,8 @@ export interface ThemePreferences {
   brandColorId: string;
   customBrandHex: string;
   fontId: string;
+  userName: string;
+  profileTitle: string;
 }
 
 export type ShadeKey =
@@ -287,6 +289,8 @@ export const DEFAULT_THEME_PREFS: ThemePreferences = {
   brandColorId: 'emerald',
   customBrandHex: '#047857',
   fontId: 'hind-siliguri',
+  userName: '',
+  profileTitle: '',
 };
 
 function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
@@ -363,6 +367,10 @@ export function loadThemePreferences(): ThemePreferences {
         FONT_PRESETS.some((f) => f.id === parsed.fontId) && parsed.fontId
           ? parsed.fontId
           : DEFAULT_THEME_PREFS.fontId,
+      userName:
+        typeof parsed.userName === 'string' ? parsed.userName : DEFAULT_THEME_PREFS.userName,
+      profileTitle:
+        typeof parsed.profileTitle === 'string' ? parsed.profileTitle : DEFAULT_THEME_PREFS.profileTitle,
     };
   } catch {
     return { ...DEFAULT_THEME_PREFS, mode: legacyMode };

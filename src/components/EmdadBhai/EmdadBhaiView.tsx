@@ -203,16 +203,18 @@ export const EmdadBhaiView: React.FC = () => {
       </div>
 
       {/* Top Banner & Summary Card */}
-      <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-2xs no-print">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-slate-100">
+      <div className="bg-white dark:bg-slate-900 rounded-xl p-5 border border-slate-200 dark:border-slate-800 shadow-2xs no-print transition-colors">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-slate-100 dark:border-slate-800">
           <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xl">🤝</span>
-              <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 flex items-center justify-center shrink-0">
+                <UserCheck className="w-4 h-4" />
+              </div>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
                 {lang === 'bn' ? 'ইমদাদ ভাই এর হিসাব' : 'Emdad Bhai Expense Ledger'}
               </h2>
             </div>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               {lang === 'bn'
                 ? 'ইমদাদ ভাই এর জন্য কুয়েতি দিনারে খরচ এবং উনার কাছ থেকে কালেকশন (Paid/Unpaid) ট্র্যাকিং'
                 : 'Tracks expenses in KWD with Paid & Unpaid collection tracking'}
@@ -225,7 +227,7 @@ export const EmdadBhaiView: React.FC = () => {
               disabled={totalUnpaid <= 0}
               className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-colors shadow-2xs ${
                 totalUnpaid <= 0
-                  ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
+                  ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700 cursor-not-allowed'
                   : 'bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer'
               }`}
               title={lang === 'bn' ? 'সকল বকেয়া একসাথে পরিশোধিত হিসেবে মার্ক করুন' : 'Mark all unpaid as paid'}
@@ -236,27 +238,27 @@ export const EmdadBhaiView: React.FC = () => {
 
             <button
               onClick={handleSendWhatsAppClaim}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-lg transition-colors shadow-2xs cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-300 dark:border-emerald-800 rounded-lg transition-colors shadow-2xs cursor-pointer"
               title={lang === 'bn' ? 'হোয়াটসঅ্যাপে দাবি স্লিপ পাঠান' : 'WhatsApp Claim Slip'}
             >
-              <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
+              <MessageCircle className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
               <span>{lang === 'bn' ? 'হোয়াটসঅ্যাপ দাবি' : 'WhatsApp Claim'}</span>
             </button>
 
             <button
               onClick={handlePrint}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 rounded-lg transition-colors shadow-2xs cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 rounded-lg transition-colors shadow-2xs cursor-pointer"
               title={lang === 'bn' ? 'সরাসরি প্রিন্ট বা PDF ফাইল সেভ করুন' : 'Print or Save PDF'}
             >
-              <Printer className="w-3.5 h-3.5 text-slate-600" />
+              <Printer className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300" />
               <span>{lang === 'bn' ? 'প্রিন্ট / PDF' : 'Print / PDF'}</span>
             </button>
 
             <button
               onClick={handleExportCSV}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 rounded-lg transition-colors shadow-2xs"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 rounded-lg transition-colors shadow-2xs cursor-pointer"
             >
-              <Download className="w-3.5 h-3.5 text-slate-600" />
+              <Download className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300" />
               <span>CSV</span>
             </button>
           </div>
@@ -265,7 +267,7 @@ export const EmdadBhaiView: React.FC = () => {
         {/* 3 Status KPI Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-5">
           {/* Card 1: Unpaid (কালেকশন বাকি) */}
-          <div className="bg-linear-to-br from-rose-600 via-orange-600 to-rose-800 text-white rounded-2xl p-4.5 border border-rose-400/30 shadow-md shadow-rose-500/15 flex flex-col justify-between">
+          <div className="bg-linear-to-br from-rose-600 via-orange-600 to-rose-800 text-white rounded-2xl p-4.5 border border-rose-400/30 shadow-md shadow-rose-500/15 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-150 flex flex-col justify-between">
             <div>
               <div className="text-[11px] font-bold text-rose-100 uppercase tracking-wider flex items-center justify-between">
                 <span>{lang === 'bn' ? 'উনার কাছে কালেকশন বাকি (Unpaid)' : 'Pending Collection (Unpaid)'}</span>
@@ -283,7 +285,7 @@ export const EmdadBhaiView: React.FC = () => {
           </div>
 
           {/* Card 2: Paid (কালেকশন সম্পন্ন) */}
-          <div className="bg-linear-to-br from-emerald-600 via-teal-600 to-emerald-800 text-white rounded-2xl p-4.5 border border-emerald-400/30 shadow-md shadow-emerald-500/15 flex flex-col justify-between">
+          <div className="bg-linear-to-br from-emerald-600 via-teal-600 to-emerald-800 text-white rounded-2xl p-4.5 border border-emerald-400/30 shadow-md shadow-emerald-500/15 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-150 flex flex-col justify-between">
             <div>
               <div className="text-[11px] font-bold text-emerald-100 uppercase tracking-wider flex items-center justify-between">
                 <span>{lang === 'bn' ? 'কালেকশন সম্পন্ন (Paid)' : 'Collected (Paid)'}</span>
@@ -299,7 +301,7 @@ export const EmdadBhaiView: React.FC = () => {
           </div>
 
           {/* Card 3: Total Expenses */}
-          <div className="bg-linear-to-br from-slate-700 via-slate-800 to-indigo-950 text-white rounded-2xl p-4.5 border border-slate-600/30 shadow-md shadow-slate-900/15 flex flex-col justify-between">
+          <div className="bg-linear-to-br from-slate-700 via-slate-800 to-indigo-950 text-white rounded-2xl p-4.5 border border-slate-600/30 shadow-md shadow-slate-900/15 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-150 flex flex-col justify-between">
             <div>
               <div className="text-[11px] font-bold text-slate-200 uppercase tracking-wider flex items-center justify-between">
                 <span>{lang === 'bn' ? 'সর্বমোট খরচ (Total Spent)' : 'Total Incurred'}</span>
@@ -317,13 +319,13 @@ export const EmdadBhaiView: React.FC = () => {
       </div>
 
       {/* Rapid In-Line Expense Logger (NO CATEGORIES, PROMINENT NOTES BOX) */}
-      <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-2xs no-print">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-            <Plus className="w-3.5 h-3.5 text-rose-600" />
+      <div className="bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-200 dark:border-slate-800 shadow-2xs no-print transition-colors">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+            <Plus className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
             <span>{lang === 'bn' ? 'ইমদাদ ভাই এর নতুন খরচ এন্ট্রি' : 'Add New Expense for Emdad Bhai'}</span>
           </h3>
-          <span className="text-[11px] text-slate-500 font-medium">
+          <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
             {lang === 'bn' ? 'কারেন্সি: কুয়েতি দিনার (KWD) · কোনো ক্যাটাগরি লাগবে না' : 'Currency: KWD · No category required'}
           </span>
         </div>
@@ -331,7 +333,7 @@ export const EmdadBhaiView: React.FC = () => {
         <form onSubmit={handleAddExpense} className="space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
             <div>
-              <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+              <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
                 {lang === 'bn' ? 'তারিখ' : 'Date'} <span className="text-rose-500">*</span>
               </label>
               <input
@@ -339,12 +341,12 @@ export const EmdadBhaiView: React.FC = () => {
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
                 required
-                className="w-full px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-md focus:bg-white focus:outline-hidden focus:ring-1 focus:ring-rose-500"
+                className="w-full px-2.5 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 rounded-md focus:bg-white dark:focus:bg-slate-800 focus:outline-hidden focus:ring-1 focus:ring-rose-500"
               />
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+              <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
                 {lang === 'bn' ? 'দিনার পরিমাণ (KWD)' : 'Amount (KWD)'} <span className="text-rose-500">*</span>
               </label>
               <input
@@ -354,12 +356,12 @@ export const EmdadBhaiView: React.FC = () => {
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 required
-                className="w-full px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-md font-mono focus:bg-white focus:outline-hidden focus:ring-1 focus:ring-rose-500"
+                className="w-full px-2.5 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 rounded-md font-mono focus:bg-white dark:focus:bg-slate-800 focus:outline-hidden focus:ring-1 focus:ring-rose-500"
               />
             </div>
 
             <div className="sm:col-span-2">
-              <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+              <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
                 {lang === 'bn' ? 'খরচের বিস্তারিত বিবরণ (নোট)' : 'Expense Description / Note'} <span className="text-rose-500">*</span>
               </label>
               <input
@@ -368,24 +370,24 @@ export const EmdadBhaiView: React.FC = () => {
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 required
-                className="w-full px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-md focus:bg-white focus:outline-hidden focus:ring-1 focus:ring-rose-500"
+                className="w-full px-2.5 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 rounded-md focus:bg-white dark:focus:bg-slate-800 focus:outline-hidden focus:ring-1 focus:ring-rose-500"
               />
             </div>
           </div>
 
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-semibold text-slate-700">
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                 {lang === 'bn' ? 'কালেকশন স্ট্যাটাস:' : 'Initial Status:'}
               </span>
-              <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-lg text-xs">
+              <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs">
                 <button
                   type="button"
                   onClick={() => setPaymentStatus('unpaid')}
-                  className={`px-3 py-1 rounded-md font-semibold transition-colors ${
+                  className={`px-3 py-1 rounded-md font-semibold transition-colors cursor-pointer ${
                     paymentStatus === 'unpaid'
                       ? 'bg-rose-600 text-white shadow-2xs'
-                      : 'text-slate-600 hover:text-slate-900'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   {lang === 'bn' ? 'Unpaid (কালেকশন বাকি)' : 'Unpaid (Pending)'}
@@ -393,10 +395,10 @@ export const EmdadBhaiView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setPaymentStatus('paid')}
-                  className={`px-3 py-1 rounded-md font-semibold transition-colors ${
+                  className={`px-3 py-1 rounded-md font-semibold transition-colors cursor-pointer ${
                     paymentStatus === 'paid'
                       ? 'bg-emerald-600 text-white shadow-2xs'
-                      : 'text-slate-600 hover:text-slate-900'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   {lang === 'bn' ? 'Paid (টাকা পেয়েছি)' : 'Paid (Collected)'}
@@ -406,7 +408,7 @@ export const EmdadBhaiView: React.FC = () => {
 
             <button
               type="submit"
-              className="px-5 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors shadow-2xs whitespace-nowrap"
+              className="px-5 py-2 text-xs font-bold text-white bg-slate-900 dark:bg-emerald-600 hover:bg-slate-800 dark:hover:bg-emerald-700 rounded-lg transition-colors shadow-2xs whitespace-nowrap cursor-pointer"
             >
               {lang === 'bn' ? '+ খরচ সংরক্ষণ করুন' : '+ Save Expense'}
             </button>
@@ -415,42 +417,42 @@ export const EmdadBhaiView: React.FC = () => {
       </div>
 
       {/* Expenses Ledger Table */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden print-shadow-none">
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs overflow-hidden print-shadow-none transition-colors">
         {/* Table Filter & Controls */}
-        <div className="p-3.5 border-b border-slate-200 bg-slate-50/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3 no-print">
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs font-bold text-slate-800 mr-2">
+        <div className="p-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 no-print">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-xs font-bold text-slate-800 dark:text-white mr-2">
               {lang === 'bn' ? 'খরচের তালিকা' : 'Expense Entries'} ({filteredTransactions.length})
             </span>
 
             {/* Filter buttons */}
-            <div className="flex items-center gap-1 p-0.5 bg-slate-200/70 rounded-lg text-xs">
+            <div className="flex items-center gap-1 p-0.5 bg-slate-200/70 dark:bg-slate-800 rounded-lg text-xs">
               <button
                 onClick={() => setStatusFilter('all')}
-                className={`px-2.5 py-1 rounded-md transition-colors ${
+                className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
                   statusFilter === 'all'
-                    ? 'bg-white text-slate-900 font-bold shadow-2xs'
-                    : 'text-slate-600 hover:text-slate-900'
+                    ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white font-bold shadow-2xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 {lang === 'bn' ? 'সকল' : 'All'}
               </button>
               <button
                 onClick={() => setStatusFilter('unpaid')}
-                className={`px-2.5 py-1 rounded-md transition-colors ${
+                className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
                   statusFilter === 'unpaid'
                     ? 'bg-rose-600 text-white font-bold shadow-2xs'
-                    : 'text-slate-600 hover:text-slate-900'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 {lang === 'bn' ? 'কালেকশন বাকি (Unpaid)' : 'Unpaid'}
               </button>
               <button
                 onClick={() => setStatusFilter('paid')}
-                className={`px-2.5 py-1 rounded-md transition-colors ${
+                className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
                   statusFilter === 'paid'
                     ? 'bg-emerald-600 text-white font-bold shadow-2xs'
-                    : 'text-slate-600 hover:text-slate-900'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 {lang === 'bn' ? 'পরিশোধিত (Paid)' : 'Paid'}
@@ -465,7 +467,7 @@ export const EmdadBhaiView: React.FC = () => {
               placeholder={lang === 'bn' ? 'বিবরণ খুঁজুন...' : 'Search description...'}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-8 pr-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded-md focus:outline-hidden focus:ring-1 focus:ring-slate-900"
+              className="w-full sm:w-auto pl-8 pr-2.5 py-1.5 text-xs bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 rounded-md focus:outline-hidden focus:ring-1 focus:ring-slate-900 dark:focus:ring-emerald-500"
             />
           </div>
         </div>
@@ -474,7 +476,7 @@ export const EmdadBhaiView: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-slate-100/70 border-b border-slate-200 text-slate-600 font-bold">
+              <tr className="bg-slate-100/70 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 font-bold">
                 <th className="py-2.5 px-3.5 whitespace-nowrap">{lang === 'bn' ? 'তারিখ' : 'Date'}</th>
                 <th className="py-2.5 px-3.5">{lang === 'bn' ? 'খরচের বিস্তারিত বিবরণ (নোট)' : 'Expense Description / Notes'}</th>
                 <th className="py-2.5 px-3.5 text-right whitespace-nowrap">{lang === 'bn' ? 'পরিমাণ (KWD)' : 'Amount (KWD)'}</th>
@@ -482,10 +484,10 @@ export const EmdadBhaiView: React.FC = () => {
                 <th className="py-2.5 px-3.5 text-center whitespace-nowrap w-14 no-print">{lang === 'bn' ? 'অ্যাকশন' : 'Action'}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 text-slate-800">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-800 dark:text-slate-200">
               {filteredTransactions.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-8 text-slate-400">
+                  <td colSpan={5} className="text-center py-8 text-slate-400 dark:text-slate-500">
                     {lang === 'bn'
                       ? 'কোন খরচের এন্ট্রি পাওয়া যায়নি।'
                       : 'No expense records found.'}
@@ -496,14 +498,14 @@ export const EmdadBhaiView: React.FC = () => {
                   const isPaid = tx.paymentStatus === 'paid';
 
                   return (
-                    <tr key={tx.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="py-2.5 px-3.5 whitespace-nowrap font-medium text-slate-600">
+                    <tr key={tx.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                      <td className="py-2.5 px-3.5 whitespace-nowrap font-medium text-slate-600 dark:text-slate-400 font-mono tabular-nums">
                         {formatDate(tx.date, lang)}
                       </td>
-                      <td className="py-2.5 px-3.5 font-medium text-slate-900 max-w-md">
+                      <td className="py-2.5 px-3.5 font-medium text-slate-900 dark:text-white max-w-md">
                         {tx.note || '-'}
                       </td>
-                      <td className="py-2.5 px-3.5 text-right font-mono tabular-nums font-bold text-slate-900 whitespace-nowrap">
+                      <td className="py-2.5 px-3.5 text-right font-mono tabular-nums font-bold text-slate-900 dark:text-white whitespace-nowrap">
                         {tx.amount.toFixed(3)} KD
                       </td>
                       <td className="py-2.5 px-3.5 text-center whitespace-nowrap">
@@ -512,8 +514,8 @@ export const EmdadBhaiView: React.FC = () => {
                           onClick={() => togglePaymentStatus(tx.id)}
                           className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all flex items-center justify-center gap-1 mx-auto cursor-pointer ${
                             isPaid
-                              ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border border-emerald-300'
-                              : 'bg-rose-100 text-rose-800 hover:bg-rose-200 border border-rose-300'
+                              ? 'bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-900/70 border border-emerald-300 dark:border-emerald-800'
+                              : 'bg-rose-100 dark:bg-rose-950/70 text-rose-800 dark:text-rose-300 hover:bg-rose-200 dark:hover:bg-rose-900/70 border border-rose-300 dark:border-rose-800'
                           }`}
                           title={
                             lang === 'bn'
@@ -523,12 +525,12 @@ export const EmdadBhaiView: React.FC = () => {
                         >
                           {isPaid ? (
                             <>
-                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                               <span>Paid (কালেকশন সম্পন্ন)</span>
                             </>
                           ) : (
                             <>
-                              <Clock className="w-3.5 h-3.5 text-rose-600" />
+                              <Clock className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
                               <span>Unpaid (কালেকশন বাকি)</span>
                             </>
                           )}
@@ -539,7 +541,7 @@ export const EmdadBhaiView: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => setEditingTxId(tx.id)}
-                            className="p-1 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors cursor-pointer"
+                            className="p-1 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 rounded transition-colors cursor-pointer"
                             title={lang === 'bn' ? 'সংশোধন / এডিট করুন' : 'Edit'}
                           >
                             <Edit2 className="w-3.5 h-3.5" />
@@ -550,7 +552,7 @@ export const EmdadBhaiView: React.FC = () => {
                                 deleteTransaction(tx.id);
                               }
                             }}
-                            className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors cursor-pointer"
+                            className="p-1 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/60 rounded transition-colors cursor-pointer"
                             title={lang === 'bn' ? 'মুছে ফেলুন' : 'Delete'}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -565,17 +567,17 @@ export const EmdadBhaiView: React.FC = () => {
             {/* Table Footer with Summary */}
             {filteredTransactions.length > 0 && (
               <tfoot>
-                <tr className="bg-slate-100/90 border-t-2 border-slate-300 font-bold text-slate-900">
+                <tr className="bg-slate-100/90 dark:bg-slate-800/80 border-t-2 border-slate-300 dark:border-slate-700 font-bold text-slate-900 dark:text-white">
                   <td colSpan={2} className="py-2.5 px-3.5 text-right uppercase tracking-wider text-xs">
                     {lang === 'bn' ? 'ফিল্টারকৃত মোট খরচ:' : 'Subtotal Expenses:'}
                   </td>
-                  <td className="py-2.5 px-3.5 text-right font-mono tabular-nums text-sm font-bold text-slate-900">
+                  <td className="py-2.5 px-3.5 text-right font-mono tabular-nums text-sm font-bold text-slate-900 dark:text-white">
                     {filteredTransactions
                       .reduce((acc, t) => acc + Number(t.amount || 0), 0)
                       .toFixed(3)}{' '}
                     KD
                   </td>
-                  <td className="text-center text-[11px] text-slate-500 py-2.5 px-3.5">
+                  <td className="text-center text-[11px] text-slate-500 dark:text-slate-400 py-2.5 px-3.5 font-mono tabular-nums">
                     {lang === 'bn'
                       ? `বকেয়া বাকি: ${totalUnpaid.toFixed(3)} KD`
                       : `Unpaid: ${totalUnpaid.toFixed(3)} KD`}

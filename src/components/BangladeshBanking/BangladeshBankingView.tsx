@@ -288,106 +288,108 @@ export const BangladeshBankingView: React.FC = () => {
       </div>
 
       {/* Top Banner & KPI Strip */}
-      <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-2xs no-print">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-slate-100">
+      <div className="bg-white dark:bg-slate-900 rounded-xl p-5 border border-slate-200 dark:border-slate-800 shadow-2xs no-print transition-colors">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-slate-100 dark:border-slate-800">
           <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xl">🇧🇩</span>
-              <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                <Landmark className="w-4 h-4" />
+              </div>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
                 {lang === 'bn' ? 'বাংলাদেশের ব্যাংকের হিসাব বিবরনী' : 'Bangladesh Bank Accounts Statement'}
               </h2>
             </div>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               {lang === 'bn'
-                ? '৩টি ব্যাংক অ্যাকাউন্ট, ক্যাটাগরি অনুযায়ী আয়-ব্যয় এবং ডিপিএস/ইন্সুরেন্স ফান্ড ট্রান্সফার'
-                : '3 Bank accounts with category-wise inflows, outflows, and savings transfers'}
+                ? 'সকল ব্যাংক অ্যাকাউন্ট, ক্যাটাগরি অনুযায়ী আয়-ব্যয় এবং ডিপিএস/ইন্সুরেন্স ফান্ড ট্রান্সফার'
+                : 'Bank accounts with category-wise inflows, outflows, and savings transfers'}
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={() => window.print()}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 rounded-lg transition-colors shadow-2xs cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 rounded-lg transition-colors shadow-2xs cursor-pointer"
               title="১০০% বিনামূল্যে সরাসরি প্রিন্ট বা PDF হিসেবে সেভ করুন"
             >
-              <Printer className="w-3.5 h-3.5 text-slate-600" />
+              <Printer className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300" />
               <span>{lang === 'bn' ? 'প্রিন্ট / PDF স্টেটমেন্ট' : 'Print / PDF'}</span>
             </button>
             <button
               onClick={() => openQuickAddWithSection('bd-bank')}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg transition-colors shadow-2xs"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg transition-colors shadow-2xs cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>{lang === 'bn' ? 'নতুন লেনদেন' : 'New Transaction'}</span>
             </button>
             <button
               onClick={handleOpenTransfer}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors cursor-pointer shadow-2xs"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800 rounded-lg transition-colors cursor-pointer shadow-2xs"
               title={lang === 'bn' ? 'এক ব্যাংক থেকে অন্য ব্যাংকে টাকা স্থানান্তর' : 'Bank-to-Bank Transfer'}
             >
-              <ArrowRightLeft className="w-3.5 h-3.5 text-blue-700" />
+              <ArrowRightLeft className="w-3.5 h-3.5 text-blue-700 dark:text-blue-300" />
               <span>{lang === 'bn' ? 'ব্যাংক ট্রান্সফার' : 'Bank Transfer'}</span>
             </button>
             <button
               onClick={() => setIsAddingBank(!isAddingBank)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-lg transition-colors cursor-pointer"
             >
-              <Landmark className="w-3.5 h-3.5 text-slate-600" />
+              <Landmark className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300" />
               <span>{lang === 'bn' ? '+ ব্যাংক যোগ' : '+ Add Bank'}</span>
             </button>
           </div>
         </div>
 
         {/* Global KPIs with Advanced Modern Colors */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 pt-5">
-          <div className="bg-linear-to-br from-emerald-50 via-teal-50/70 to-emerald-100/50 rounded-xl p-4 border border-emerald-200 shadow-2xs hover:shadow-xs transition-shadow">
-            <p className="text-[11px] font-bold text-emerald-900 uppercase tracking-wider flex items-center justify-between">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 pt-5">
+          <div className="bg-linear-to-br from-emerald-50 via-teal-50/70 to-emerald-100/50 dark:from-emerald-950/60 dark:via-slate-900 dark:to-emerald-950/30 rounded-xl p-4 border border-emerald-200 dark:border-emerald-800/70 shadow-2xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-150">
+            <p className="text-[11px] font-bold text-emerald-900 dark:text-emerald-300 uppercase tracking-wider flex items-center justify-between">
               <span>{lang === 'bn' ? 'সর্বমোট ব্যাংক ব্যালেন্স' : 'Total Bank Balance'}</span>
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <Landmark className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             </p>
-            <p className="text-2xl font-black text-emerald-950 font-mono tabular-nums mt-1.5">
+            <p className="text-xl sm:text-2xl font-black text-emerald-950 dark:text-white font-mono tabular-nums mt-1.5">
               {formatCurrency(totalBalance, 'BDT', lang)}
             </p>
-            <p className="text-[11px] text-emerald-700 font-medium mt-1">
+            <p className="text-[11px] text-emerald-700 dark:text-emerald-400 font-medium mt-1">
               {lang === 'bn' ? `${data.banks.length}টি ব্যাংকে মোট জমা স্থিতি` : `Across ${data.banks.length} bank accounts`}
             </p>
           </div>
 
-          <div className="bg-linear-to-br from-blue-50 via-indigo-50/70 to-blue-100/50 rounded-xl p-4 border border-blue-200 shadow-2xs hover:shadow-xs transition-shadow">
-            <p className="text-[11px] font-bold text-blue-900 uppercase tracking-wider flex items-center justify-between">
+          <div className="bg-linear-to-br from-blue-50 via-indigo-50/70 to-blue-100/50 dark:from-blue-950/60 dark:via-slate-900 dark:to-indigo-950/30 rounded-xl p-4 border border-blue-200 dark:border-blue-800/70 shadow-2xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-150">
+            <p className="text-[11px] font-bold text-blue-900 dark:text-blue-300 uppercase tracking-wider flex items-center justify-between">
               <span>{lang === 'bn' ? 'মোট জমা ও ইনফ্লো' : 'Total Inflow'}</span>
-              <TrendingUp className="w-4 h-4 text-blue-600" />
+              <TrendingUp className="w-4 h-4 text-blue-600 dark:text-blue-400" />
             </p>
-            <p className="text-2xl font-black text-blue-950 font-mono tabular-nums mt-1.5">
+            <p className="text-xl sm:text-2xl font-black text-blue-950 dark:text-white font-mono tabular-nums mt-1.5">
               {formatCurrency(totalIncome, 'BDT', lang)}
             </p>
-            <p className="text-[11px] text-blue-700 font-medium mt-1">
+            <p className="text-[11px] text-blue-700 dark:text-blue-400 font-medium mt-1">
               {lang === 'bn' ? 'রেমিট্যান্স ও অন্যান্য মোট জমা' : 'Remittance & all deposits'}
             </p>
           </div>
 
-          <div className="bg-linear-to-br from-rose-50 via-pink-50/70 to-rose-100/50 rounded-xl p-4 border border-rose-200 shadow-2xs hover:shadow-xs transition-shadow">
-            <p className="text-[11px] font-bold text-rose-900 uppercase tracking-wider flex items-center justify-between">
+          <div className="bg-linear-to-br from-rose-50 via-pink-50/70 to-rose-100/50 dark:from-rose-950/60 dark:via-slate-900 dark:to-rose-950/30 rounded-xl p-4 border border-rose-200 dark:border-rose-800/70 shadow-2xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-150">
+            <p className="text-[11px] font-bold text-rose-900 dark:text-rose-300 uppercase tracking-wider flex items-center justify-between">
               <span>{lang === 'bn' ? 'মোট সরাসরি খরচ' : 'Total Outflow'}</span>
-              <TrendingDown className="w-4 h-4 text-rose-600" />
+              <TrendingDown className="w-4 h-4 text-rose-600 dark:text-rose-400" />
             </p>
-            <p className="text-2xl font-black text-rose-950 font-mono tabular-nums mt-1.5">
+            <p className="text-xl sm:text-2xl font-black text-rose-950 dark:text-white font-mono tabular-nums mt-1.5">
               {formatCurrency(totalExpense, 'BDT', lang)}
             </p>
-            <p className="text-[11px] text-rose-700 font-medium mt-1">
+            <p className="text-[11px] text-rose-700 dark:text-rose-400 font-medium mt-1">
               {lang === 'bn' ? 'পারিবারিক ও দৈনন্দিন খরচ' : 'Direct expenses paid'}
             </p>
           </div>
 
-          <div className="bg-linear-to-br from-purple-50 via-fuchsia-50/70 to-indigo-100/50 rounded-xl p-4 border border-purple-200 shadow-2xs hover:shadow-xs transition-shadow">
-            <p className="text-[11px] font-bold text-purple-900 uppercase tracking-wider flex items-center justify-between">
+          <div className="bg-linear-to-br from-purple-50 via-fuchsia-50/70 to-indigo-100/50 dark:from-purple-950/60 dark:via-slate-900 dark:to-indigo-950/30 rounded-xl p-4 border border-purple-200 dark:border-purple-800/70 shadow-2xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-150">
+            <p className="text-[11px] font-bold text-purple-900 dark:text-purple-300 uppercase tracking-wider flex items-center justify-between">
               <span>{lang === 'bn' ? 'ডিপিএস/ইন্সুরেন্স সঞ্চয়' : 'Sent to Savings'}</span>
-              <PiggyBank className="w-4 h-4 text-purple-600" />
+              <PiggyBank className="w-4 h-4 text-purple-600 dark:text-purple-400" />
             </p>
-            <p className="text-2xl font-black text-purple-950 font-mono tabular-nums mt-1.5">
+            <p className="text-xl sm:text-2xl font-black text-purple-950 dark:text-white font-mono tabular-nums mt-1.5">
               {formatCurrency(totalTransferredToSavings, 'BDT', lang)}
             </p>
-            <p className="text-[11px] text-purple-700 font-medium mt-1">
+            <p className="text-[11px] text-purple-700 dark:text-purple-400 font-medium mt-1">
               {lang === 'bn' ? 'ব্যাংক থেকে সঞ্চয়ে ট্রান্সফার' : 'Bank to DPS/Insurance'}
             </p>
           </div>
@@ -398,23 +400,23 @@ export const BangladeshBankingView: React.FC = () => {
       {isAddingBank && (
         <form
           onSubmit={handleAddNewBank}
-          className="bg-emerald-50/60 p-4 rounded-xl border border-emerald-200 space-y-3"
+          className="bg-emerald-50/60 dark:bg-emerald-950/30 p-4 rounded-xl border border-emerald-200 dark:border-emerald-800/70 space-y-3"
         >
           <div className="flex items-center justify-between">
-            <h3 className="text-xs font-bold text-emerald-900 uppercase tracking-wider">
+            <h3 className="text-xs font-bold text-emerald-900 dark:text-emerald-300 uppercase tracking-wider">
               {lang === 'bn' ? 'নতুন ব্যাংক অ্যাকাউন্ট তথ্য' : 'New Bank Account Details'}
             </h3>
             <button
               type="button"
               onClick={() => setIsAddingBank(false)}
-              className="text-slate-400 hover:text-slate-600 p-0.5"
+              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5 cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
             <div>
-              <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+              <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
                 {lang === 'bn' ? 'ব্যাংকের নাম' : 'Bank Name'}
               </label>
               <input
@@ -423,11 +425,11 @@ export const BangladeshBankingView: React.FC = () => {
                 onChange={(e) => setNewBankName(e.target.value)}
                 placeholder="যেমন: সোনালী ব্যাংক লিমিটেড"
                 required
-                className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded-md"
+                className="w-full px-2.5 py-1.5 text-xs bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 rounded-md"
               />
             </div>
             <div>
-              <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+              <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
                 {lang === 'bn' ? 'অ্যাকাউন্ট নম্বর' : 'Account Number'}
               </label>
               <input
@@ -435,11 +437,11 @@ export const BangladeshBankingView: React.FC = () => {
                 value={newBankAccNo}
                 onChange={(e) => setNewBankAccNo(e.target.value)}
                 placeholder="2050-XXXX-XXXX"
-                className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded-md font-mono"
+                className="w-full px-2.5 py-1.5 text-xs bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 rounded-md font-mono"
               />
             </div>
             <div>
-              <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+              <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
                 {lang === 'bn' ? 'শাখা / বিবরণ' : 'Branch / Note'}
               </label>
               <input
@@ -447,11 +449,11 @@ export const BangladeshBankingView: React.FC = () => {
                 value={newBankBranch}
                 onChange={(e) => setNewBankBranch(e.target.value)}
                 placeholder="রেমিট্যান্স শাখা"
-                className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded-md"
+                className="w-full px-2.5 py-1.5 text-xs bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 rounded-md"
               />
             </div>
             <div>
-              <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+              <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
                 {lang === 'bn' ? 'ওপেনিং ব্যালেন্স (BDT)' : 'Opening Balance (BDT)'}
               </label>
               <div className="flex gap-2">
@@ -460,11 +462,11 @@ export const BangladeshBankingView: React.FC = () => {
                   value={newBankOpeningBal}
                   onChange={(e) => setNewBankOpeningBal(e.target.value)}
                   placeholder="0"
-                  className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded-md font-mono"
+                  className="w-full px-2.5 py-1.5 text-xs bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 rounded-md font-mono"
                 />
                 <button
                   type="submit"
-                  className="px-3 py-1.5 text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 rounded-md whitespace-nowrap"
+                  className="px-3 py-1.5 text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 rounded-md whitespace-nowrap cursor-pointer"
                 >
                   {lang === 'bn' ? 'সংরক্ষণ' : 'Save'}
                 </button>
@@ -492,12 +494,12 @@ export const BangladeshBankingView: React.FC = () => {
           return (
             <div
               key={bank.id}
-              className="bg-white rounded-xl p-4 border border-slate-200 shadow-2xs hover:border-slate-300 transition-all flex flex-col justify-between"
+              className="bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-200 dark:border-slate-800 shadow-2xs hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-md hover:-translate-y-0.5 transition-all duration-150 flex flex-col justify-between"
             >
               <div>
-                <div className="flex items-start justify-between gap-2 pb-2.5 border-b border-slate-100">
+                <div className="flex items-start justify-between gap-2 pb-2.5 border-b border-slate-100 dark:border-slate-800">
                   <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-md bg-slate-100 flex items-center justify-center text-slate-700 font-bold text-xs">
+                    <div className="w-7 h-7 rounded-md bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-200 font-bold text-xs shrink-0">
                       {index + 1}
                     </div>
                     <div>
@@ -506,16 +508,16 @@ export const BangladeshBankingView: React.FC = () => {
                           type="text"
                           value={editBankName}
                           onChange={(e) => setEditBankName(e.target.value)}
-                          className="text-xs font-bold border border-slate-300 rounded px-1.5 py-0.5 w-full"
+                          className="text-xs font-bold bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 rounded px-1.5 py-0.5 w-full"
                         />
                       ) : (
-                        <h3 className="text-sm font-bold text-slate-900 leading-tight">{bank.name}</h3>
+                        <h3 className="text-sm font-bold text-slate-900 dark:text-white leading-tight">{bank.name}</h3>
                       )}
-                      <div className="flex items-center gap-1.5 mt-1">
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                      <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                           {lang === 'bn' ? 'সেভিংস অ্যাকাউন্ট' : 'Savings A/C'}
                         </span>
-                        <span className="text-[11px] text-slate-500 font-medium">
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
                           {lang === 'bn' ? 'শাখা: লোকাল শাখা' : 'Branch: Local'}
                         </span>
                       </div>
@@ -527,14 +529,14 @@ export const BangladeshBankingView: React.FC = () => {
                       <>
                         <button
                           onClick={() => saveBankEdit(bank.id)}
-                          className="p-1 text-emerald-700 hover:bg-emerald-50 rounded"
+                          className="p-1 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 rounded cursor-pointer"
                           title="সংরক্ষণ"
                         >
                           <Check className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => setEditingBankId(null)}
-                          className="p-1 text-slate-400 hover:bg-slate-100 rounded"
+                          className="p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded cursor-pointer"
                           title="বাতিল"
                         >
                           <X className="w-4 h-4" />
@@ -543,7 +545,7 @@ export const BangladeshBankingView: React.FC = () => {
                     ) : (
                       <button
                         onClick={() => startEditingBank(bank)}
-                        className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded"
+                        className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded cursor-pointer"
                         title={lang === 'bn' ? 'তথ্য ও ওপেনিং ব্যালেন্স পরিবর্তন' : 'Edit bank details'}
                       >
                         <Edit2 className="w-3.5 h-3.5" />
@@ -555,31 +557,31 @@ export const BangladeshBankingView: React.FC = () => {
                 {/* Account Balances */}
                 <div className="pt-3 pb-2 space-y-1.5">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-500">{lang === 'bn' ? 'ওপেনিং ব্যালেন্স:' : 'Opening Bal:'}</span>
+                    <span className="text-slate-500 dark:text-slate-400">{lang === 'bn' ? 'ওপেনিং ব্যালেন্স:' : 'Opening Bal:'}</span>
                     {isEditing ? (
                       <input
                         type="number"
                         value={editBankOpeningBal}
                         onChange={(e) => setEditBankOpeningBal(e.target.value)}
-                        className="w-24 text-right font-mono text-xs border border-slate-300 rounded px-1"
+                        className="w-24 text-right font-mono text-xs bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 rounded px-1"
                       />
                     ) : (
-                      <span className="font-mono tabular-nums text-slate-700">
+                      <span className="font-mono tabular-nums text-slate-700 dark:text-slate-200">
                         {formatCurrency(bank.openingBalance, 'BDT', lang)}
                       </span>
                     )}
                   </div>
 
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-emerald-700">{lang === 'bn' ? 'মোট জমা / ইনফ্লো:' : 'Total Inflow:'}</span>
-                    <span className="font-mono tabular-nums text-emerald-700 font-semibold">
+                    <span className="text-emerald-700 dark:text-emerald-400">{lang === 'bn' ? 'মোট জমা / ইনফ্লো:' : 'Total Inflow:'}</span>
+                    <span className="font-mono tabular-nums text-emerald-700 dark:text-emerald-400 font-semibold">
                       +{formatCurrency(bankInflows, 'BDT', lang)}
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-rose-700">{lang === 'bn' ? 'মোট খরচ ও ট্রান্সফার:' : 'Total Outflow:'}</span>
-                    <span className="font-mono tabular-nums text-rose-700 font-semibold">
+                    <span className="text-rose-700 dark:text-rose-400">{lang === 'bn' ? 'মোট খরচ ও ট্রান্সফার:' : 'Total Outflow:'}</span>
+                    <span className="font-mono tabular-nums text-rose-700 dark:text-rose-400 font-semibold">
                       -{formatCurrency(bankOutflows, 'BDT', lang)}
                     </span>
                   </div>
@@ -587,11 +589,11 @@ export const BangladeshBankingView: React.FC = () => {
               </div>
 
               {/* Current Net Balance */}
-              <div className="pt-3 mt-2 border-t border-slate-100 flex items-center justify-between bg-slate-50/70 p-2.5 rounded-lg">
-                <span className="text-xs font-bold text-slate-700">{lang === 'bn' ? 'বর্তমান ব্যালেন্স:' : 'Current Bal:'}</span>
+              <div className="pt-3 mt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/70 dark:bg-slate-800/60 p-2.5 rounded-lg">
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{lang === 'bn' ? 'বর্তমান ব্যালেন্স:' : 'Current Bal:'}</span>
                 <span
                   className={`font-mono tabular-nums text-base font-bold ${
-                    currentBal >= 0 ? 'text-slate-900' : 'text-rose-600'
+                    currentBal >= 0 ? 'text-slate-900 dark:text-white' : 'text-rose-600 dark:text-rose-400'
                   }`}
                 >
                   {formatCurrency(currentBal, 'BDT', lang)}
@@ -603,15 +605,15 @@ export const BangladeshBankingView: React.FC = () => {
       </div>
 
       {/* Transactions Ledger & Filters */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-2xs">
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xs transition-colors">
         {/* Ledger Header & Filter Controls */}
-        <div className="p-4 border-b border-slate-200 bg-slate-50/60 space-y-3">
+        <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 space-y-3">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h3 className="text-sm font-bold text-slate-900">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">
                 {lang === 'bn' ? 'বাংলাদেশের ব্যাংকের হিসাব বিবরনী (লেনদেন খতিয়ান)' : 'Bangladesh Bank Statement Ledger'}
               </h3>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 {lang === 'bn'
                   ? `মোট ${filteredTransactions.length}টি এন্ট্রি প্রদর্শিত হচ্ছে`
                   : `Showing ${filteredTransactions.length} transactions`}
@@ -629,9 +631,9 @@ export const BangladeshBankingView: React.FC = () => {
               </button>
               <button
                 onClick={handleExportCSV}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 rounded-md transition-colors shadow-2xs cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 rounded-md transition-colors shadow-2xs cursor-pointer"
               >
-                <Download className="w-3.5 h-3.5 text-slate-600" />
+                <Download className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300" />
                 <span>{lang === 'bn' ? 'এক্সেল ডাউনলোড (CSV)' : 'Export CSV'}</span>
               </button>
             </div>
@@ -647,7 +649,7 @@ export const BangladeshBankingView: React.FC = () => {
                 placeholder={t('searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-8 pr-2.5 py-1.5 bg-white border border-slate-300 rounded-md focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
+                className="w-full pl-8 pr-2.5 py-1.5 bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 rounded-md focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
               />
             </div>
 
@@ -655,7 +657,7 @@ export const BangladeshBankingView: React.FC = () => {
             <select
               value={selectedBankId}
               onChange={(e) => setSelectedBankId(e.target.value)}
-              className="px-2.5 py-1.5 bg-white border border-slate-300 rounded-md focus:outline-hidden focus:ring-1 focus:ring-emerald-500 font-medium"
+              className="px-2.5 py-1.5 bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 rounded-md focus:outline-hidden focus:ring-1 focus:ring-emerald-500 font-medium"
             >
               <option value="all">{lang === 'bn' ? 'সকল ব্যাংক' : 'All Banks'}</option>
               {data.banks.map((b) => (
@@ -669,7 +671,7 @@ export const BangladeshBankingView: React.FC = () => {
             <select
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value)}
-              className="px-2.5 py-1.5 bg-white border border-slate-300 rounded-md focus:outline-hidden focus:ring-1 focus:ring-emerald-500 font-medium"
+              className="px-2.5 py-1.5 bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 rounded-md focus:outline-hidden focus:ring-1 focus:ring-emerald-500 font-medium"
             >
               <option value="all">{lang === 'bn' ? 'সকল ধরণ' : 'All Types'}</option>
               <option value="income">{lang === 'bn' ? 'শুধুমাত্র জমা / আয়' : 'Inflow (Income)'}</option>
@@ -681,7 +683,7 @@ export const BangladeshBankingView: React.FC = () => {
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="px-2.5 py-1.5 bg-white border border-slate-300 rounded-md focus:outline-hidden focus:ring-1 focus:ring-emerald-500 font-medium"
+              className="px-2.5 py-1.5 bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 rounded-md focus:outline-hidden focus:ring-1 focus:ring-emerald-500 font-medium"
             >
               <option value="all">{lang === 'bn' ? 'সকল ক্যাটাগরি' : 'All Categories'}</option>
               {data.categories
@@ -709,7 +711,7 @@ export const BangladeshBankingView: React.FC = () => {
                   setStartDate('');
                   setEndDate('');
                 }}
-                className="px-2.5 py-1.5 text-xs text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-md border border-rose-200 font-medium transition-colors"
+                className="px-2.5 py-1.5 text-xs text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 dark:hover:bg-rose-900/60 rounded-md border border-rose-200 dark:border-rose-800 font-medium transition-colors cursor-pointer"
               >
                 {lang === 'bn' ? 'ফিল্টার মুছুন' : 'Reset Filters'}
               </button>
@@ -721,7 +723,7 @@ export const BangladeshBankingView: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-slate-100/70 border-b border-slate-200 text-slate-600 font-bold">
+              <tr className="bg-slate-100/70 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 font-bold">
                 <th className="py-2.5 px-3.5 whitespace-nowrap">{lang === 'bn' ? 'তারিখ' : 'Date'}</th>
                 <th className="py-2.5 px-3.5 whitespace-nowrap">{lang === 'bn' ? 'ধরণ' : 'Type'}</th>
                 <th className="py-2.5 px-3.5 whitespace-nowrap">{lang === 'bn' ? 'ব্যাংক হিসাব' : 'Bank'}</th>
@@ -731,10 +733,10 @@ export const BangladeshBankingView: React.FC = () => {
                 <th className="py-2.5 px-3.5 text-center whitespace-nowrap w-16">{lang === 'bn' ? 'অ্যাকশন' : 'Action'}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 text-slate-800">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-800 dark:text-slate-200">
               {filteredTransactions.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-8 text-slate-400">
+                  <td colSpan={7} className="text-center py-8 text-slate-400 dark:text-slate-500">
                     {lang === 'bn'
                       ? 'কোন লেনদেন পাওয়া যায়নি। উপরে "+ নতুন লেনদেন" বাটনে ক্লিক করে যুক্ত করুন।'
                       : 'No transactions found matching your filters.'}
@@ -757,44 +759,44 @@ export const BangladeshBankingView: React.FC = () => {
                   }
 
                   return (
-                    <tr key={tx.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="py-2.5 px-3.5 whitespace-nowrap font-medium text-slate-600">
+                    <tr key={tx.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                      <td className="py-2.5 px-3.5 whitespace-nowrap font-medium text-slate-600 dark:text-slate-400 font-mono tabular-nums">
                         {formatDate(tx.date, lang)}
                       </td>
                       <td className="py-2.5 px-3.5 whitespace-nowrap">
                         {tx.type === 'income' && (
-                          <span className="text-emerald-700 font-semibold flex items-center gap-1">
+                          <span className="text-emerald-700 dark:text-emerald-400 font-semibold flex items-center gap-1">
                             <TrendingUp className="w-3 h-3" />
                             <span>{lang === 'bn' ? 'জমা' : 'Income'}</span>
                           </span>
                         )}
                         {tx.type === 'expense' && (
-                          <span className="text-rose-700 font-semibold flex items-center gap-1">
+                          <span className="text-rose-700 dark:text-rose-400 font-semibold flex items-center gap-1">
                             <TrendingDown className="w-3 h-3" />
                             <span>{lang === 'bn' ? 'খরচ' : 'Expense'}</span>
                           </span>
                         )}
                         {tx.type === 'transfer' && (
-                          <span className="text-blue-700 font-semibold flex items-center gap-1">
+                          <span className="text-blue-700 dark:text-blue-400 font-semibold flex items-center gap-1">
                             <ArrowRightLeft className="w-3 h-3" />
                             <span>{lang === 'bn' ? 'ট্রান্সফার' : 'Transfer'}</span>
                           </span>
                         )}
                       </td>
-                      <td className="py-2.5 px-3.5 text-slate-700 font-medium max-w-xs truncate" title={bankDisplay}>
+                      <td className="py-2.5 px-3.5 text-slate-700 dark:text-slate-300 font-medium max-w-xs truncate" title={bankDisplay}>
                         {bankDisplay}
                       </td>
-                      <td className="py-2.5 px-3.5 whitespace-nowrap font-medium text-slate-900">
+                      <td className="py-2.5 px-3.5 whitespace-nowrap font-medium text-slate-900 dark:text-white">
                         {lang === 'bn'
                           ? tx.categoryNameBn || tx.categoryNameEn || '-'
                           : tx.categoryNameEn || tx.categoryNameBn || '-'}
                       </td>
-                      <td className="py-2.5 px-3.5 text-slate-600 max-w-xs">
+                      <td className="py-2.5 px-3.5 text-slate-600 dark:text-slate-400 max-w-xs">
                         <div className="truncate" title={tx.note || ''}>
                           {tx.note || '-'}
                         </div>
                         {tx.voucherNo && (
-                          <span className="inline-block mt-0.5 px-1.5 py-0.2 rounded text-[10px] bg-slate-100 text-slate-700 font-mono border border-slate-200">
+                          <span className="inline-block mt-0.5 px-1.5 py-0.2 rounded text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono border border-slate-200 dark:border-slate-700">
                             {lang === 'bn' ? 'চেক/আইডি:' : 'Ref:'} {tx.voucherNo}
                           </span>
                         )}
@@ -803,10 +805,10 @@ export const BangladeshBankingView: React.FC = () => {
                         <span
                           className={
                             tx.type === 'income'
-                              ? 'text-emerald-700'
+                              ? 'text-emerald-700 dark:text-emerald-400'
                               : tx.type === 'expense'
-                              ? 'text-rose-700'
-                              : 'text-blue-700'
+                              ? 'text-rose-700 dark:text-rose-400'
+                              : 'text-blue-700 dark:text-blue-400'
                           }
                         >
                           {tx.type === 'income' ? '+' : tx.type === 'expense' ? '-' : '⇄'}{' '}
@@ -818,7 +820,7 @@ export const BangladeshBankingView: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => setEditingTxId(tx.id)}
-                            className="p-1 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors cursor-pointer"
+                            className="p-1 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 rounded transition-colors cursor-pointer"
                             title={lang === 'bn' ? 'সংশোধন / এডিট করুন' : 'Edit'}
                           >
                             <Edit2 className="w-3.5 h-3.5" />
@@ -829,7 +831,7 @@ export const BangladeshBankingView: React.FC = () => {
                                 deleteTransaction(tx.id);
                               }
                             }}
-                            className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors cursor-pointer"
+                            className="p-1 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/60 rounded transition-colors cursor-pointer"
                             title={lang === 'bn' ? 'মুছে ফেলুন' : 'Delete'}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -848,24 +850,24 @@ export const BangladeshBankingView: React.FC = () => {
       {/* MODAL: Bank-to-Bank Fund Transfer */}
       {isTransferModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs no-print">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md border border-slate-200 overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between bg-gradient-to-r from-blue-50 to-indigo-50">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-linear-to-r from-blue-50 to-indigo-50 dark:from-blue-950/60 dark:to-indigo-950/60">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center">
                   <ArrowRightLeft className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900">
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">
                     {lang === 'bn' ? 'ব্যাংক টু ব্যাংক ফান্ড ট্রান্সফার' : 'Bank to Bank Fund Transfer'}
                   </h3>
-                  <p className="text-[11px] text-slate-500">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
                     {lang === 'bn' ? 'এক ব্যাংক অ্যাকাউন্ট থেকে অন্য অ্যাকাউন্টে টাকা স্থানান্তর' : 'Move money between your BD bank accounts'}
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setIsTransferModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-1"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -874,13 +876,13 @@ export const BangladeshBankingView: React.FC = () => {
             <form onSubmit={handleTransferSubmit} className="p-5 space-y-3.5 text-xs">
               {/* From Bank */}
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {lang === 'bn' ? 'প্রেরক ব্যাংক (From Bank)' : 'From Bank Account'} <span className="text-rose-500">*</span>
                 </label>
                 <select
                   value={transferFromBankId}
                   onChange={(e) => setTransferFromBankId(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg font-medium"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 rounded-lg font-medium"
                   required
                 >
                   {data.banks.map((b) => (
@@ -893,13 +895,13 @@ export const BangladeshBankingView: React.FC = () => {
 
               {/* To Bank */}
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {lang === 'bn' ? 'প্রাপক ব্যাংক (To Bank)' : 'To Bank Account'} <span className="text-rose-500">*</span>
                 </label>
                 <select
                   value={transferToBankId}
                   onChange={(e) => setTransferToBankId(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg font-medium"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 rounded-lg font-medium"
                   required
                 >
                   {data.banks.map((b) => (
@@ -913,7 +915,7 @@ export const BangladeshBankingView: React.FC = () => {
               {/* Amount & Date */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     {lang === 'bn' ? 'ট্রান্সফার পরিমাণ (BDT ৳)' : 'Amount (BDT ৳)'} <span className="text-rose-500">*</span>
                   </label>
                   <input
@@ -923,11 +925,11 @@ export const BangladeshBankingView: React.FC = () => {
                     value={transferAmount}
                     onChange={(e) => setTransferAmount(e.target.value)}
                     required
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg font-mono font-bold"
+                    className="w-full px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 rounded-lg font-mono font-bold"
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     {lang === 'bn' ? 'তারিখ' : 'Date'} <span className="text-rose-500">*</span>
                   </label>
                   <input
@@ -935,7 +937,7 @@ export const BangladeshBankingView: React.FC = () => {
                     value={transferDate}
                     onChange={(e) => setTransferDate(e.target.value)}
                     required
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg font-medium"
+                    className="w-full px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 rounded-lg font-medium"
                   />
                 </div>
               </div>
@@ -943,10 +945,10 @@ export const BangladeshBankingView: React.FC = () => {
               {/* Cheque / Txn Ref */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="block font-semibold text-slate-700">
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300">
                     {lang === 'bn' ? 'ভাউচার / রেফারেন্স / চেক নং' : 'Voucher / Ref / Cheque #'}
                   </label>
-                  <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                  <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
                     ⚡ {lang === 'bn' ? 'অটো জেনারেটেড' : 'Auto Generated'}
                   </span>
                 </div>
@@ -955,13 +957,13 @@ export const BangladeshBankingView: React.FC = () => {
                   placeholder="e.g. 1001"
                   value={transferVoucher}
                   onChange={(e) => setTransferVoucher(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg font-mono font-bold text-slate-800"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 rounded-lg font-mono font-bold"
                 />
               </div>
 
               {/* Note */}
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {lang === 'bn' ? 'বিবরণ বা নোট' : 'Note / Purpose'}
                 </label>
                 <input
@@ -969,16 +971,16 @@ export const BangladeshBankingView: React.FC = () => {
                   placeholder={lang === 'bn' ? 'ব্যাংক টু ব্যাংক ব্যালেন্স ট্রান্সফার' : 'Transfer note...'}
                   value={transferNote}
                   onChange={(e) => setTransferNote(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 rounded-lg"
                 />
               </div>
 
               {/* Actions */}
-              <div className="pt-3 flex justify-end gap-2 border-t border-slate-100">
+              <div className="pt-3 flex justify-end gap-2 border-t border-slate-100 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => setIsTransferModalOpen(false)}
-                  className="px-3.5 py-2 text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 cursor-pointer font-medium"
+                  className="px-3.5 py-2 text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer font-medium"
                 >
                   {t('cancel')}
                 </button>

@@ -3,12 +3,16 @@ import { Sun, Sunrise, Sunset, Moon } from 'lucide-react';
 
 interface LiveGreetingClockProps {
   lang?: 'bn' | 'en';
+  userName?: string;
+  profileTitle?: string;
   onReplayIntro?: () => void;
   className?: string;
 }
 
 export const LiveGreetingClock: React.FC<LiveGreetingClockProps> = ({
   lang = 'bn',
+  userName = '',
+  profileTitle = '',
   onReplayIntro,
   className = '',
 }) => {
@@ -62,20 +66,29 @@ export const LiveGreetingClock: React.FC<LiveGreetingClockProps> = ({
   };
 
   const banglaTime = `${toBanglaNumerals(`${displayHours}:${pad(minutes)}`)} ${ampm}`;
+  const cleanName = userName.trim();
+  const cleanTitle = profileTitle.trim();
 
   return (
     <button
       type="button"
       onClick={onReplayIntro}
-      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100/75 dark:bg-slate-800/70 hover:bg-slate-200/70 dark:hover:bg-slate-800 border border-slate-200/70 dark:border-slate-700/60 text-xs font-medium text-slate-600 dark:text-slate-300 transition-colors cursor-pointer select-none ${className}`}
-      title={lang === 'bn' ? 'ওয়েলকাম স্লাইড দেখুন' : 'View Welcome Intro'}
+      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100/80 dark:bg-slate-800/80 hover:bg-slate-200/75 dark:hover:bg-slate-700/80 border border-slate-200/80 dark:border-slate-700/70 text-xs font-medium text-slate-600 dark:text-slate-300 transition-colors cursor-pointer select-none max-w-full ${className}`}
+      title={
+        cleanTitle
+          ? `${cleanName ? `${cleanName} — ` : ''}${cleanTitle}`
+          : lang === 'bn'
+          ? 'ওয়েলকাম স্লাইড দেখুন'
+          : 'View Welcome Intro'
+      }
     >
       <IconComponent className={`w-3.5 h-3.5 ${iconColor} shrink-0`} />
-      <span className="font-semibold text-slate-700 dark:text-slate-200">
+      <span className="font-semibold text-slate-700 dark:text-slate-200 truncate">
         {lang === 'bn' ? greetingBn : greetingEn}
+        {cleanName ? `, ${cleanName}` : ''}
       </span>
-      <span className="text-slate-300 dark:text-slate-600">·</span>
-      <span className="font-mono text-[11px] font-semibold tabular-nums text-slate-500 dark:text-slate-400">
+      <span className="text-slate-300 dark:text-slate-600 shrink-0">·</span>
+      <span className="font-mono text-[11px] font-semibold tabular-nums text-slate-500 dark:text-slate-400 shrink-0">
         {lang === 'bn' ? banglaTime : timeFormatted}
       </span>
     </button>

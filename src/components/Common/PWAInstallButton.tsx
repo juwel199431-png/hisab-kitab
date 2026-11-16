@@ -31,10 +31,10 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({ lang }) => {
       <button
         onClick={handleInstallClick}
         disabled={isInstalling}
-        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-linear-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 rounded-lg shadow-xs hover:shadow-sm transition-all border border-emerald-500/40 cursor-pointer whitespace-nowrap animate-pulse hover:animate-none"
+        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-linear-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 rounded-lg shadow-xs hover:shadow-sm hover:-translate-y-0.5 transition-all duration-150 border border-emerald-500/40 cursor-pointer whitespace-nowrap"
         title={lang === 'bn' ? 'অ্যাপ হিসেবে ইন্সটল করুন (অফলাইন সুবিধা)' : 'Install app locally'}
       >
-        <Download className="w-3.5 h-3.5" />
+        <Download className="w-3.5 h-3.5 shrink-0" />
         <span>{lang === 'bn' ? 'অ্যাপ ইন্সটল' : 'Install App'}</span>
       </button>
     );

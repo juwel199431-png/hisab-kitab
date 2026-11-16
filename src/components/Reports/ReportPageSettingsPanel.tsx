@@ -210,7 +210,7 @@ export const ReportPageSettingsPanel: React.FC<ReportPageSettingsPanelProps> = (
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden no-print transition-all">
+    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-xs overflow-hidden no-print transition-all">
       {/* Top Banner / Trigger Bar */}
       <div className="px-5 py-3.5 bg-linear-to-r from-slate-900 via-indigo-950 to-slate-900 text-white flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
@@ -241,7 +241,7 @@ export const ReportPageSettingsPanel: React.FC<ReportPageSettingsPanelProps> = (
             onClick={handleExplicitSave}
             className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl border transition-all cursor-pointer shadow-xs ${
               saveToast || isSaved
-                ? 'bg-emerald-500 text-white border-emerald-400 animate-pulse'
+                ? 'bg-emerald-500 text-white border-emerald-400'
                 : 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-500/60'
             }`}
             title={lang === 'bn' ? 'আপনার সকল কাস্টম মাপ ও মার্জিন ব্রাউজারে স্থায়ীভাবে সেভ করুন' : 'Save all custom dimensions and margins'}
@@ -288,10 +288,10 @@ export const ReportPageSettingsPanel: React.FC<ReportPageSettingsPanelProps> = (
 
       {/* Expanded Adjuster Controls */}
       {isOpen && (
-        <div className="p-5 md:p-6 bg-slate-50 border-t border-slate-200/80 space-y-5 animate-in fade-in duration-150">
+        <div className="p-5 md:p-6 bg-slate-50 dark:bg-slate-900/60 border-t border-slate-200/80 dark:border-slate-800 space-y-5 animate-in fade-in duration-150">
           {/* Quick Presets Row */}
-          <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-white rounded-xl border border-slate-200 shadow-2xs">
-            <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
+          <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-white dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700 shadow-2xs">
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-200">
               <Sparkles className="w-4 h-4 text-amber-500" />
               <span>{lang === 'bn' ? 'দ্রুত প্রিসেট নির্বাচন:' : 'Quick Presets:'}</span>
             </div>
@@ -300,25 +300,25 @@ export const ReportPageSettingsPanel: React.FC<ReportPageSettingsPanelProps> = (
               <button
                 type="button"
                 onClick={applyPresetZeroMargin}
-                className="px-3 py-1 text-xs font-bold rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 transition-colors cursor-pointer"
+                className="px-3 py-1 text-xs font-bold rounded-lg bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-800 dark:text-indigo-200 border border-indigo-200 dark:border-indigo-800 transition-colors cursor-pointer"
               >
-                {lang === 'bn' ? '📐 ফুল পেজ (২ মিমি জিরো মার্জিন)' : 'Full Page (2mm Margins)'}
+                {lang === 'bn' ? 'ফুল পেজ (২ মিমি মার্জিন)' : 'Full Page (2mm Margins)'}
               </button>
 
               <button
                 type="button"
                 onClick={applyPresetLandscape}
-                className="px-3 py-1 text-xs font-bold rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 transition-colors cursor-pointer"
+                className="px-3 py-1 text-xs font-bold rounded-lg bg-teal-50 dark:bg-teal-950/60 hover:bg-teal-100 dark:hover:bg-teal-900/60 text-teal-800 dark:text-teal-200 border border-teal-200 dark:border-teal-800 transition-colors cursor-pointer"
               >
-                {lang === 'bn' ? '📑 ল্যান্ডস্কেপ চওড়া খতিয়ান (Wide Ledger)' : 'Landscape Ledger (Wide)'}
+                {lang === 'bn' ? 'ল্যান্ডস্কেপ চওড়া খতিয়ান (Wide)' : 'Landscape Ledger (Wide)'}
               </button>
 
               <button
                 type="button"
                 onClick={applyPresetStandardA4}
-                className="px-3 py-1 text-xs font-bold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 transition-colors cursor-pointer"
+                className="px-3 py-1 text-xs font-bold rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 transition-colors cursor-pointer"
               >
-                {lang === 'bn' ? '📄 স্ট্যান্ডার্ড অফিসিয়াল (৮ মিমি)' : 'Standard Office (8mm)'}
+                {lang === 'bn' ? 'স্ট্যান্ডার্ড অফিসিয়াল (৮ মিমি)' : 'Standard Office (8mm)'}
               </button>
 
               <button
@@ -333,7 +333,7 @@ export const ReportPageSettingsPanel: React.FC<ReportPageSettingsPanelProps> = (
               <button
                 type="button"
                 onClick={onReset}
-                className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition-colors cursor-pointer flex items-center gap-1"
+                className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 transition-colors cursor-pointer flex items-center gap-1"
                 title="Reset to default settings"
               >
                 <RotateCcw className="w-3 h-3" />
@@ -345,10 +345,10 @@ export const ReportPageSettingsPanel: React.FC<ReportPageSettingsPanelProps> = (
           {/* Grid of Sliders and Selectors */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Box 1: 4-Way Page Margins */}
-            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs space-y-3">
+            <div className="bg-white dark:bg-slate-800/80 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-2xs space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                  <span>📐</span>
+                <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <Maximize2 className="w-3.5 h-3.5 text-indigo-500" />
                   <span>{lang === 'bn' ? 'চারপাশের মার্জিন (মিমি)' : 'Page Margins (mm)'}</span>
                 </span>
                 <span className="text-[10px] text-slate-400 font-mono">0 - 30 mm</span>
@@ -356,9 +356,9 @@ export const ReportPageSettingsPanel: React.FC<ReportPageSettingsPanelProps> = (
 
               {/* Top Margin */}
               <div>
-                <div className="flex justify-between text-[11px] font-semibold text-slate-700 mb-1">
+                <div className="flex justify-between text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   <span>{lang === 'bn' ? 'উপরে (Top):' : 'Top:'}</span>
-                  <span className="font-mono text-indigo-600 font-bold">{settings.marginTop} mm</span>
+                  <span className="font-mono text-indigo-600 dark:text-indigo-400 font-bold">{settings.marginTop} mm</span>
                 </div>
                 <input
                   type="range"
@@ -373,9 +373,9 @@ export const ReportPageSettingsPanel: React.FC<ReportPageSettingsPanelProps> = (
 
               {/* Bottom Margin */}
               <div>
-                <div className="flex justify-between text-[11px] font-semibold text-slate-700 mb-1">
+                <div className="flex justify-between text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   <span>{lang === 'bn' ? 'নিচে (Bottom):' : 'Bottom:'}</span>
-                  <span className="font-mono text-indigo-600 font-bold">{settings.marginBottom} mm</span>
+                  <span className="font-mono text-indigo-600 dark:text-indigo-400 font-bold">{settings.marginBottom} mm</span>
                 </div>
                 <input
                   type="range"
@@ -390,9 +390,9 @@ export const ReportPageSettingsPanel: React.FC<ReportPageSettingsPanelProps> = (
 
               {/* Left Margin */}
               <div>
-                <div className="flex justify-between text-[11px] font-semibold text-slate-700 mb-1">
+                <div className="flex justify-between text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   <span>{lang === 'bn' ? 'বামে (Left):' : 'Left:'}</span>
-                  <span className="font-mono text-indigo-600 font-bold">{settings.marginLeft} mm</span>
+                  <span className="font-mono text-indigo-600 dark:text-indigo-400 font-bold">{settings.marginLeft} mm</span>
                 </div>
                 <input
                   type="range"
@@ -407,9 +407,9 @@ export const ReportPageSettingsPanel: React.FC<ReportPageSettingsPanelProps> = (
 
               {/* Right Margin */}
               <div>
-                <div className="flex justify-between text-[11px] font-semibold text-slate-700 mb-1">
+                <div className="flex justify-between text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   <span>{lang === 'bn' ? 'ডানে (Right):' : 'Right:'}</span>
-                  <span className="font-mono text-indigo-600 font-bold">{settings.marginRight} mm</span>
+                  <span className="font-mono text-indigo-600 dark:text-indigo-400 font-bold">{settings.marginRight} mm</span>
                 </div>
                 <input
                   type="range"
@@ -423,24 +423,24 @@ export const ReportPageSettingsPanel: React.FC<ReportPageSettingsPanelProps> = (
               </div>
             </div>
 
-            {/* Box 2: Column Width Controls (Now includes Date, Remarks, Account, Debit/Credit) */}
-            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs space-y-3">
+            {/* Box 2: Column Width Controls */}
+            <div className="bg-white dark:bg-slate-800/80 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-2xs space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                  <span>📊</span>
+                <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <AlignLeft className="w-3.5 h-3.5 text-emerald-500" />
                   <span>{lang === 'bn' ? 'কলামের প্রস্থ অনুপাত' : 'Column Width Ratios'}</span>
                 </span>
-                <span className="text-[10px] text-emerald-600 font-black">১০০% এডজাস্টেবল</span>
+                <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-black">১০০% এডজাস্টেবল</span>
               </div>
 
-              {/* Date Column Width (Requested by User) */}
-              <div className="bg-indigo-50/50 p-2 rounded-lg border border-indigo-100">
-                <div className="flex justify-between text-[11px] font-semibold text-slate-700 mb-1">
-                  <span className="text-indigo-950 font-bold flex items-center gap-1">
-                    <Calendar className="w-3 h-3 text-indigo-600" />
+              {/* Date Column Width */}
+              <div className="bg-indigo-50/50 dark:bg-indigo-950/40 p-2 rounded-lg border border-indigo-100 dark:border-indigo-800/60">
+                <div className="flex justify-between text-[11px] font-semibold text-slate-700 dark:text-slate-200 mb-1">
+                  <span className="text-indigo-950 dark:text-indigo-200 font-bold flex items-center gap-1">
+                    <Calendar className="w-3 h-3 text-indigo-600 dark:text-indigo-400" />
                     <span>{lang === 'bn' ? 'তারিখ (Date) কলাম:' : 'Date Column Width:'}</span>
                   </span>
-                  <span className="font-mono text-indigo-700 font-black text-xs">{settings.dateWidth}%</span>
+                  <span className="font-mono text-indigo-700 dark:text-indigo-300 font-black text-xs">{settings.dateWidth}%</span>
                 </div>
                 <input
                   type="range"
@@ -451,16 +451,16 @@ export const ReportPageSettingsPanel: React.FC<ReportPageSettingsPanelProps> = (
                   onChange={(e) => onChange({ dateWidth: Number(e.target.value) })}
                   className="w-full accent-indigo-600 cursor-pointer"
                 />
-                <span className="text-[9.5px] text-indigo-600 block mt-0.5 font-medium">
+                <span className="text-[9.5px] text-indigo-600 dark:text-indigo-400 block mt-0.5 font-medium">
                   {lang === 'bn' ? 'তারিখের মাপ বাড়িয়ে বা কমিয়ে সুবিধামত রাখুন' : 'Slide to expand date column'}
                 </span>
               </div>
 
               {/* Remarks Width */}
               <div>
-                <div className="flex justify-between text-[11px] font-semibold text-slate-700 mb-1">
-                  <span className="text-slate-800 font-bold">{lang === 'bn' ? 'মন্তব্য (Remarks) কলাম:' : 'Remarks Width:'}</span>
-                  <span className="font-mono text-indigo-600 font-black text-xs">{settings.remarksWidth}%</span>
+                <div className="flex justify-between text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  <span className="text-slate-800 dark:text-slate-200 font-bold">{lang === 'bn' ? 'মন্তব্য (Remarks) কলাম:' : 'Remarks Width:'}</span>
+                  <span className="font-mono text-indigo-600 dark:text-indigo-400 font-black text-xs">{settings.remarksWidth}%</span>
                 </div>
                 <input
                   type="range"
@@ -475,9 +475,9 @@ export const ReportPageSettingsPanel: React.FC<ReportPageSettingsPanelProps> = (
 
               {/* Account Width */}
               <div>
-                <div className="flex justify-between text-[11px] font-semibold text-slate-700 mb-1">
+                <div className="flex justify-between text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   <span>{lang === 'bn' ? 'অ্যাকাউন্ট (Account):' : 'Account:'}</span>
-                  <span className="font-mono text-slate-700 font-bold">{settings.accountWidth}%</span>
+                  <span className="font-mono text-slate-700 dark:text-slate-300 font-bold">{settings.accountWidth}%</span>
                 </div>
                 <input
                   type="range"
@@ -492,9 +492,9 @@ export const ReportPageSettingsPanel: React.FC<ReportPageSettingsPanelProps> = (
 
               {/* Debit & Credit Width */}
               <div>
-                <div className="flex justify-between text-[11px] font-semibold text-slate-700 mb-1">
+                <div className="flex justify-between text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   <span>{lang === 'bn' ? 'ডেবিট ও ক্রেডিট কলাম:' : 'Debit & Credit:'}</span>
-                  <span className="font-mono text-slate-700 font-bold">প্রতিটি {settings.debitWidth}%</span>
+                  <span className="font-mono text-slate-700 dark:text-slate-300 font-bold">প্রতিটি {settings.debitWidth}%</span>
                 </div>
                 <input
                   type="range"
@@ -511,21 +511,21 @@ export const ReportPageSettingsPanel: React.FC<ReportPageSettingsPanelProps> = (
               </div>
             </div>
 
-            {/* Box 3: Typography, Bold, Italic & Row Height (Requested by User) */}
-            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs space-y-3">
+            {/* Box 3: Typography, Bold, Italic & Row Height */}
+            <div className="bg-white dark:bg-slate-800/80 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-2xs space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                  <span>✍️</span>
+                <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <Type className="w-3.5 h-3.5 text-indigo-500" />
                   <span>{lang === 'bn' ? 'ফন্ট স্টাইল ও রো-এর উচ্চতা' : 'Font Style & Rows'}</span>
                 </span>
-                <span className="text-[10px] text-indigo-600 font-bold">{settings.fontSizePt}pt</span>
+                <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold">{settings.fontSizePt}pt</span>
               </div>
 
               {/* Font Size Slider */}
               <div>
-                <div className="flex justify-between text-[11px] font-semibold text-slate-700 mb-1">
+                <div className="flex justify-between text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   <span>{lang === 'bn' ? 'ফন্ট সাইজ (Font Size):' : 'Font Size:'}</span>
-                  <span className="font-mono text-indigo-600 font-bold">{settings.fontSizePt} pt</span>
+                  <span className="font-mono text-indigo-600 dark:text-indigo-400 font-bold">{settings.fontSizePt} pt</span>
                 </div>
                 <input
                   type="range"
@@ -540,7 +540,7 @@ export const ReportPageSettingsPanel: React.FC<ReportPageSettingsPanelProps> = (
 
               {/* Bold & Italic Toggles */}
               <div>
-                <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {lang === 'bn' ? 'লেখা বোল্ড / ইটালিক করুন:' : 'Bold & Italic:'}
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -550,7 +550,7 @@ export const ReportPageSettingsPanel: React.FC<ReportPageSettingsPanelProps> = (
                     className={`py-1.5 px-3 rounded-lg border text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                       settings.isBold
                         ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
-                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                        : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'
                     }`}
                   >
                     <Bold className="w-3.5 h-3.5" />
@@ -563,7 +563,7 @@ export const ReportPageSettingsPanel: React.FC<ReportPageSettingsPanelProps> = (
                     className={`py-1.5 px-3 rounded-lg border text-xs font-semibold italic flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                       settings.isItalic
                         ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
-                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                        : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'
                     }`}
                   >
                     <Italic className="w-3.5 h-3.5" />
@@ -574,7 +574,7 @@ export const ReportPageSettingsPanel: React.FC<ReportPageSettingsPanelProps> = (
 
               {/* Font Family Selection */}
               <div>
-                <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {lang === 'bn' ? 'ফন্ট নির্বাচন:' : 'Font Family:'}
                 </label>
                 <div className="grid grid-cols-3 gap-1.5">
@@ -589,8 +589,8 @@ export const ReportPageSettingsPanel: React.FC<ReportPageSettingsPanelProps> = (
                       onClick={() => onChange({ fontFamily: f.id as any })}
                       className={`py-1 text-xs font-medium rounded-lg border transition-all cursor-pointer ${
                         settings.fontFamily === f.id
-                          ? 'bg-slate-900 text-white border-slate-900 font-bold shadow-2xs'
-                          : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                          ? 'bg-slate-900 dark:bg-emerald-600 text-white border-slate-900 dark:border-emerald-500 font-bold shadow-2xs'
+                          : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'
                       }`}
                     >
                       {f.label}
@@ -599,9 +599,9 @@ export const ReportPageSettingsPanel: React.FC<ReportPageSettingsPanelProps> = (
                 </div>
               </div>
 
-              {/* Row Padding (Compact, Normal, Relaxed) */}
+              {/* Row Padding */}
               <div>
-                <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {lang === 'bn' ? 'রো-এর স্পেসিং / উচ্চতা:' : 'Row Spacing:'}
                 </label>
                 <div className="grid grid-cols-3 gap-1.5">
@@ -617,7 +617,7 @@ export const ReportPageSettingsPanel: React.FC<ReportPageSettingsPanelProps> = (
                       className={`py-1 text-xs font-medium rounded-lg border transition-all cursor-pointer ${
                         settings.rowPadding === r.id
                           ? 'bg-indigo-600 text-white border-indigo-600 font-bold shadow-2xs'
-                          : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                          : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'
                       }`}
                     >
                       {r.label}
@@ -628,10 +628,10 @@ export const ReportPageSettingsPanel: React.FC<ReportPageSettingsPanelProps> = (
             </div>
 
             {/* Box 4: Orientation & Zoom Scaling */}
-            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs space-y-3">
+            <div className="bg-white dark:bg-slate-800/80 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-2xs space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                  <span>📑</span>
+                <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <FileText className="w-3.5 h-3.5 text-amber-500" />
                   <span>{lang === 'bn' ? 'কাগজের দিক ও জুম স্কেল' : 'Orientation & Scale'}</span>
                 </span>
               </div>
@@ -642,8 +642,8 @@ export const ReportPageSettingsPanel: React.FC<ReportPageSettingsPanelProps> = (
                   onClick={() => onChange({ orientation: 'portrait' })}
                   className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
                     settings.orientation === 'portrait'
-                      ? 'bg-indigo-50 border-indigo-600 text-indigo-900 font-bold shadow-xs'
-                      : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                      ? 'bg-indigo-50 dark:bg-indigo-950/60 border-indigo-600 dark:border-indigo-500 text-indigo-900 dark:text-indigo-200 font-bold shadow-xs'
+                      : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
                   }`}
                 >
                   <div className="w-4 h-6 border-2 border-current mx-auto rounded-xs mb-1" />
@@ -656,8 +656,8 @@ export const ReportPageSettingsPanel: React.FC<ReportPageSettingsPanelProps> = (
                   onClick={() => onChange({ orientation: 'landscape' })}
                   className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
                     settings.orientation === 'landscape'
-                      ? 'bg-teal-50 border-teal-600 text-teal-900 font-bold shadow-xs'
-                      : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                      ? 'bg-teal-50 dark:bg-teal-950/60 border-teal-600 dark:border-teal-500 text-teal-900 dark:text-teal-200 font-bold shadow-xs'
+                      : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
                   }`}
                 >
                   <div className="w-6 h-4 border-2 border-current mx-auto rounded-xs mb-1.5" />
@@ -668,9 +668,9 @@ export const ReportPageSettingsPanel: React.FC<ReportPageSettingsPanelProps> = (
 
               {/* Table Scale Slider */}
               <div className="pt-1">
-                <div className="flex justify-between text-[11px] font-semibold text-slate-700 mb-1">
+                <div className="flex justify-between text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   <span>{lang === 'bn' ? 'টেবিল স্কেল / জুম:' : 'Table Scale / Zoom:'}</span>
-                  <span className="font-mono text-indigo-600 font-bold">{settings.scale}%</span>
+                  <span className="font-mono text-indigo-600 dark:text-indigo-400 font-bold">{settings.scale}%</span>
                 </div>
                 <input
                   type="range"
@@ -693,31 +693,31 @@ export const ReportPageSettingsPanel: React.FC<ReportPageSettingsPanelProps> = (
                 <button
                   type="button"
                   onClick={handleExplicitSave}
-                  className="w-full py-2 px-3 text-xs font-bold rounded-xl bg-slate-900 hover:bg-slate-800 text-white flex items-center justify-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                  className="w-full py-2 px-3 text-xs font-bold rounded-xl bg-slate-900 dark:bg-emerald-700 hover:bg-slate-800 dark:hover:bg-emerald-600 text-white flex items-center justify-center gap-1.5 shadow-sm transition-all cursor-pointer"
                 >
-                  <Save className="w-3.5 h-3.5 text-emerald-400" />
+                  <Save className="w-3.5 h-3.5 text-emerald-300" />
                   <span>{lang === 'bn' ? 'এই মাপ ও মার্জিন সেভ করুন' : 'Save Dimensions & Margins'}</span>
                 </button>
               </div>
             </div>
 
-            {/* Box 5: Letterhead & Aesthetic Background Watermark (Requested by User) */}
-            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs space-y-3 md:col-span-2 lg:col-span-4">
-              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2">
+            {/* Box 5: Letterhead & Aesthetic Background Watermark */}
+            <div className="bg-white dark:bg-slate-800/80 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-2xs space-y-3 md:col-span-2 lg:col-span-4">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-700 pb-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-base">🏛️</span>
+                  <Sparkles className="w-4 h-4 text-emerald-500" />
                   <div>
-                    <span className="text-xs font-bold text-slate-900 block">
+                    <span className="text-xs font-bold text-slate-900 dark:text-white block">
                       {lang === 'bn' ? 'অফিসিয়াল লেটারহেড ও ব্যাকগ্রাউন্ড সিকিউরিটি ডিজাইন' : 'Official Letterhead & Aesthetic Background Design'}
                     </span>
-                    <span className="text-[10px] text-slate-500">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400">
                       {lang === 'bn' ? 'প্রিন্ট বা পিডিএফ করার সময় পেজের শীর্ষে আকর্ষণীয় লেটারহেড ও ব্যাকগ্রাউন্ডে ওয়াটারমার্ক শো করবে' : 'Shows official logo letterhead on top and security watermark in background'}
                     </span>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                     {lang === 'bn' ? 'প্রিন্ট ও PDF রেডি' : 'Print / PDF Ready'}
                   </span>
                 </div>
@@ -725,12 +725,12 @@ export const ReportPageSettingsPanel: React.FC<ReportPageSettingsPanelProps> = (
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
                 {/* 1. Letterhead Toggle */}
-                <div className="p-3 rounded-lg border bg-slate-50 border-slate-200 flex items-center justify-between">
+                <div className="p-3 rounded-lg border bg-slate-50 dark:bg-slate-900/60 border-slate-200 dark:border-slate-700 flex items-center justify-between">
                   <div>
-                    <span className="text-xs font-bold text-slate-800 block">
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
                       {lang === 'bn' ? 'লেটারহেড (শীর্ষ ব্যানার):' : 'Letterhead (Header):'}
                     </span>
-                    <span className="text-[10px] text-slate-500">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400">
                       {lang === 'bn' ? 'লোগো ও অফিসিয়াল নাম' : 'Logo & Official Title'}
                     </span>
                   </div>
@@ -740,7 +740,7 @@ export const ReportPageSettingsPanel: React.FC<ReportPageSettingsPanelProps> = (
                     className={`px-3 py-1 text-xs font-bold rounded-lg border transition-all cursor-pointer ${
                       settings.showLetterhead
                         ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
-                        : 'bg-white text-slate-500 border-slate-300'
+                        : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-300 dark:border-slate-600'
                     }`}
                   >
                     {settings.showLetterhead ? (lang === 'bn' ? 'চালু (On)' : 'On') : (lang === 'bn' ? 'বন্ধ (Off)' : 'Off')}
@@ -748,12 +748,12 @@ export const ReportPageSettingsPanel: React.FC<ReportPageSettingsPanelProps> = (
                 </div>
 
                 {/* 2. Watermark Toggle */}
-                <div className="p-3 rounded-lg border bg-slate-50 border-slate-200 flex items-center justify-between">
+                <div className="p-3 rounded-lg border bg-slate-50 dark:bg-slate-900/60 border-slate-200 dark:border-slate-700 flex items-center justify-between">
                   <div>
-                    <span className="text-xs font-bold text-slate-800 block">
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
                       {lang === 'bn' ? 'ব্যাকগ্রাউন্ড ওয়াটারমার্ক:' : 'Security Watermark:'}
                     </span>
-                    <span className="text-[10px] text-slate-500">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400">
                       {lang === 'bn' ? 'সিকিউরিটি সিল ও প্যাটার্ন' : 'Guilloche Seal Pattern'}
                     </span>
                   </div>
@@ -763,7 +763,7 @@ export const ReportPageSettingsPanel: React.FC<ReportPageSettingsPanelProps> = (
                     className={`px-3 py-1 text-xs font-bold rounded-lg border transition-all cursor-pointer ${
                       settings.showWatermark
                         ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs'
-                        : 'bg-white text-slate-500 border-slate-300'
+                        : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-300 dark:border-slate-600'
                     }`}
                   >
                     {settings.showWatermark ? (lang === 'bn' ? 'চালু (On)' : 'On') : (lang === 'bn' ? 'বন্ধ (Off)' : 'Off')}
@@ -771,12 +771,12 @@ export const ReportPageSettingsPanel: React.FC<ReportPageSettingsPanelProps> = (
                 </div>
 
                 {/* 3. Watermark Opacity Intensity */}
-                <div className="p-3 rounded-lg border bg-slate-50 border-slate-200">
+                <div className="p-3 rounded-lg border bg-slate-50 dark:bg-slate-900/60 border-slate-200 dark:border-slate-700">
                   <div className="flex justify-between items-center mb-1.5">
-                    <span className="text-xs font-bold text-slate-800">
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
                       {lang === 'bn' ? 'ওয়াটারমার্কের গভীরতা:' : 'Watermark Intensity:'}
                     </span>
-                    <span className="text-[10px] font-mono text-indigo-700 font-bold">
+                    <span className="text-[10px] font-mono text-indigo-700 dark:text-indigo-400 font-bold">
                       {settings.watermarkOpacity === 0.03 ? (lang === 'bn' ? 'হালকা (Subtle)' : 'Subtle') : settings.watermarkOpacity === 0.08 ? (lang === 'bn' ? 'স্পষ্ট (Bold)' : 'Bold') : (lang === 'bn' ? 'স্বাভাবিক (Normal)' : 'Normal')}
                     </span>
                   </div>
@@ -792,8 +792,8 @@ export const ReportPageSettingsPanel: React.FC<ReportPageSettingsPanelProps> = (
                         onClick={() => onChange({ watermarkOpacity: op.val })}
                         className={`py-1 text-[11px] font-medium rounded-md border transition-all cursor-pointer ${
                           settings.watermarkOpacity === op.val
-                            ? 'bg-slate-900 text-white border-slate-900 font-bold shadow-2xs'
-                            : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
+                            ? 'bg-slate-900 dark:bg-emerald-600 text-white border-slate-900 dark:border-emerald-500 font-bold shadow-2xs'
+                            : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'
                         }`}
                       >
                         {op.label}
@@ -803,21 +803,21 @@ export const ReportPageSettingsPanel: React.FC<ReportPageSettingsPanelProps> = (
                 </div>
 
                 {/* 4. Logo & Branding Customization Button */}
-                <div className="sm:col-span-3 pt-3 mt-1 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 bg-white p-3 rounded-lg border border-slate-100">
+                <div className="sm:col-span-3 pt-3 mt-1 border-t border-slate-200 dark:border-slate-700 flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-slate-900/80 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold text-xs border border-indigo-200 shadow-2xs">
-                      <Camera className="w-4 h-4 text-indigo-600" />
+                    <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 flex items-center justify-center font-bold text-xs border border-indigo-200 dark:border-indigo-800 shadow-2xs">
+                      <Camera className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-slate-800">
+                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
                           {settings.companyName || 'Hisab Kitab'}
                         </span>
-                        <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-100 text-slate-600 border border-slate-200">
+                        <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                           {settings.logoType === 'custom' ? (lang === 'bn' ? 'কাস্টম লোগো' : 'Custom') : (settings.logoType || 'default')}
                         </span>
                       </div>
-                      <p className="text-[10.5px] text-slate-500">
+                      <p className="text-[10.5px] text-slate-500 dark:text-slate-400">
                         {settings.companyTagline || 'Personal & Work Finance'}
                       </p>
                     </div>

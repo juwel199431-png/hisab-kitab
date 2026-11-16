@@ -373,22 +373,22 @@ export const KuwaitLoanTracker: React.FC = () => {
       </div>
 
       {/* 1. Header Banner & Actions */}
-      <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-2xs no-print">
+      <div className="bg-white dark:bg-slate-900 rounded-xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-2xs no-print">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-700 shadow-2xs">
+            <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800/60 flex items-center justify-center text-indigo-700 dark:text-indigo-400 shadow-2xs shrink-0">
               <HandCoins className="w-5 h-5" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold text-slate-900">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-base font-bold text-slate-900 dark:text-white">
                   {lang === 'bn' ? 'Personal Receivable Loan (ব্যক্তিগত পাওনা লোন)' : 'Personal Receivable Loan Tracker'}
                 </h2>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-200">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 dark:bg-indigo-950/70 text-indigo-800 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60">
                   KWD Currency
                 </span>
               </div>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                 {lang === 'bn'
                   ? 'কাউকে ব্যক্তিগত প্রয়োজনে দিনার লোন দেওয়া এবং আংশিক বা কিস্তিতে ফেরত আদায়ের ব্যক্তিভিত্তিক নিখুঁত খতিয়ান'
                   : 'Track dinar loans given to individuals with partial/full collection and running balance'}
@@ -401,7 +401,7 @@ export const KuwaitLoanTracker: React.FC = () => {
               onClick={() => handleOpenLend()}
               className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-2xs transition-colors cursor-pointer"
             >
-              <Plus className="w-3.5 h-3.5" />
+              <Plus className="w-3.5 h-3.5 shrink-0" />
               <span>{lang === 'bn' ? '+ লোন প্রদান এন্ট্রি' : '+ Give Loan'}</span>
             </button>
 
@@ -409,39 +409,39 @@ export const KuwaitLoanTracker: React.FC = () => {
               onClick={() => handleOpenCollect()}
               className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-2xs transition-colors cursor-pointer"
             >
-              <Check className="w-3.5 h-3.5" />
+              <Check className="w-3.5 h-3.5 shrink-0" />
               <span>{lang === 'bn' ? '✓ টাকা ফেরত গ্রহণ' : '✓ Collect / Repay'}</span>
             </button>
 
             <button
               onClick={handlePrint}
-              className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 rounded-lg transition-colors shadow-2xs cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 rounded-lg transition-colors shadow-2xs cursor-pointer"
               title={lang === 'bn' ? 'প্রিন্ট অথবা PDF সেভ করুন' : 'Print / PDF'}
             >
-              <Printer className="w-3.5 h-3.5 text-slate-600" />
+              <Printer className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300 shrink-0" />
               <span>{lang === 'bn' ? 'প্রিন্ট / PDF' : 'Print / PDF'}</span>
             </button>
 
             <button
               onClick={handleExportCSV}
-              className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 rounded-lg transition-colors shadow-2xs cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 rounded-lg transition-colors shadow-2xs cursor-pointer"
               title="CSV Download"
             >
-              <Download className="w-3.5 h-3.5 text-slate-600" />
+              <Download className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300 shrink-0" />
               <span>CSV</span>
             </button>
           </div>
         </div>
 
         {/* 2. Top KPI Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3.5 mt-5 pt-5 border-t border-slate-100">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mt-5 pt-5 border-t border-slate-100 dark:border-slate-800">
           {/* Card 1: Total Lent */}
-          <div className="bg-linear-to-br from-indigo-600 via-blue-600 to-indigo-800 text-white rounded-2xl p-4 border border-indigo-400/30 shadow-md shadow-indigo-500/15 flex flex-col justify-between">
+          <div className="bg-linear-to-br from-indigo-600 via-blue-600 to-indigo-800 text-white rounded-2xl p-4 border border-indigo-400/30 shadow-md shadow-indigo-500/15 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-150 flex flex-col justify-between">
             <div>
               <span className="text-[11px] font-bold text-indigo-100 uppercase tracking-wider block">
                 {lang === 'bn' ? 'মোট লোন প্রদান (Total Lent)' : 'Total Lent'}
               </span>
-              <span className="font-mono text-xl font-bold text-white mt-1.5 block drop-shadow-xs">
+              <span className="font-mono tabular-nums text-xl font-bold text-white mt-1.5 block drop-shadow-xs">
                 {totalLent.toFixed(3)} KD
               </span>
             </div>
@@ -451,12 +451,12 @@ export const KuwaitLoanTracker: React.FC = () => {
           </div>
 
           {/* Card 2: Total Collected */}
-          <div className="bg-linear-to-br from-emerald-600 via-teal-600 to-emerald-800 text-white rounded-2xl p-4 border border-emerald-400/30 shadow-md shadow-emerald-500/15 flex flex-col justify-between">
+          <div className="bg-linear-to-br from-emerald-600 via-teal-600 to-emerald-800 text-white rounded-2xl p-4 border border-emerald-400/30 shadow-md shadow-emerald-500/15 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-150 flex flex-col justify-between">
             <div>
               <span className="text-[11px] font-bold text-emerald-100 uppercase tracking-wider block">
                 {lang === 'bn' ? 'মোট ফেরত আদায় (Collected)' : 'Total Collected'}
               </span>
-              <span className="font-mono text-xl font-bold text-white mt-1.5 block drop-shadow-xs">
+              <span className="font-mono tabular-nums text-xl font-bold text-white mt-1.5 block drop-shadow-xs">
                 {totalCollected.toFixed(3)} KD
               </span>
             </div>
@@ -468,17 +468,17 @@ export const KuwaitLoanTracker: React.FC = () => {
           </div>
 
           {/* Card 3: Remaining Due */}
-          <div className="bg-linear-to-br from-amber-500 via-orange-600 to-red-600 text-white rounded-2xl p-4 border border-amber-400/30 shadow-md shadow-orange-500/15 flex flex-col justify-between">
+          <div className="bg-linear-to-br from-amber-500 via-orange-600 to-red-600 text-white rounded-2xl p-4 border border-amber-400/30 shadow-md shadow-orange-500/15 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-150 flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-bold text-amber-100 uppercase tracking-wider block">
                   {lang === 'bn' ? 'বর্তমান মোট পাওনা (Remaining Due)' : 'Remaining Due'}
                 </span>
                 {totalRemaining > 0 && (
-                  <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                  <span className="w-2 h-2 rounded-full bg-white/90 shrink-0" />
                 )}
               </div>
-              <span className="font-mono text-xl font-bold text-white mt-1.5 block drop-shadow-xs">
+              <span className="font-mono tabular-nums text-xl font-bold text-white mt-1.5 block drop-shadow-xs">
                 {totalRemaining.toFixed(3)} KD
               </span>
             </div>
@@ -488,12 +488,12 @@ export const KuwaitLoanTracker: React.FC = () => {
           </div>
 
           {/* Card 4: Accounts Count */}
-          <div className="bg-linear-to-br from-purple-600 via-violet-600 to-indigo-900 text-white rounded-2xl p-4 border border-purple-400/30 shadow-md shadow-purple-500/15 flex flex-col justify-between">
+          <div className="bg-linear-to-br from-purple-600 via-violet-600 to-indigo-900 text-white rounded-2xl p-4 border border-purple-400/30 shadow-md shadow-purple-500/15 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-150 flex flex-col justify-between">
             <div>
               <span className="text-[11px] font-bold text-purple-100 uppercase tracking-wider block">
                 {lang === 'bn' ? 'গ্রহীতা অ্যাকাউন্ট সংখ্যা' : 'Borrower Accounts'}
               </span>
-              <span className="font-mono text-xl font-bold text-white mt-1.5 block drop-shadow-xs">
+              <span className="font-mono tabular-nums text-xl font-bold text-white mt-1.5 block drop-shadow-xs">
                 {totalBorrowersCount} {lang === 'bn' ? 'জন' : 'people'}
               </span>
             </div>
@@ -508,11 +508,11 @@ export const KuwaitLoanTracker: React.FC = () => {
       <div className="space-y-3.5 no-print">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <User className="w-4 h-4 text-indigo-600" />
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <User className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
               <span>{lang === 'bn' ? 'ব্যক্তিভিত্তিক পাওনা লোন অ্যাকাউন্ট' : 'Borrower Accounts Ledger'}</span>
             </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               {lang === 'bn'
                 ? 'প্রতিটি ব্যক্তির নামে আলাদা কার্ড। টাকা ফেরত পেলে "ফেরত গ্রহণ" বাটনে ক্লিক করুন, সরাসরি ব্যালেন্স থেকে বিয়োগ হবে।'
                 : 'Each person has their own card. Repayments directly subtract from their remaining balance.'}
@@ -521,19 +521,19 @@ export const KuwaitLoanTracker: React.FC = () => {
         </div>
 
         {borrowers.length === 0 ? (
-          <div className="bg-white rounded-xl border border-dashed border-slate-300 p-8 text-center">
-            <User className="w-10 h-10 mx-auto text-slate-300 mb-2" />
-            <p className="text-xs font-bold text-slate-600">
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 p-8 text-center">
+            <User className="w-10 h-10 mx-auto text-slate-300 dark:text-slate-600 mb-2" />
+            <p className="text-xs font-bold text-slate-600 dark:text-slate-300">
               {lang === 'bn' ? 'কোন ঋণগ্রহীতার অ্যাকাউন্ট নেই' : 'No borrower accounts yet'}
             </p>
-            <p className="text-[11px] text-slate-400 mt-1">
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">
               {lang === 'bn'
                 ? 'কাউকে লোন দিতে উপরের "+ লোন প্রদান এন্ট্রি" বাটনে ক্লিক করুন।'
                 : 'Click "+ Give Loan" above to add your first loan record.'}
             </p>
             <button
               onClick={() => handleOpenLend()}
-              className="mt-3 px-3 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-2xs"
+              className="mt-3 px-3 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-2xs cursor-pointer"
             >
               {lang === 'bn' ? '+ প্রথম লোন এন্ট্রি করুন' : '+ Add First Loan'}
             </button>
@@ -549,30 +549,32 @@ export const KuwaitLoanTracker: React.FC = () => {
               return (
                 <div
                   key={borrower.id}
-                  className={`bg-white rounded-xl border transition-all shadow-xs ${
-                    isCleared ? 'border-emerald-200' : 'border-amber-300/80'
+                  className={`bg-white dark:bg-slate-900 rounded-xl border transition-all duration-150 shadow-xs hover:shadow-md hover:-translate-y-0.5 ${
+                    isCleared
+                      ? 'border-emerald-200 dark:border-emerald-800/60'
+                      : 'border-amber-300/80 dark:border-amber-700/60'
                   }`}
                 >
                   {/* Card Header */}
-                  <div className="p-4 border-b border-slate-100">
+                  <div className="p-4 border-b border-slate-100 dark:border-slate-800">
                     <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-2.5">
+                      <div className="flex items-center gap-2.5 min-w-0">
                         <div
-                          className={`w-9 h-9 rounded-lg flex items-center justify-center font-bold text-sm ${
+                          className={`w-9 h-9 rounded-lg flex items-center justify-center font-bold text-sm shrink-0 ${
                             isCleared
-                              ? 'bg-emerald-100 text-emerald-800'
-                              : 'bg-amber-100 text-amber-800'
+                              ? 'bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300'
+                              : 'bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300'
                           }`}
                         >
                           {borrower.name.charAt(0).toUpperCase()}
                         </div>
-                        <div>
-                          <h4 className="text-sm font-bold text-slate-900 leading-tight">
+                        <div className="min-w-0">
+                          <h4 className="text-sm font-bold text-slate-900 dark:text-white leading-tight truncate">
                             {borrower.name}
                           </h4>
                           {borrower.phone && (
-                            <span className="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5 font-mono">
-                              <Phone className="w-3 h-3 text-slate-400" />
+                            <span className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5 font-mono">
+                              <Phone className="w-3 h-3 text-slate-400 dark:text-slate-500 shrink-0" />
                               <span>{borrower.phone}</span>
                             </span>
                           )}
@@ -581,10 +583,10 @@ export const KuwaitLoanTracker: React.FC = () => {
 
                       {/* Status Badge */}
                       <span
-                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap ${
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap shrink-0 ${
                           isCleared
-                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                            : 'bg-amber-100 text-amber-900 border border-amber-200'
+                            ? 'bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60'
+                            : 'bg-amber-100 dark:bg-amber-950/70 text-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60'
                         }`}
                       >
                         {isCleared
@@ -594,19 +596,20 @@ export const KuwaitLoanTracker: React.FC = () => {
                     </div>
 
                     {borrower.notes && (
-                      <p className="text-[11px] text-slate-500 mt-2 bg-slate-50 p-1.5 rounded border border-slate-100 italic">
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-2 bg-slate-50 dark:bg-slate-800/60 p-1.5 rounded border border-slate-100 dark:border-slate-800 italic">
                         {borrower.notes}
                       </p>
                     )}
 
                     {borrower.dueDate && (
-                      <div className="flex items-center gap-1.5 mt-2 px-2 py-1 rounded bg-slate-50 border border-slate-200">
-                        <Calendar className="w-3 h-3 text-slate-500 shrink-0" />
-                        <span className="text-[10px] font-medium text-slate-600">
-                          {lang === 'bn' ? 'পরিশোধের তারিখ:' : 'Target Due:'} <span className="font-mono font-bold text-slate-800">{borrower.dueDate}</span>
+                      <div className="flex items-center gap-1.5 mt-2 px-2 py-1 rounded bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+                        <Calendar className="w-3 h-3 text-slate-500 dark:text-slate-400 shrink-0" />
+                        <span className="text-[10px] font-medium text-slate-600 dark:text-slate-300">
+                          {lang === 'bn' ? 'পরিশোধের তারিখ:' : 'Target Due:'}{' '}
+                          <span className="font-mono font-bold text-slate-800 dark:text-slate-100">{borrower.dueDate}</span>
                         </span>
                         {!isCleared && new Date(borrower.dueDate) < new Date(new Date().toISOString().split('T')[0]) && (
-                          <span className="ml-auto px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-100 text-rose-700 border border-rose-200 uppercase">
+                          <span className="ml-auto px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-100 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 uppercase">
                             {lang === 'bn' ? 'মেয়াদোত্তীর্ণ' : 'Overdue'}
                           </span>
                         )}
@@ -617,26 +620,26 @@ export const KuwaitLoanTracker: React.FC = () => {
                   {/* Card Financial Details */}
                   <div className="p-4 space-y-3">
                     <div className="flex justify-between items-baseline text-xs">
-                      <span className="text-slate-500">{lang === 'bn' ? 'মোট লোন প্রদান:' : 'Total Lent:'}</span>
-                      <span className="font-mono font-bold text-indigo-900">
+                      <span className="text-slate-500 dark:text-slate-400">{lang === 'bn' ? 'মোট লোন প্রদান:' : 'Total Lent:'}</span>
+                      <span className="font-mono tabular-nums font-bold text-indigo-900 dark:text-indigo-300">
                         {bal.totalLent.toFixed(3)} KD
                       </span>
                     </div>
 
                     <div className="flex justify-between items-baseline text-xs">
-                      <span className="text-slate-500">{lang === 'bn' ? 'ফেরত আদায় (Collected):' : 'Collected:'}</span>
-                      <span className="font-mono font-bold text-emerald-700">
+                      <span className="text-slate-500 dark:text-slate-400">{lang === 'bn' ? 'ফেরত আদায় (Collected):' : 'Collected:'}</span>
+                      <span className="font-mono tabular-nums font-bold text-emerald-700 dark:text-emerald-400">
                         +{bal.totalCollected.toFixed(3)} KD
                       </span>
                     </div>
 
                     {/* Progress Bar */}
                     <div className="space-y-1">
-                      <div className="flex justify-between text-[10px] text-slate-400">
+                      <div className="flex justify-between text-[10px] text-slate-400 dark:text-slate-500">
                         <span>{lang === 'bn' ? 'আদায়ের অগ্রগতি' : 'Recovery progress'}</span>
-                        <span className="font-mono font-bold text-slate-600">{recoveryPercent.toFixed(0)}%</span>
+                        <span className="font-mono tabular-nums font-bold text-slate-600 dark:text-slate-300">{recoveryPercent.toFixed(0)}%</span>
                       </div>
-                      <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                      <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
                         <div
                           className={`h-full rounded-full transition-all duration-300 ${
                             isCleared ? 'bg-emerald-500' : 'bg-amber-500'
@@ -650,14 +653,14 @@ export const KuwaitLoanTracker: React.FC = () => {
                     <div
                       className={`p-2.5 rounded-lg flex items-center justify-between text-xs ${
                         isCleared
-                          ? 'bg-emerald-50 text-emerald-900 border border-emerald-200'
-                          : 'bg-amber-50 text-amber-950 border border-amber-200'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800/60'
+                          : 'bg-amber-50 dark:bg-amber-950/40 text-amber-950 dark:text-amber-200 border border-amber-200 dark:border-amber-800/60'
                       }`}
                     >
                       <span className="font-bold">
                         {lang === 'bn' ? 'অবশিষ্ট পাওনা:' : 'Remaining Due:'}
                       </span>
-                      <span className="font-mono text-sm font-bold">
+                      <span className="font-mono tabular-nums text-sm font-bold">
                         {bal.remaining.toFixed(3)} KD
                       </span>
                     </div>
@@ -669,39 +672,39 @@ export const KuwaitLoanTracker: React.FC = () => {
                         disabled={isCleared}
                         className={`py-1.5 px-1.5 text-[11px] font-bold rounded-lg transition-colors flex items-center justify-center gap-1 ${
                           isCleared
-                            ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                            ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
                             : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs cursor-pointer'
                         }`}
                         title={lang === 'bn' ? 'টাকা ফেরত পেলে এন্ট্রি করুন' : 'Record collection'}
                       >
-                        <Check className="w-3 h-3" />
+                        <Check className="w-3 h-3 shrink-0" />
                         <span>{lang === 'bn' ? 'ফেরত গ্রহণ' : 'Collect'}</span>
                       </button>
 
                       <button
                         onClick={() => handleOpenLend(borrower.id)}
-                        className="py-1.5 px-1.5 text-[11px] font-bold rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                        className="py-1.5 px-1.5 text-[11px] font-bold rounded-lg bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60 transition-colors flex items-center justify-center gap-1 cursor-pointer"
                         title={lang === 'bn' ? 'আরও লোন প্রদান করুন' : 'Lend more'}
                       >
-                        <Plus className="w-3 h-3" />
+                        <Plus className="w-3 h-3 shrink-0" />
                         <span>{lang === 'bn' ? 'লোন প্রদান' : 'Lend'}</span>
                       </button>
 
                       <button
                         onClick={() => handleSendWhatsAppReminder(borrower)}
-                        className="py-1.5 px-1.5 text-[11px] font-bold rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                        className="py-1.5 px-1.5 text-[11px] font-bold rounded-lg bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800/60 transition-colors flex items-center justify-center gap-1 cursor-pointer"
                         title={lang === 'bn' ? 'হোয়াটসঅ্যাপে স্টেটমেন্ট রিমাইন্ডার পাঠান' : 'WhatsApp Statement Reminder'}
                       >
-                        <MessageCircle className="w-3 h-3 text-emerald-600" />
+                        <MessageCircle className="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
                         <span>{lang === 'bn' ? 'রিমাইন্ডার' : 'WhatsApp'}</span>
                       </button>
                     </div>
 
                     {/* Expand/Collapse Statement Link */}
-                    <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-[11px]">
+                    <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 text-[11px]">
                       <button
                         onClick={() => setExpandedBorrowerId(isExpanded ? null : borrower.id)}
-                        className="text-slate-600 hover:text-indigo-600 font-semibold flex items-center gap-1"
+                        className="text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 font-semibold flex items-center gap-1 cursor-pointer"
                       >
                         <span>
                           {isExpanded
@@ -711,10 +714,10 @@ export const KuwaitLoanTracker: React.FC = () => {
                         {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                       </button>
 
-                      <div className="flex items-center gap-1.5 text-slate-400">
+                      <div className="flex items-center gap-1.5 text-slate-400 dark:text-slate-500">
                         <button
                           onClick={() => setEditingBorrower(borrower)}
-                          className="hover:text-indigo-600 p-0.5"
+                          className="hover:text-indigo-600 dark:hover:text-indigo-400 p-0.5 cursor-pointer"
                           title={lang === 'bn' ? 'তথ্য এডিট' : 'Edit Borrower'}
                         >
                           <Edit2 className="w-3 h-3" />
@@ -725,7 +728,7 @@ export const KuwaitLoanTracker: React.FC = () => {
                               deleteKuwaitReceivableBorrower(borrower.id);
                             }
                           }}
-                          className="hover:text-rose-600 p-0.5"
+                          className="hover:text-rose-600 dark:hover:text-rose-400 p-0.5 cursor-pointer"
                           title={lang === 'bn' ? 'মুছে ফেলুন' : 'Delete'}
                         >
                           <Trash2 className="w-3 h-3" />
@@ -735,16 +738,16 @@ export const KuwaitLoanTracker: React.FC = () => {
 
                     {/* Expanded Individual Account Statement Ledger */}
                     {isExpanded && (
-                      <div className="mt-3 pt-3 border-t border-slate-200 space-y-2 text-xs">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
+                      <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800 space-y-2 text-xs">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
                           {lang === 'bn' ? `${borrower.name} এর লেনদেন ইতিহাস:` : `${borrower.name}'s History:`}
                         </span>
                         {bal.transactions.length === 0 ? (
-                          <p className="text-[11px] text-slate-400 italic">
+                          <p className="text-[11px] text-slate-400 dark:text-slate-500 italic">
                             {lang === 'bn' ? 'কোন লেনদেন নেই' : 'No transactions recorded'}
                           </p>
                         ) : (
-                          <div className="max-h-52 overflow-y-auto divide-y divide-slate-100 pr-1">
+                          <div className="max-h-52 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 pr-1">
                             {bal.transactions.map((tx) => (
                               <div key={tx.id} className="py-2 flex items-center justify-between gap-2">
                                 <div>
@@ -752,24 +755,24 @@ export const KuwaitLoanTracker: React.FC = () => {
                                     <span
                                       className={`px-1.5 py-0.2 rounded text-[9px] font-bold uppercase ${
                                         tx.type === 'lend'
-                                          ? 'bg-indigo-100 text-indigo-800'
-                                          : 'bg-emerald-100 text-emerald-800'
+                                          ? 'bg-indigo-100 dark:bg-indigo-950/70 text-indigo-800 dark:text-indigo-300'
+                                          : 'bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300'
                                       }`}
                                     >
                                       {tx.type === 'lend' ? (lang === 'bn' ? 'প্রদান' : 'Lend') : (lang === 'bn' ? 'ফেরত' : 'Collect')}
                                     </span>
-                                    <span className="font-mono text-[10px] text-slate-500">{tx.date}</span>
+                                    <span className="font-mono text-[10px] text-slate-500 dark:text-slate-400">{tx.date}</span>
                                     {tx.voucherNo && (
-                                      <span className="text-[9px] text-indigo-600 font-mono">#{tx.voucherNo}</span>
+                                      <span className="text-[9px] text-indigo-600 dark:text-indigo-400 font-mono">#{tx.voucherNo}</span>
                                     )}
                                   </div>
-                                  {tx.note && <p className="text-[11px] text-slate-600 mt-0.5">{tx.note}</p>}
+                                  {tx.note && <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-0.5">{tx.note}</p>}
                                 </div>
 
                                 <div className="text-right shrink-0">
                                   <span
-                                    className={`font-mono font-bold block ${
-                                      tx.type === 'lend' ? 'text-indigo-900' : 'text-emerald-700'
+                                    className={`font-mono tabular-nums font-bold block ${
+                                      tx.type === 'lend' ? 'text-indigo-900 dark:text-indigo-300' : 'text-emerald-700 dark:text-emerald-400'
                                     }`}
                                   >
                                     {tx.type === 'lend' ? '+' : '-'}{tx.amount.toFixed(3)} KD
@@ -777,7 +780,7 @@ export const KuwaitLoanTracker: React.FC = () => {
                                   <div className="flex items-center justify-end gap-1 mt-0.5">
                                     <button
                                       onClick={() => setEditingTx(tx)}
-                                      className="text-slate-400 hover:text-indigo-600 p-0.5"
+                                      className="text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 p-0.5 cursor-pointer"
                                     >
                                       <Edit2 className="w-2.5 h-2.5" />
                                     </button>
@@ -787,7 +790,7 @@ export const KuwaitLoanTracker: React.FC = () => {
                                           deleteKuwaitReceivableTransaction(tx.id);
                                         }
                                       }}
-                                      className="text-slate-400 hover:text-rose-600 p-0.5"
+                                      className="text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 p-0.5 cursor-pointer"
                                     >
                                       <Trash2 className="w-2.5 h-2.5" />
                                     </button>
@@ -808,12 +811,12 @@ export const KuwaitLoanTracker: React.FC = () => {
       </div>
 
       {/* 4. Complete Audit Ledger Table with Filters */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden no-print">
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs overflow-hidden no-print">
         {/* Table Filters & Search */}
-        <div className="p-4 bg-slate-50/70 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="p-4 bg-slate-50/70 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <Receipt className="w-4 h-4 text-slate-600" />
-            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wide">
+            <Receipt className="w-4 h-4 text-slate-600 dark:text-slate-300 shrink-0" />
+            <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wide">
               {lang === 'bn' ? 'পাওনা লোন অডিট খতিয়ান ও হিসাব লেনদেন' : 'Receivable Loans Audit Ledger'}
             </h3>
           </div>
@@ -823,7 +826,7 @@ export const KuwaitLoanTracker: React.FC = () => {
             <select
               value={selectedBorrowerFilter}
               onChange={(e) => setSelectedBorrowerFilter(e.target.value)}
-              className="px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg bg-white font-medium text-slate-700"
+              className="px-2.5 py-1.5 text-xs border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 font-medium text-slate-700 dark:text-slate-200"
             >
               <option value="all">{lang === 'bn' ? 'সকল গ্রহীতা (All)' : 'All Borrowers'}</option>
               {borrowers.map((b) => (
@@ -837,7 +840,7 @@ export const KuwaitLoanTracker: React.FC = () => {
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value as any)}
-              className="px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg bg-white font-medium text-slate-700"
+              className="px-2.5 py-1.5 text-xs border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 font-medium text-slate-700 dark:text-slate-200"
             >
               <option value="all">{lang === 'bn' ? 'সকল ধরন' : 'All Types'}</option>
               <option value="lend">{lang === 'bn' ? 'লোন প্রদান (Lend)' : 'Lend'}</option>
@@ -846,13 +849,13 @@ export const KuwaitLoanTracker: React.FC = () => {
 
             {/* Search */}
             <div className="relative">
-              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2" />
+              <Search className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute left-2.5 top-2" />
               <input
                 type="text"
                 placeholder={lang === 'bn' ? 'খুঁজুন...' : 'Search...'}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-7 pr-3 py-1.5 text-xs border border-slate-300 rounded-lg bg-white w-36 sm:w-44"
+                className="pl-7 pr-3 py-1.5 text-xs border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 w-36 sm:w-44"
               />
             </div>
           </div>
@@ -862,7 +865,7 @@ export const KuwaitLoanTracker: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-slate-100/60 border-b border-slate-200 text-slate-600 font-semibold uppercase text-[10px]">
+              <tr className="bg-slate-100/60 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 font-semibold uppercase text-[10px]">
                 <th className="py-2.5 px-3.5 whitespace-nowrap">{lang === 'bn' ? 'তারিখ' : 'Date'}</th>
                 <th className="py-2.5 px-3.5 whitespace-nowrap">{lang === 'bn' ? 'গ্রহীতার নাম' : 'Borrower'}</th>
                 <th className="py-2.5 px-3.5 whitespace-nowrap">{lang === 'bn' ? 'ধরন' : 'Type'}</th>
@@ -872,28 +875,28 @@ export const KuwaitLoanTracker: React.FC = () => {
                 <th className="py-2.5 px-3.5 text-right whitespace-nowrap">{lang === 'bn' ? 'অ্যাকশন' : 'Action'}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 text-slate-800">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-800 dark:text-slate-200">
               {filteredTransactions.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-slate-400">
+                  <td colSpan={7} className="py-8 text-center text-slate-400 dark:text-slate-500">
                     <p className="font-semibold">{lang === 'bn' ? 'কোন লেনদেনের তথ্য পাওয়া যায়নি' : 'No transactions found'}</p>
                   </td>
                 </tr>
               ) : (
                 filteredTransactions.map((tx) => (
-                  <tr key={tx.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-2.5 px-3.5 whitespace-nowrap font-mono text-slate-600">
+                  <tr key={tx.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
+                    <td className="py-2.5 px-3.5 whitespace-nowrap font-mono text-slate-600 dark:text-slate-400">
                       {formatDate(tx.date, lang)}
                     </td>
-                    <td className="py-2.5 px-3.5 whitespace-nowrap font-bold text-slate-900">
+                    <td className="py-2.5 px-3.5 whitespace-nowrap font-bold text-slate-900 dark:text-white">
                       {tx.borrowerName}
                     </td>
                     <td className="py-2.5 px-3.5 whitespace-nowrap">
                       <span
                         className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                           tx.type === 'lend'
-                            ? 'bg-indigo-100 text-indigo-900 border border-indigo-200'
-                            : 'bg-emerald-100 text-emerald-900 border border-emerald-200'
+                            ? 'bg-indigo-100 dark:bg-indigo-950/70 text-indigo-900 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60'
+                            : 'bg-emerald-100 dark:bg-emerald-950/70 text-emerald-900 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60'
                         }`}
                       >
                         {tx.type === 'lend'
@@ -901,14 +904,14 @@ export const KuwaitLoanTracker: React.FC = () => {
                           : lang === 'bn' ? '- ফেরত আদায়' : '- Collect'}
                       </span>
                     </td>
-                    <td className="py-2.5 px-3.5 whitespace-nowrap font-mono text-[11px] text-slate-600">
+                    <td className="py-2.5 px-3.5 whitespace-nowrap font-mono text-[11px] text-slate-600 dark:text-slate-400">
                       {tx.voucherNo ? `#${tx.voucherNo}` : '—'}
                     </td>
-                    <td className="py-2.5 px-3.5 text-slate-600 max-w-xs truncate">
+                    <td className="py-2.5 px-3.5 text-slate-600 dark:text-slate-300 max-w-xs truncate">
                       {tx.note || '—'}
                     </td>
-                    <td className="py-2.5 px-3.5 text-right font-mono font-bold whitespace-nowrap">
-                      <span className={tx.type === 'lend' ? 'text-indigo-900' : 'text-emerald-700'}>
+                    <td className="py-2.5 px-3.5 text-right font-mono tabular-nums font-bold whitespace-nowrap">
+                      <span className={tx.type === 'lend' ? 'text-indigo-900 dark:text-indigo-300' : 'text-emerald-700 dark:text-emerald-400'}>
                         {tx.type === 'lend' ? '+' : '-'}{tx.amount.toFixed(3)} KD
                       </span>
                     </td>
@@ -934,7 +937,7 @@ export const KuwaitLoanTracker: React.FC = () => {
                               borrowerName: tx.borrowerName,
                             });
                           }}
-                          className="p-1 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors cursor-pointer"
+                          className="p-1 text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 rounded transition-colors cursor-pointer"
                           title={lang === 'bn' ? 'অডিট স্লিপ দেখুন ও প্রিন্ট করুন' : 'View slip & print'}
                         >
                           <Eye className="w-3.5 h-3.5" />
@@ -960,14 +963,14 @@ export const KuwaitLoanTracker: React.FC = () => {
                             setSharingStatementData(null);
                             setIsShareModalOpen(true);
                           }}
-                          className="p-1 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded transition-colors cursor-pointer"
+                          className="p-1 text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 rounded transition-colors cursor-pointer"
                           title={lang === 'bn' ? 'হোয়াটসঅ্যাপে ছবি আকারে ভাউচার পাঠান' : 'Send Voucher Image to WhatsApp'}
                         >
                           <MessageCircle className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => setEditingTx(tx)}
-                          className="p-1 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded cursor-pointer"
+                          className="p-1 text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 rounded cursor-pointer"
                           title={lang === 'bn' ? 'সংশোধন / এডিট' : 'Edit'}
                         >
                           <Edit2 className="w-3.5 h-3.5" />
@@ -978,7 +981,7 @@ export const KuwaitLoanTracker: React.FC = () => {
                               deleteKuwaitReceivableTransaction(tx.id);
                             }
                           }}
-                          className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded cursor-pointer"
+                          className="p-1 text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded cursor-pointer"
                           title={lang === 'bn' ? 'মুছে ফেলুন' : 'Delete'}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -992,11 +995,11 @@ export const KuwaitLoanTracker: React.FC = () => {
             {/* Table Footer */}
             {filteredTransactions.length > 0 && (
               <tfoot>
-                <tr className="bg-slate-50 font-bold border-t border-slate-200 text-slate-800 text-[11px]">
+                <tr className="bg-slate-50 dark:bg-slate-800/80 font-bold border-t border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-[11px]">
                   <td colSpan={5} className="py-2 px-3.5 text-right uppercase">
                     {lang === 'bn' ? 'মোট ফিল্টারকৃত অবশিষ্ট পাওনা:' : 'Filtered Remaining Due:'}
                   </td>
-                  <td className="py-2 px-3.5 text-right font-mono text-amber-950 font-bold">
+                  <td className="py-2 px-3.5 text-right font-mono tabular-nums text-amber-950 dark:text-amber-300 font-bold">
                     {totalRemaining.toFixed(3)} KD
                   </td>
                   <td></td>
@@ -1009,14 +1012,14 @@ export const KuwaitLoanTracker: React.FC = () => {
 
       {/* MODAL 1: Give Loan (+ লোন প্রদান) */}
       {isLendModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md border border-slate-200 overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between bg-indigo-50">
-              <h3 className="text-sm font-bold text-indigo-950 flex items-center gap-2">
-                <HandCoins className="w-4 h-4 text-indigo-700" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/75 backdrop-blur-xs">
+          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl w-full max-w-md border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-indigo-50 dark:bg-indigo-950/50">
+              <h3 className="text-sm font-bold text-indigo-950 dark:text-indigo-200 flex items-center gap-2">
+                <HandCoins className="w-4 h-4 text-indigo-700 dark:text-indigo-400 shrink-0" />
                 <span>{lang === 'bn' ? '+ কাওকে দিনার লোন প্রদান এন্ট্রি' : '+ Give Dinar Loan'}</span>
               </h3>
-              <button onClick={() => setIsLendModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+              <button onClick={() => setIsLendModalOpen(false)} className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -1024,7 +1027,7 @@ export const KuwaitLoanTracker: React.FC = () => {
             <form onSubmit={handleLendSubmit} className="p-5 space-y-3.5 text-xs">
               {/* Borrower Mode: Existing vs New */}
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {lang === 'bn' ? 'লোন গ্রহীতা' : 'Borrower'} <span className="text-rose-500">*</span>
                 </label>
                 <div className="grid grid-cols-2 gap-2 mb-2">
@@ -1032,10 +1035,10 @@ export const KuwaitLoanTracker: React.FC = () => {
                     type="button"
                     onClick={() => setLendBorrowerMode('existing')}
                     disabled={borrowers.length === 0}
-                    className={`py-1.5 px-3 rounded-lg border text-xs font-semibold ${
+                    className={`py-1.5 px-3 rounded-lg border text-xs font-semibold cursor-pointer ${
                       lendBorrowerMode === 'existing'
                         ? 'bg-indigo-600 text-white border-indigo-600'
-                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                        : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
                     }`}
                   >
                     {lang === 'bn' ? 'পূর্বের গ্রহীতা' : 'Existing Borrower'}
@@ -1043,10 +1046,10 @@ export const KuwaitLoanTracker: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setLendBorrowerMode('new')}
-                    className={`py-1.5 px-3 rounded-lg border text-xs font-semibold ${
+                    className={`py-1.5 px-3 rounded-lg border text-xs font-semibold cursor-pointer ${
                       lendBorrowerMode === 'new'
                         ? 'bg-indigo-600 text-white border-indigo-600'
-                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                        : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
                     }`}
                   >
                     {lang === 'bn' ? '+ নতুন গ্রহীতা' : '+ New Borrower'}
@@ -1057,7 +1060,7 @@ export const KuwaitLoanTracker: React.FC = () => {
                   <select
                     value={lendBorrowerId}
                     onChange={(e) => setLendBorrowerId(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md font-medium"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-md font-medium"
                   >
                     {borrowers.map((b) => (
                       <option key={b.id} value={b.id}>
@@ -1075,24 +1078,24 @@ export const KuwaitLoanTracker: React.FC = () => {
                       value={newBorrowerName}
                       onChange={(e) => setNewBorrowerName(e.target.value)}
                       required
-                      className="w-full px-3 py-2 border border-slate-300 rounded-md font-medium"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-md font-medium"
                     />
                     <input
                       type="text"
                       placeholder={lang === 'bn' ? 'মোবাইল নম্বর (ঐচ্ছিক)' : 'Phone (Optional)'}
                       value={newBorrowerPhone}
                       onChange={(e) => setNewBorrowerPhone(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-md font-mono"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-md font-mono"
                     />
                     <div>
-                      <label className="block text-[11px] font-semibold text-slate-600 mb-0.5">
+                      <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-0.5">
                         {lang === 'bn' ? 'সম্ভাব্য ফেরত/পরিশোধের তারিখ (ঐচ্ছিক)' : 'Target Due Date (Optional)'}
                       </label>
                       <input
                         type="date"
                         value={newBorrowerDueDate}
                         onChange={(e) => setNewBorrowerDueDate(e.target.value)}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-md font-medium"
+                        className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-md font-medium"
                       />
                     </div>
                   </div>
@@ -1102,7 +1105,7 @@ export const KuwaitLoanTracker: React.FC = () => {
               {/* Amount & Date */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     {lang === 'bn' ? 'লোনের পরিমাণ (KWD)' : 'Amount (KWD)'} <span className="text-rose-500">*</span>
                   </label>
                   <input
@@ -1112,11 +1115,11 @@ export const KuwaitLoanTracker: React.FC = () => {
                     value={lendAmount}
                     onChange={(e) => setLendAmount(e.target.value)}
                     required
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md font-mono text-sm"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-md font-mono text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     {lang === 'bn' ? 'লোন দেওয়ার তারিখ' : 'Date'} <span className="text-rose-500">*</span>
                   </label>
                   <input
@@ -1124,14 +1127,14 @@ export const KuwaitLoanTracker: React.FC = () => {
                     value={lendDate}
                     onChange={(e) => setLendDate(e.target.value)}
                     required
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-md"
                   />
                 </div>
               </div>
 
               {/* Voucher No */}
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {lang === 'bn' ? 'ভাউচার / স্লিপ নম্বর' : 'Voucher #'}
                 </label>
                 <input
@@ -1139,13 +1142,13 @@ export const KuwaitLoanTracker: React.FC = () => {
                   placeholder="LND-1001"
                   value={lendVoucher}
                   onChange={(e) => setLendVoucher(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md font-mono"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-md font-mono"
                 />
               </div>
 
               {/* Note */}
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {lang === 'bn' ? 'নোট ও বিবরণ' : 'Notes'}
                 </label>
                 <textarea
@@ -1153,7 +1156,7 @@ export const KuwaitLoanTracker: React.FC = () => {
                   placeholder={lang === 'bn' ? 'ধার দেওয়ার কারণ বা ফেরত দেওয়ার সম্ভাব্য সময়...' : 'Reason or due details...'}
                   value={lendNote}
                   onChange={(e) => setLendNote(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-md"
                 />
               </div>
 
@@ -1161,13 +1164,13 @@ export const KuwaitLoanTracker: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsLendModalOpen(false)}
-                  className="px-3 py-1.5 text-slate-600 bg-slate-100 rounded-md hover:bg-slate-200"
+                  className="px-3 py-1.5 text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer"
                 >
                   {t('cancel')}
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-md shadow-xs"
+                  className="px-4 py-1.5 font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-md shadow-xs cursor-pointer"
                 >
                   {lang === 'bn' ? 'লোন সংরক্ষণ' : 'Save Loan'}
                 </button>
@@ -1179,14 +1182,14 @@ export const KuwaitLoanTracker: React.FC = () => {
 
       {/* MODAL 2: Collect / Return (✓ টাকা ফেরত গ্রহণ) */}
       {isCollectModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md border border-slate-200 overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between bg-emerald-50">
-              <h3 className="text-sm font-bold text-emerald-950 flex items-center gap-2">
-                <Check className="w-4 h-4 text-emerald-700" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/75 backdrop-blur-xs">
+          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl w-full max-w-md border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-emerald-50 dark:bg-emerald-950/50">
+              <h3 className="text-sm font-bold text-emerald-950 dark:text-emerald-200 flex items-center gap-2">
+                <Check className="w-4 h-4 text-emerald-700 dark:text-emerald-400 shrink-0" />
                 <span>{lang === 'bn' ? '✓ লোন ফেরত / টাকা আদায় এন্ট্রি' : 'Record Loan Collection'}</span>
               </h3>
-              <button onClick={() => setIsCollectModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+              <button onClick={() => setIsCollectModalOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -1194,13 +1197,13 @@ export const KuwaitLoanTracker: React.FC = () => {
             <form onSubmit={handleCollectSubmit} className="p-5 space-y-3.5 text-xs">
               {/* Select Borrower */}
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {lang === 'bn' ? 'কার কাছ থেকে টাকা ফেরত নিচ্ছেন?' : 'Borrower Returning Money'} <span className="text-rose-500">*</span>
                 </label>
                 <select
                   value={collectBorrowerId}
                   onChange={(e) => setCollectBorrowerId(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md font-medium"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-md font-medium focus:outline-hidden focus:ring-2 focus:ring-emerald-500/40"
                 >
                   {borrowers.map((b) => {
                     const bal = getBorrowerBalance(b.id);
@@ -1213,9 +1216,9 @@ export const KuwaitLoanTracker: React.FC = () => {
                 </select>
 
                 {collectBorrowerId && (
-                  <div className="mt-2 p-2 bg-amber-50 rounded border border-amber-200 text-amber-900 text-[11px] flex justify-between items-center">
+                  <div className="mt-2 p-2 bg-amber-50 dark:bg-amber-950/40 rounded border border-amber-200 dark:border-amber-800/50 text-amber-900 dark:text-amber-200 text-[11px] flex justify-between items-center">
                     <span>{lang === 'bn' ? 'উক্ত ব্যক্তির বর্তমান বাকি পাওনা:' : 'Current Remaining Due:'}</span>
-                    <span className="font-mono font-bold text-amber-950">
+                    <span className="font-mono tabular-nums font-bold text-amber-950 dark:text-amber-100">
                       {getBorrowerBalance(collectBorrowerId).remaining.toFixed(3)} KD
                     </span>
                   </div>
@@ -1225,7 +1228,7 @@ export const KuwaitLoanTracker: React.FC = () => {
               {/* Amount & Date */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     {lang === 'bn' ? 'আদায়কৃত পরিমাণ (KWD)' : 'Collected Amount (KWD)'} <span className="text-rose-500">*</span>
                   </label>
                   <input
@@ -1235,11 +1238,11 @@ export const KuwaitLoanTracker: React.FC = () => {
                     value={collectAmount}
                     onChange={(e) => setCollectAmount(e.target.value)}
                     required
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md font-mono text-sm"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-md font-mono tabular-nums text-sm focus:outline-hidden focus:ring-2 focus:ring-emerald-500/40"
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     {lang === 'bn' ? 'ফেরত পাওয়ার তারিখ' : 'Date'} <span className="text-rose-500">*</span>
                   </label>
                   <input
@@ -1247,14 +1250,14 @@ export const KuwaitLoanTracker: React.FC = () => {
                     value={collectDate}
                     onChange={(e) => setCollectDate(e.target.value)}
                     required
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-md focus:outline-hidden focus:ring-2 focus:ring-emerald-500/40"
                   />
                 </div>
               </div>
 
               {/* Voucher No */}
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {lang === 'bn' ? 'ভাউচার / মানি রসিদ নম্বর' : 'Receipt / Voucher #'}
                 </label>
                 <input
@@ -1262,13 +1265,13 @@ export const KuwaitLoanTracker: React.FC = () => {
                   placeholder="COL-1001"
                   value={collectVoucher}
                   onChange={(e) => setCollectVoucher(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md font-mono"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-md font-mono focus:outline-hidden focus:ring-2 focus:ring-emerald-500/40"
                 />
               </div>
 
               {/* Note */}
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {lang === 'bn' ? 'নোট ও বিবরণ' : 'Notes'}
                 </label>
                 <textarea
@@ -1276,11 +1279,11 @@ export const KuwaitLoanTracker: React.FC = () => {
                   placeholder={lang === 'bn' ? 'আংশিক বা সম্পূর্ণ ফেরত পাওয়া গেলো...' : 'Partial or full return...'}
                   value={collectNote}
                   onChange={(e) => setCollectNote(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-md focus:outline-hidden focus:ring-2 focus:ring-emerald-500/40"
                 />
               </div>
 
-              <div className="p-2.5 bg-emerald-50 rounded-lg text-emerald-800 text-[11px]">
+              <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/70 dark:border-emerald-800/40 rounded-lg text-emerald-800 dark:text-emerald-300 text-[11px]">
                 <p>
                   {lang === 'bn'
                     ? 'টাকা সেভ করার সাথে সাথে উক্ত ব্যক্তির পাওনা ব্যালেন্স থেকে স্বয়ংক্রিয়ভাবে মাইনাস হয়ে যাবে।'
@@ -1292,13 +1295,13 @@ export const KuwaitLoanTracker: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsCollectModalOpen(false)}
-                  className="px-3 py-1.5 text-slate-600 bg-slate-100 rounded-md hover:bg-slate-200"
+                  className="px-3 py-1.5 text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer"
                 >
                   {t('cancel')}
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-md shadow-xs"
+                  className="px-4 py-1.5 font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-md shadow-xs cursor-pointer"
                 >
                   {lang === 'bn' ? 'আদায় সংরক্ষণ (মাইনাস করুন)' : 'Save Collection'}
                 </button>
@@ -1310,39 +1313,39 @@ export const KuwaitLoanTracker: React.FC = () => {
 
       {/* MODAL 3: Edit Single Transaction */}
       {editingTx && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md border border-slate-200 overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-100">
-              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                <Edit2 className="w-4 h-4 text-indigo-600" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/75 backdrop-blur-xs">
+          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl w-full max-w-md border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-100 dark:bg-slate-800">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <Edit2 className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
                 <span>{lang === 'bn' ? 'লেনদেন রেকর্ড এডিট' : 'Edit Transaction'}</span>
               </h3>
-              <button onClick={() => setEditingTx(null)} className="text-slate-400 hover:text-slate-600">
+              <button onClick={() => setEditingTx(null)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <form onSubmit={handleEditTxSubmit} className="p-5 space-y-3.5 text-xs">
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {lang === 'bn' ? 'গ্রহীতা' : 'Borrower'}
                 </label>
                 <input
                   type="text"
                   disabled
                   value={editingTx.borrowerName}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-md bg-slate-50 font-bold"
+                  className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-md bg-slate-50 dark:bg-slate-800/70 text-slate-700 dark:text-slate-300 font-bold"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {lang === 'bn' ? 'ধরন' : 'Type'}
                 </label>
                 <select
                   value={editingTx.type}
                   onChange={(e) => setEditingTx({ ...editingTx, type: e.target.value as 'lend' | 'collect' })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md font-bold"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-md font-bold focus:outline-hidden focus:ring-2 focus:ring-indigo-500/40"
                 >
                   <option value="lend">{lang === 'bn' ? '+ লোন প্রদান (Lend)' : '+ Lend'}</option>
                   <option value="collect">{lang === 'bn' ? '- ফেরত আদায় (Collect)' : '- Collect'}</option>
@@ -1351,7 +1354,7 @@ export const KuwaitLoanTracker: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     {lang === 'bn' ? 'পরিমাণ (KWD)' : 'Amount (KWD)'}
                   </label>
                   <input
@@ -1360,11 +1363,11 @@ export const KuwaitLoanTracker: React.FC = () => {
                     value={editingTx.amount}
                     onChange={(e) => setEditingTx({ ...editingTx, amount: parseFloat(e.target.value) || 0 })}
                     required
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md font-mono"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-md font-mono tabular-nums focus:outline-hidden focus:ring-2 focus:ring-indigo-500/40"
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     {lang === 'bn' ? 'তারিখ' : 'Date'}
                   </label>
                   <input
@@ -1372,32 +1375,32 @@ export const KuwaitLoanTracker: React.FC = () => {
                     value={editingTx.date}
                     onChange={(e) => setEditingTx({ ...editingTx, date: e.target.value })}
                     required
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-md focus:outline-hidden focus:ring-2 focus:ring-indigo-500/40"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {lang === 'bn' ? 'ভাউচার / রসিদ #' : 'Voucher #'}
                 </label>
                 <input
                   type="text"
                   value={editingTx.voucherNo || ''}
                   onChange={(e) => setEditingTx({ ...editingTx, voucherNo: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md font-mono"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-md font-mono focus:outline-hidden focus:ring-2 focus:ring-indigo-500/40"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {lang === 'bn' ? 'নোট' : 'Note'}
                 </label>
                 <textarea
                   rows={2}
                   value={editingTx.note || ''}
                   onChange={(e) => setEditingTx({ ...editingTx, note: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-md focus:outline-hidden focus:ring-2 focus:ring-indigo-500/40"
                 />
               </div>
 
@@ -1405,13 +1408,13 @@ export const KuwaitLoanTracker: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setEditingTx(null)}
-                  className="px-3 py-1.5 text-slate-600 bg-slate-100 rounded-md hover:bg-slate-200"
+                  className="px-3 py-1.5 text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer"
                 >
                   {t('cancel')}
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-md shadow-xs"
+                  className="px-4 py-1.5 font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-md shadow-xs cursor-pointer"
                 >
                   {lang === 'bn' ? 'আপডেট করুন' : 'Update'}
                 </button>
@@ -1423,21 +1426,21 @@ export const KuwaitLoanTracker: React.FC = () => {
 
       {/* MODAL 4: Edit Borrower Details */}
       {editingBorrower && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md border border-slate-200 overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-100">
-              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                <User className="w-4 h-4 text-indigo-600" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/75 backdrop-blur-xs">
+          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl w-full max-w-md border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-100 dark:bg-slate-800">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <User className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
                 <span>{lang === 'bn' ? 'গ্রহীতার তথ্য পরিবর্তন' : 'Edit Borrower'}</span>
               </h3>
-              <button onClick={() => setEditingBorrower(null)} className="text-slate-400 hover:text-slate-600">
+              <button onClick={() => setEditingBorrower(null)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <form onSubmit={handleEditBorrowerSubmit} className="p-5 space-y-3.5 text-xs">
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {lang === 'bn' ? 'গ্রহীতার নাম' : 'Name'} <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -1445,43 +1448,43 @@ export const KuwaitLoanTracker: React.FC = () => {
                   value={editingBorrower.name}
                   onChange={(e) => setEditingBorrower({ ...editingBorrower, name: e.target.value })}
                   required
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md font-bold"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-md font-bold focus:outline-hidden focus:ring-2 focus:ring-indigo-500/40"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {lang === 'bn' ? 'মোবাইল নম্বর' : 'Phone'}
                 </label>
                 <input
                   type="text"
                   value={editingBorrower.phone || ''}
                   onChange={(e) => setEditingBorrower({ ...editingBorrower, phone: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md font-mono"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-md font-mono focus:outline-hidden focus:ring-2 focus:ring-indigo-500/40"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {lang === 'bn' ? 'সম্ভাব্য ফেরত/পরিশোধের তারিখ' : 'Target Due Date'}
                 </label>
                 <input
                   type="date"
                   value={editingBorrower.dueDate || ''}
                   onChange={(e) => setEditingBorrower({ ...editingBorrower, dueDate: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md font-medium"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-md font-medium focus:outline-hidden focus:ring-2 focus:ring-indigo-500/40"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {lang === 'bn' ? 'নোট' : 'Notes'}
                 </label>
                 <textarea
                   rows={2}
                   value={editingBorrower.notes || ''}
                   onChange={(e) => setEditingBorrower({ ...editingBorrower, notes: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-md focus:outline-hidden focus:ring-2 focus:ring-indigo-500/40"
                 />
               </div>
 
@@ -1489,13 +1492,13 @@ export const KuwaitLoanTracker: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setEditingBorrower(null)}
-                  className="px-3 py-1.5 text-slate-600 bg-slate-100 rounded-md hover:bg-slate-200"
+                  className="px-3 py-1.5 text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer"
                 >
                   {t('cancel')}
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-md shadow-xs"
+                  className="px-4 py-1.5 font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-md shadow-xs cursor-pointer"
                 >
                   {lang === 'bn' ? 'সংরক্ষণ' : 'Save'}
                 </button>
