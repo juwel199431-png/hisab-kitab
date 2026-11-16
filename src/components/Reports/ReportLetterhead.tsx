@@ -238,8 +238,8 @@ export const ReportWatermarkBackground: React.FC<ReportWatermarkBackgroundProps>
 }) => {
   if (!showWatermark) return null;
 
-  // Use a boosted base opacity so it's vividly visible on paper/PDF
-  const effectiveOpacity = Math.max(opacity, 0.18);
+  // Scale opacity cleanly from subtle to vivid based on user setting
+  const effectiveOpacity = Math.max(0.04, Math.min(0.4, opacity));
 
   return (
     <div

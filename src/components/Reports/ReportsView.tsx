@@ -51,10 +51,13 @@ import {
 import {
   ReportPageSettingsPanel,
   ReportPageSettings,
-  DEFAULT_PAGE_SETTINGS,
-  PAGE_SETTINGS_STORAGE_KEY,
-  loadSavedPageSettings,
-  savePageSettingsToStorage,
+  loadSavedPageSettingsForHead,
+  savePageSettingsForHead,
+  resetPageSettingsForHead,
+  getCustomizedHeadIds,
+  saveReportBrandingToStorage,
+  computeNormalizedColWidths,
+  HeadScopeMeta,
 } from './ReportPageSettingsPanel';
 import {
   ReportLetterhead,
@@ -134,95 +137,155 @@ export const ReportsView: React.FC = () => {
   // Universal Transaction Edit Modal State
   const [editTarget, setEditTarget] = useState<UniversalEditTarget | null>(null);
 
-  // Manual Page Margins, Orientation & Column Proportions State (Persistent)
-  const [pageSettings, setPageSettings] = useState<ReportPageSettings>(loadSavedPageSettings);
+  // Manual Page Margins, Orientation & Column Proportions State (Strictly Per-Head Persistent)
+  const accountFilterRef = useRef<AccountFilter>(accountFilter);
+  accountFilterRef.current = accountFilter;
+
+  const [pageSettings, setPageSettings] = useState<ReportPageSettings>(() =>
+    loadSavedPageSettingsForHead(accountFilter)
+  );
+  const [savedCustomHeads, setSavedCustomHeads] = useState<string[]>(() => getCustomizedHeadIds());
   const [isPageSettingsOpen, setIsPageSettingsOpen] = useState(false);
   const [isLivePaperPreview, setIsLivePaperPreview] = useState(false);
+  const [previewViewerZoom, setPreviewViewerZoom] = useState<number>(80);
   const [isLogoModalOpen, setIsLogoModalOpen] = useState(false);
 
-  // Logo settings update handler
-  const handleSaveLogoSettings = (logoUpdates: LogoSettings) => {
-    handleUpdatePageSettings({
+  // Sync pageSettings whenever the user switches to a different Account Head
+  useEffect(() => {
+    setPageSettings(loadSavedPageSettingsForHead(accountFilter));
+    setSavedCustomHeads(getCustomizedHeadIds());
+  }, [accountFilter]);
+
+  // Logo settings update handler (shared branding across all heads)
+  const handleSaveLogoSettings = useCallback((logoUpdates: LogoSettings) => {
+    saveReportBrandingToStorage({
       logoType: logoUpdates.logoType,
       customLogoUrl: logoUpdates.customLogoUrl,
       companyName: logoUpdates.companyName,
       companyTagline: logoUpdates.companyTagline,
       companyBadge: logoUpdates.companyBadge,
     });
-  };
+    setPageSettings((prev) => ({
+      ...prev,
+      logoType: logoUpdates.logoType,
+      customLogoUrl: logoUpdates.customLogoUrl,
+      companyName: logoUpdates.companyName,
+      companyTagline: logoUpdates.companyTagline,
+      companyBadge: logoUpdates.companyBadge,
+    }));
+  }, []);
 
-  // Update page settings handler with local storage persistence
-  const handleUpdatePageSettings = (updates: Partial<ReportPageSettings>) => {
+  // Update page settings handler — saves ONLY for the currently active accountFilter head
+  const handleUpdatePageSettings = useCallback((updates: Partial<ReportPageSettings>) => {
+    const activeHead = accountFilterRef.current;
     setPageSettings((prev) => {
       const next = { ...prev, ...updates };
-      try {
-        localStorage.setItem(PAGE_SETTINGS_STORAGE_KEY, JSON.stringify(next));
-      } catch (err) {
-        console.error('Failed to save page settings:', err);
-      }
+      savePageSettingsForHead(activeHead, next);
       return next;
     });
-  };
+    setSavedCustomHeads(getCustomizedHeadIds());
+  }, []);
 
-  // Reset page settings to defaults
-  const handleResetPageSettings = () => {
-    setPageSettings(DEFAULT_PAGE_SETTINGS);
-    try {
-      localStorage.removeItem(PAGE_SETTINGS_STORAGE_KEY);
-    } catch (err) {
-      console.error('Failed to reset page settings:', err);
-    }
-  };
+  // Reset page settings ONLY for the currently active head
+  const handleResetPageSettings = useCallback(() => {
+    const activeHead = accountFilterRef.current;
+    const resetNext = resetPageSettingsForHead(activeHead);
+    setPageSettings(resetNext);
+    setSavedCustomHeads(getCustomizedHeadIds());
+  }, []);
 
-  // Dynamic Column Width Proportions for Sub Ledger Table (ensures 100% total)
+  // Copy page settings from another already-customized head into the current head
+  const handleCopySettingsFromHead = useCallback((sourceHeadId: string) => {
+    const activeHead = accountFilterRef.current;
+    const sourceSettings = loadSavedPageSettingsForHead(sourceHeadId);
+    savePageSettingsForHead(activeHead, sourceSettings);
+    setPageSettings(sourceSettings);
+    setSavedCustomHeads(getCustomizedHeadIds());
+  }, []);
+
+  // Dynamic Column Width Proportions (strictly normalized to 100% for BOTH Sub Ledger and Standard Ledger)
   const dynamicColWidths = useMemo(() => {
-    const sl = pageSettings.slWidth || 4;
-    const date = pageSettings.dateWidth || 12;
-    const debit = pageSettings.debitWidth || 8;
-    const credit = pageSettings.creditWidth || 8;
-    const balance = pageSettings.balanceWidth || 9.5;
-    const account = pageSettings.accountWidth || 17;
-    // Calculate remarks as whatever remains to make exactly 100%
-    const fixedTotal = sl + date + debit + credit + balance + account;
-    const remarks = Math.max(20, Number((100 - fixedTotal).toFixed(1)));
-    const baseColSpanWidth = Number((debit + credit + balance).toFixed(1));
+    const n = computeNormalizedColWidths(pageSettings);
+    const baseColSpanWidth = Number((n.debit + n.credit + n.balance).toFixed(1));
 
     return {
-      sl: `${sl}%`,
-      date: `${date}%`,
-      account: `${account}%`,
-      debit: `${debit}%`,
-      credit: `${credit}%`,
-      balance: `${balance}%`,
-      remarks: `${remarks}%`,
+      sl: `${n.sl}%`,
+      date: `${n.date}%`,
+      account: `${n.account}%`,
+      debit: `${n.debit}%`,
+      credit: `${n.credit}%`,
+      balance: `${n.balance}%`,
+      remarks: `${n.remarks}%`,
       baseColSpan: `${baseColSpanWidth}%`,
     };
   }, [pageSettings]);
 
-  // Typography helper classes for Sub Ledger
-  const subLedgerFontFamilyClass = useMemo(() => {
-    if (pageSettings.fontFamily === 'mono') return 'font-mono';
-    if (pageSettings.fontFamily === 'serif') return 'font-serif';
-    return 'font-sans';
+  const dynamicStdColWidths = useMemo(() => {
+    const n = computeNormalizedColWidths(pageSettings);
+    const rawSl = Math.max(4, n.sl);
+    const rawDate = n.date;
+    const rawAccount = n.account;
+    const rawDetails = Math.max(18, n.remarks - 4);
+    const rawType = 9;
+    const rawAmount = Math.max(9, n.debit + 1);
+    const rawBalance = Math.max(9, n.balance);
+    const rawStatus = 7;
+    const total = rawSl + rawDate + rawAccount + rawDetails + rawType + rawAmount + rawBalance + rawStatus;
+    const k = 100 / total;
+    const sl = Number((rawSl * k).toFixed(1));
+    const date = Number((rawDate * k).toFixed(1));
+    const account = Number((rawAccount * k).toFixed(1));
+    const type = Number((rawType * k).toFixed(1));
+    const amount = Number((rawAmount * k).toFixed(1));
+    const balance = Number((rawBalance * k).toFixed(1));
+    const status = Number((rawStatus * k).toFixed(1));
+    const details = Number(Math.max(16, 100 - (sl + date + account + type + amount + balance + status)).toFixed(1));
+    return {
+      sl: `${sl}%`,
+      date: `${date}%`,
+      account: `${account}%`,
+      details: `${details}%`,
+      type: `${type}%`,
+      amount: `${amount}%`,
+      balance: `${balance}%`,
+      status: `${status}%`,
+    };
+  }, [pageSettings]);
+
+  // Exact CSS Font Family applied consistently across Measurer, Live Preview, and Printed PDF
+  const reportFontFamilyCss = useMemo(() => {
+    if (pageSettings.fontFamily === 'mono') {
+      return '"JetBrains Mono", "Courier New", Courier, monospace';
+    }
+    if (pageSettings.fontFamily === 'serif') {
+      return 'Georgia, Cambria, "Times New Roman", serif';
+    }
+    return 'var(--font-sans)';
   }, [pageSettings.fontFamily]);
 
-  const subLedgerRowPaddingClass = useMemo(() => {
+  const reportCellPadClass = useMemo(() => {
+    if (pageSettings.rowPadding === 'compact') return 'py-0.5';
+    if (pageSettings.rowPadding === 'relaxed') return 'py-2.5';
+    return 'py-1.5';
+  }, [pageSettings.rowPadding]);
+
+  const reportThPadClass = useMemo(() => {
     if (pageSettings.rowPadding === 'compact') return 'py-1';
     if (pageSettings.rowPadding === 'relaxed') return 'py-2.5';
     return 'py-1.5';
   }, [pageSettings.rowPadding]);
 
-  // Computed A4 paper & printable sheet geometry in mm
+  // Computed A4 paper & printable sheet geometry in mm (honors exact user 0..25mm margins cleanly)
   const printGeometry = useMemo(() => {
     const paperWidthMm = pageSettings.orientation === 'portrait' ? 210 : 297;
     const paperHeightMm = pageSettings.orientation === 'portrait' ? 297 : 210;
-    const marginTopMm = Math.max(pageSettings.marginTop, 4);
-    const marginBottomMm = Math.max(pageSettings.marginBottom, 5);
-    const marginLeftMm = Math.max(pageSettings.marginLeft, 4);
-    const marginRightMm = Math.max(pageSettings.marginRight, 4);
+    const marginTopMm = Math.max(0, Number(pageSettings.marginTop ?? 5));
+    const marginBottomMm = Math.max(0, Number(pageSettings.marginBottom ?? 5));
+    const marginLeftMm = Math.max(0, Number(pageSettings.marginLeft ?? 5));
+    const marginRightMm = Math.max(0, Number(pageSettings.marginRight ?? 5));
     const printableWidthMm = paperWidthMm - marginLeftMm - marginRightMm;
-    // Leave 2mm safety buffer inside @page content box so subpixel rounding never creates a blank overflow page
-    const sheetHeightMm = Math.max(120, paperHeightMm - marginTopMm - marginBottomMm - 2);
+    // Leave 1.5mm safety buffer inside @page content box so subpixel rounding never spills an extra blank page
+    const sheetHeightMm = Math.max(120, paperHeightMm - marginTopMm - marginBottomMm - 1.5);
     return {
       paperWidthMm,
       paperHeightMm,
@@ -235,7 +298,7 @@ export const ReportsView: React.FC = () => {
     };
   }, [pageSettings.orientation, pageSettings.marginTop, pageSettings.marginBottom, pageSettings.marginLeft, pageSettings.marginRight]);
 
-  // Inject dynamic print stylesheet to strictly enforce user's manual page margins, orientation, and full-sheet A4 footer pinning
+  // Inject dynamic print stylesheet enforcing user's exact margins, orientation, typography, and A4 sheet pinning
   useEffect(() => {
     const styleId = 'dynamic-custom-report-page-style';
     let styleEl = document.getElementById(styleId) as HTMLStyleElement | null;
@@ -244,13 +307,6 @@ export const ReportsView: React.FC = () => {
       styleEl.id = styleId;
       document.head.appendChild(styleEl);
     }
-
-    const fontFamilyRule =
-      pageSettings.fontFamily === 'mono'
-        ? '"Courier New", Courier, monospace'
-        : pageSettings.fontFamily === 'serif'
-        ? 'Georgia, Cambria, "Times New Roman", serif'
-        : 'Inter, system-ui, -apple-system, sans-serif';
 
     styleEl.innerHTML = `
       @media print {
@@ -275,9 +331,7 @@ export const ReportsView: React.FC = () => {
         .printable-report-wrapper {
           position: relative !important;
           font-size: ${pageSettings.fontSizePt}pt !important;
-          font-family: ${fontFamilyRule} !important;
-          font-weight: ${pageSettings.isBold ? '700' : '400'} !important;
-          font-style: ${pageSettings.isItalic ? 'italic' : 'normal'} !important;
+          font-family: ${reportFontFamilyCss} !important;
           width: 100% !important;
           background: transparent !important;
         }
@@ -318,6 +372,8 @@ export const ReportsView: React.FC = () => {
           position: relative !important;
           z-index: 10 !important;
           width: 100% !important;
+          font-size: ${pageSettings.fontSizePt}pt !important;
+          font-family: ${reportFontFamilyCss} !important;
           background: transparent !important;
         }
         .print-report-content table {
@@ -332,7 +388,7 @@ export const ReportsView: React.FC = () => {
         }
       }
     `;
-  }, [pageSettings, printGeometry]);
+  }, [pageSettings, printGeometry, reportFontFamilyCss]);
 
   // Date Range Presets
   const [datePreset, setDatePreset] = useState<'all' | 'this-month' | 'last-month' | 'last-30' | 'custom'>('this-month');
@@ -1644,7 +1700,17 @@ export const ReportsView: React.FC = () => {
     subLedgerData,
     filteredRows.length,
     pageSettings.scale,
+    pageSettings.fontSizePt,
+    pageSettings.fontFamily,
+    pageSettings.rowPadding,
+    pageSettings.isBold,
+    pageSettings.isItalic,
+    pageSettings.showLetterhead,
+    pageSettings.orientation,
     printGeometry.sheetHeightMm,
+    printGeometry.printableWidthMm,
+    dynamicColWidths,
+    dynamicStdColWidths,
   ]);
 
   useLayoutEffect(() => {
@@ -1911,50 +1977,99 @@ export const ReportsView: React.FC = () => {
       </div>
 
       {/* 2. Interactive Page Settings & Margins Studio Panel */}
-      <ReportPageSettingsPanel
-        settings={pageSettings}
-        onChange={handleUpdatePageSettings}
-        onReset={handleResetPageSettings}
-        onSave={() => savePageSettingsToStorage(pageSettings)}
-        isOpen={isPageSettingsOpen}
-        onToggle={() => setIsPageSettingsOpen((prev) => !prev)}
-        isLivePreview={isLivePaperPreview}
-        onToggleLivePreview={() => setIsLivePaperPreview((prev) => !prev)}
-        onPrint={() => window.print()}
-        lang={lang}
-        onOpenLogoModal={() => setIsLogoModalOpen(true)}
-      />
+      {(() => {
+        const activeHeadObj = HEAD_SCOPE_LIST.find((h) => h.id === accountFilter);
+        const activeHeadLabel = activeHeadObj
+          ? lang === 'bn'
+            ? activeHeadObj.labelBn
+            : activeHeadObj.labelEn
+          : accountFilter;
+        const customizedHeadMetas: HeadScopeMeta[] = savedCustomHeads
+          .map((id): HeadScopeMeta | null => {
+            const found = HEAD_SCOPE_LIST.find((h) => h.id === id);
+            if (!found) return null;
+            return {
+              id: found.id,
+              label: lang === 'bn' ? found.labelBn : found.labelEn,
+            };
+          })
+          .filter((item): item is HeadScopeMeta => item !== null);
 
-      {/* Live Paper Preview Canvas (When user clicks 'লাইভ প্রিভিউ দেখুন') */}
+        return (
+          <ReportPageSettingsPanel
+            settings={pageSettings}
+            onChange={handleUpdatePageSettings}
+            onReset={handleResetPageSettings}
+            onSave={() => {
+              savePageSettingsForHead(accountFilter, pageSettings);
+              setSavedCustomHeads(getCustomizedHeadIds());
+            }}
+            isOpen={isPageSettingsOpen}
+            onToggle={() => setIsPageSettingsOpen((prev) => !prev)}
+            isLivePreview={isLivePaperPreview}
+            onToggleLivePreview={() => setIsLivePaperPreview((prev) => !prev)}
+            onPrint={() => window.print()}
+            lang={lang}
+            onOpenLogoModal={() => setIsLogoModalOpen(true)}
+            activeHeadId={accountFilter}
+            activeHeadLabel={activeHeadLabel}
+            hasCustomHeadSettings={savedCustomHeads.includes(accountFilter)}
+            customizedHeads={customizedHeadMetas}
+            onCopyFromHead={handleCopySettingsFromHead}
+            pageCount={printPageChunks.length}
+            recordCount={isSubLedgerEligible && subLedgerData ? subLedgerData.rows.length : filteredRows.length}
+          />
+        );
+      })()}
+
+      {/* Live Paper Preview Canvas (1:1 identical geometry & typography to PDF output) */}
       {isLivePaperPreview && (
-        <div className="bg-slate-900/95 p-6 rounded-2xl border border-slate-700 text-white shadow-2xl space-y-4 no-print animate-fade-in">
+        <div className="bg-slate-900/95 p-4 sm:p-6 rounded-2xl border border-slate-700 text-white shadow-2xl space-y-4 no-print animate-fade-in">
           <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
-            <div className="flex items-center gap-2">
-              <span className="p-1.5 rounded-lg bg-amber-400/20 text-amber-300 font-bold text-xs flex items-center gap-1.5">
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <span className="px-2.5 py-1 rounded-lg bg-amber-400/20 text-amber-300 font-bold text-xs flex items-center gap-1.5 border border-amber-400/30">
                 <span>📄</span>
-                <span>{lang === 'bn' ? 'লাইভ পেজ প্রিভিউ (Live Paper Preview)' : 'Live Paper Preview'}</span>
+                <span>{lang === 'bn' ? 'লাইভ পেজ প্রিভিউ (1:1 PDF মাপ)' : 'Live Paper Preview (1:1 PDF Match)'}</span>
               </span>
               <span className="text-xs text-slate-300">
                 {lang === 'bn'
-                  ? `দিক: ${pageSettings.orientation === 'portrait' ? 'A4 লম্বালম্বি' : 'A4 চওড়া/আড়াআড়ি'} | মার্জিন: উপ ${pageSettings.marginTop}mm, নি ${pageSettings.marginBottom}mm, বা ${pageSettings.marginLeft}mm, ডা ${pageSettings.marginRight}mm | স্কেল: ${pageSettings.scale}%`
-                  : `A4 ${pageSettings.orientation} | Margins: ${pageSettings.marginTop}mm / ${pageSettings.marginLeft}mm`}
+                  ? `A4 ${pageSettings.orientation === 'portrait' ? 'লম্বালম্বি' : 'আড়াআড়ি'} · মার্জিন ${printGeometry.marginTopMm}/${printGeometry.marginBottomMm}/${printGeometry.marginLeftMm}/${printGeometry.marginRightMm}mm · ${pageSettings.fontSizePt}pt · মোট ${printPageChunks.length} পাতা`
+                  : `A4 ${pageSettings.orientation} · Margins ${printGeometry.marginTopMm}/${printGeometry.marginBottomMm}/${printGeometry.marginLeftMm}/${printGeometry.marginRightMm}mm · ${pageSettings.fontSizePt}pt · ${printPageChunks.length} pages`}
               </span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Preview Screen Viewer Scale */}
+              <div className="inline-flex items-center rounded-lg bg-slate-800 p-0.5 border border-slate-700">
+                {[65, 80, 100].map((vz) => (
+                  <button
+                    key={vz}
+                    type="button"
+                    onClick={() => setPreviewViewerZoom(vz)}
+                    className={`px-2 py-1 text-[11px] font-mono font-bold rounded-md cursor-pointer transition-colors ${
+                      previewViewerZoom === vz
+                        ? 'bg-indigo-500 text-white'
+                        : 'text-slate-300 hover:text-white'
+                    }`}
+                    title={lang === 'bn' ? 'স্ক্রিন ভিউ জুম' : 'Preview zoom'}
+                  >
+                    {vz}%
+                  </button>
+                ))}
+              </div>
               <button
                 type="button"
                 onClick={() => window.print()}
                 className="px-3.5 py-1.5 text-xs font-bold bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
               >
                 <Printer className="w-3.5 h-3.5" />
-                <span>{lang === 'bn' ? 'প্রিন্ট / PDF করুন' : 'Print Now'}</span>
+                <span>{lang === 'bn' ? 'প্রিন্ট / PDF করুন' : 'Print / PDF'}</span>
               </button>
               <button
                 type="button"
                 onClick={() => setIsLivePaperPreview(false)}
-                className="px-3 py-1.5 text-xs font-semibold bg-white/10 hover:bg-white/20 text-slate-300 rounded-lg transition-colors cursor-pointer"
+                className="px-3 py-1.5 text-xs font-semibold bg-white/10 hover:bg-white/20 text-slate-200 rounded-lg transition-colors cursor-pointer"
               >
-                {lang === 'bn' ? 'প্রিভিউ বন্ধ করুন' : 'Close Preview'}
+                {lang === 'bn' ? 'বন্ধ করুন' : 'Close'}
               </button>
             </div>
           </div>
@@ -1981,7 +2096,8 @@ export const ReportsView: React.FC = () => {
                     paddingLeft: `${printGeometry.marginLeftMm}mm`,
                     paddingRight: `${printGeometry.marginRightMm}mm`,
                     fontSize: `${pageSettings.fontSizePt}pt`,
-                    zoom: pageSettings.scale / 100,
+                    fontFamily: reportFontFamilyCss,
+                    zoom: previewViewerZoom / 100,
                   }}
                 >
                   {/* Security Watermark Background on each A4 page */}
@@ -2038,340 +2154,367 @@ export const ReportsView: React.FC = () => {
                       chunk.isFirst && (
                         <div className="border-b-2 border-slate-900 pb-2 mb-2 flex justify-between items-start shrink-0">
                           <div>
-                            <h2 className="text-sm font-bold uppercase tracking-tight text-slate-900">
+                            <h2 className="text-[1.1em] font-bold uppercase tracking-tight text-slate-900">
                               {lang === 'bn' ? 'হিসাব কিতাব — অফিসিয়াল লেনদেন অডিট ও খতিয়ান রিপোর্ট' : 'Financial Statement & Audit Ledger Report'}
                             </h2>
-                            <p className="text-[10px] text-slate-600">
+                            <p className="text-[0.85em] text-slate-600">
                               {themePrefs?.userName ? `${themePrefs.userName} · ` : ''}{startDate && endDate ? `${formatDate(startDate, lang)} — ${formatDate(endDate, lang)}` : 'All Time'} · {filteredRows.length} Records
                             </p>
                           </div>
-                          <span className="px-2 py-0.5 bg-slate-100 border border-slate-300 rounded font-bold uppercase text-[9px]">
+                          <span className="px-2 py-0.5 bg-slate-100 border border-slate-300 rounded font-bold uppercase text-[0.75em]">
                             Verified Audit
                           </span>
                         </div>
                       )
                     )}
 
-                    {isSubLedgerEligible && subLedgerData ? (
-                      <div className="space-y-2 font-sans w-full">
-                        {chunk.isFirst && (
-                          <div className="border border-slate-300 rounded-xs bg-slate-50/90 overflow-hidden">
-                            <div className="bg-[#1E536E] text-white px-2.5 py-1 flex items-center justify-between text-[9.5px] font-bold tracking-wider uppercase">
-                              <span>{lang === 'bn' ? 'ব্যাংক-স্টেটমেন্ট স্টাইল সাব লেজার বিবরণী (STATEMENT OF ACCOUNT)' : 'STATEMENT OF ACCOUNT — SUB LEDGER'}</span>
-                              <span className="font-mono font-normal text-[9px] text-slate-200">
-                                {new Date().toLocaleDateString('en-GB')} · {subLedgerData.currency}
-                              </span>
-                            </div>
-                            <div className="grid grid-cols-4 divide-x divide-slate-300 text-[9.5px]">
-                              <div className="px-2 py-1.5">
-                                <span className="text-[8.5px] uppercase text-slate-500 font-bold block">{lang === 'bn' ? 'হিসাবধারী' : 'Account Holder'}</span>
-                                <span className="font-bold text-slate-900 truncate block">{themePrefs?.userName?.trim() || (lang === 'bn' ? 'ব্যক্তিগত হিসাব' : 'Account Holder')}</span>
-                              </div>
-                              <div className="px-2 py-1.5">
-                                <span className="text-[8.5px] uppercase text-slate-500 font-bold block">{lang === 'bn' ? 'অ্যাকাউন্ট / হেড' : 'Account Scope'}</span>
-                                <span className="font-bold text-slate-900 truncate block">{subLedgerData.accountBannerTitle}</span>
-                              </div>
-                              <div className="px-2 py-1.5">
-                                <span className="text-[8.5px] uppercase text-slate-500 font-bold block">{lang === 'bn' ? 'সময়কাল' : 'Statement Period'}</span>
-                                <span className="font-mono font-semibold text-slate-900 block">
-                                  {startDate ? startDate.replace(/-/g, '/') : 'All'} — {endDate ? endDate.replace(/-/g, '/') : 'Now'}
-                                </span>
-                              </div>
-                              <div className="px-2 py-1.5 text-right bg-slate-100/70">
-                                <span className="text-[8.5px] uppercase text-slate-500 font-bold block">{lang === 'bn' ? 'সমাপ্তি ব্যালেন্স' : 'Closing Balance'}</span>
-                                <span className="font-mono font-black text-slate-900 tabular-nums">
-                                  {formatSubLedgerNumber(subLedgerData.closingBalance, subLedgerData.currency, false)} {subLedgerData.currency}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        {(pageSubRows.length > 0 || chunk.isFirst || chunk.isLast) && (
-                          <div className="border border-slate-400 rounded-xs w-full">
-                            <table className="w-full text-left border-collapse text-[10px] table-fixed">
-                              <colgroup>
-                                <col style={{ width: dynamicColWidths.sl }} />
-                                <col style={{ width: dynamicColWidths.date }} />
-                                <col style={{ width: dynamicColWidths.account }} />
-                                <col style={{ width: dynamicColWidths.debit }} />
-                                <col style={{ width: dynamicColWidths.credit }} />
-                                <col style={{ width: dynamicColWidths.balance }} />
-                                <col style={{ width: dynamicColWidths.remarks }} />
-                              </colgroup>
-                              <thead>
-                                <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[9.5px]">
-                                  <th rowSpan={2} style={{ width: dynamicColWidths.sl }} className="py-1 px-1 text-center border-r border-slate-400">#</th>
-                                  <th rowSpan={2} style={{ width: dynamicColWidths.date }} className="py-1 px-1 text-center border-r border-slate-400 whitespace-nowrap">Date</th>
-                                  <th rowSpan={2} style={{ width: dynamicColWidths.account }} className="py-1 px-2 border-r border-slate-400">Account</th>
-                                  <th colSpan={3} style={{ width: dynamicColWidths.baseColSpan }} className="py-1 px-1 text-center border-r border-slate-400 border-b border-slate-400 uppercase tracking-wider text-[9px]">
-                                    Base ({subLedgerData.currency})
-                                  </th>
-                                  <th rowSpan={2} style={{ width: dynamicColWidths.remarks }} className="py-1 px-2.5 text-left border-slate-400">Remarks</th>
-                                </tr>
-                                <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[9px]">
-                                  <th style={{ width: dynamicColWidths.debit }} className="py-1 px-1 text-right border-r border-slate-400">Debit</th>
-                                  <th style={{ width: dynamicColWidths.credit }} className="py-1 px-1 text-right border-r border-slate-400">Credit</th>
-                                  <th style={{ width: dynamicColWidths.balance }} className="py-1 px-1 text-right border-r border-slate-400">Balance</th>
-                                </tr>
-                              </thead>
-                              <tbody className="divide-y divide-slate-300 text-slate-900 text-[10px]">
-                                {chunk.isFirst && (
-                                  <>
-                                    <tr className="bg-[#D8EEF8] font-bold text-slate-900 border-b border-slate-300">
-                                      <td style={{ width: dynamicColWidths.sl }} className="py-1 px-1 text-center border-r border-slate-300 font-mono text-[10px]">1</td>
-                                      <td colSpan={6} className="py-1 px-2 text-center tracking-wide font-black text-xs text-slate-900 uppercase">
-                                        {subLedgerData.accountBannerTitle}
-                                      </td>
-                                    </tr>
-                                    <tr className="bg-white font-medium border-b border-slate-200">
-                                      <td style={{ width: dynamicColWidths.sl }} className="py-1 px-1 text-center border-r border-slate-200 font-mono text-slate-600">2</td>
-                                      <td style={{ width: dynamicColWidths.date }} className="py-1 px-1 border-r border-slate-200 text-center font-mono text-slate-400">—</td>
-                                      <td style={{ width: dynamicColWidths.account }} className="py-1 px-2 border-r border-slate-200 font-bold italic text-slate-900 whitespace-nowrap">
-                                        Opening Balance
-                                      </td>
-                                      <td style={{ width: dynamicColWidths.debit }} className="py-1 px-1 text-right border-r border-slate-200 font-mono font-bold text-slate-900 tabular-nums text-[10.5px]">
-                                        {formatSubLedgerNumber(subLedgerData.openingBal, subLedgerData.currency, false)}
-                                      </td>
-                                      <td style={{ width: dynamicColWidths.credit }} className="py-1 px-1 text-right border-r border-slate-200 font-mono text-slate-400 tabular-nums text-[10.5px]">
-                                        {subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
-                                      </td>
-                                      <td style={{ width: dynamicColWidths.balance }} className="py-1 px-1 text-right border-r border-slate-200 font-mono font-black text-slate-900 tabular-nums text-[11px]">
-                                        {formatSubLedgerNumber(subLedgerData.openingBal, subLedgerData.currency, false)}
-                                      </td>
-                                      <td style={{ width: dynamicColWidths.remarks }} className="py-1 px-2.5 text-slate-400 italic text-[9.5px]">—</td>
-                                    </tr>
-                                  </>
-                                )}
-                                {pageSubRows.map((row) => (
-                                  <tr key={`prev-row-${pageIdx}-${row.id}`} className="border-b border-slate-200 bg-white/85">
-                                    <td style={{ width: dynamicColWidths.sl }} className="py-1 px-1 text-center border-r border-slate-200 font-mono text-slate-600 text-[10px]">
-                                      {row.sl}
-                                    </td>
-                                    <td style={{ width: dynamicColWidths.date }} className="py-1 px-1 border-r border-slate-200 font-mono text-slate-700 whitespace-nowrap text-center text-[9.5px]">
-                                      {row.formattedDate}
-                                    </td>
-                                    <td style={{ width: dynamicColWidths.account }} className="py-1 px-2 border-r border-slate-200 font-bold text-slate-900 text-[10px] leading-tight">
-                                      {row.account}
-                                    </td>
-                                    <td style={{ width: dynamicColWidths.debit }} className="py-1 px-1 text-right border-r border-slate-200 font-mono tabular-nums text-[10.5px] font-bold text-slate-900">
-                                      {row.debit > 0
-                                        ? formatSubLedgerNumber(row.debit, subLedgerData.currency, false)
-                                        : subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
-                                    </td>
-                                    <td style={{ width: dynamicColWidths.credit }} className="py-1 px-1 text-right border-r border-slate-200 font-mono tabular-nums text-[10.5px] font-bold text-rose-800">
-                                      {row.credit > 0
-                                        ? formatSubLedgerNumber(row.credit, subLedgerData.currency, true)
-                                        : subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
-                                    </td>
-                                    <td style={{ width: dynamicColWidths.balance }} className="py-1 px-1 text-right border-r border-slate-200 font-mono font-black tabular-nums text-[11px] text-slate-900">
-                                      {formatSubLedgerNumber(row.balance, subLedgerData.currency, false)}
-                                    </td>
-                                    <td style={{ width: dynamicColWidths.remarks }} className="py-1 px-2.5 text-slate-800 text-[10px] leading-snug break-words">
-                                      {row.remarks || <span className="text-slate-300 italic">—</span>}
-                                    </td>
-                                  </tr>
-                                ))}
-                                {chunk.isLast && (
-                                  <tr className="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-400">
-                                    <td style={{ width: dynamicColWidths.sl }} className="py-1.5 px-1 text-center border-r border-slate-300 font-mono"></td>
-                                    <td style={{ width: dynamicColWidths.date }} className="py-1.5 px-1 border-r border-slate-300"></td>
-                                    <td style={{ width: dynamicColWidths.account }} className="py-1.5 px-2 border-r border-slate-300 font-black uppercase text-[10px]">
-                                      {lang === 'bn' ? 'সর্বমোট সমাপ্তি হিসাব' : 'Total / Closing Balance'}
-                                    </td>
-                                    <td style={{ width: dynamicColWidths.debit }} className="py-1.5 px-1 text-right border-r border-slate-300 font-mono font-bold text-emerald-900 tabular-nums text-[11px]">
-                                      {formatSubLedgerNumber(
-                                        subLedgerData.openingBal + subLedgerData.totalPeriodDebit,
-                                        subLedgerData.currency,
-                                        false
-                                      )}
-                                    </td>
-                                    <td style={{ width: dynamicColWidths.credit }} className="py-1.5 px-1 text-right border-r border-slate-300 font-mono font-bold text-rose-900 tabular-nums text-[11px]">
-                                      {formatSubLedgerNumber(subLedgerData.totalPeriodCredit, subLedgerData.currency, true)}
-                                    </td>
-                                    <td style={{ width: dynamicColWidths.balance }} className="py-1.5 px-1 text-right border-r border-slate-300 font-mono font-black text-slate-900 tabular-nums text-[11.5px]">
-                                      {formatSubLedgerNumber(subLedgerData.closingBalance, subLedgerData.currency, false)}
-                                    </td>
-                                    <td style={{ width: dynamicColWidths.remarks }} className="py-1.5 px-2.5 border-r border-slate-300"></td>
-                                  </tr>
-                                )}
-                              </tbody>
-                            </table>
-                          </div>
-                        )}
-
-                        {chunk.isLast && (
-                          <div className="pt-14 pb-3 px-6 flex justify-between items-end text-xs text-slate-700">
-                            <div className="text-center">
-                              <div className="border-t-[1.5px] border-slate-500 w-56 pt-1.5 font-bold text-slate-800">হিসাব প্রস্তুতকারকের স্বাক্ষর</div>
-                              <p className="text-[10px] text-slate-500 mt-0.5 font-medium">
-                                {themePrefs?.userName?.trim() || 'Prepared By'}
-                              </p>
-                            </div>
-                            <div className="text-center">
-                              <div className="border-t-[1.5px] border-slate-500 w-56 pt-1.5 font-bold text-slate-800">অনুমোদনকারী / পরিচালক</div>
-                              <p className="text-[10px] text-slate-500 mt-0.5 font-medium">Authorized Signatory</p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="space-y-2.5 font-sans w-full">
-                        {chunk.isFirst && (
-                          <>
-                            {/* Bank-Statement Style Account Holder & Period Header Box */}
+                    {/* Scaled Content Area matching @media print .print-report-content 1:1 */}
+                    <div
+                      className="w-full"
+                      style={{
+                        zoom: pageSettings.scale / 100,
+                        fontSize: `${pageSettings.fontSizePt}pt`,
+                        fontFamily: reportFontFamilyCss,
+                      }}
+                    >
+                      {isSubLedgerEligible && subLedgerData ? (
+                        <div className="space-y-2 w-full">
+                          {chunk.isFirst && (
                             <div className="border border-slate-300 rounded-xs bg-slate-50/90 overflow-hidden">
-                              <div className="bg-[#1E536E] text-white px-2.5 py-1 flex items-center justify-between text-[9.5px] font-bold tracking-wider uppercase">
-                                <span>{lang === 'bn' ? 'ব্যাংক-স্টেটমেন্ট স্টাইল হিসাব বিবরণী (STATEMENT OF ACCOUNT)' : 'STATEMENT OF ACCOUNT'}</span>
-                                <span className="font-mono font-normal text-[9px] text-slate-200">
-                                  {new Date().toLocaleDateString('en-GB')}
+                              <div className="bg-[#1E536E] text-white px-2.5 py-1 flex items-center justify-between text-[0.85em] font-bold tracking-wider uppercase">
+                                <span>{lang === 'bn' ? 'ব্যাংক-স্টেটমেন্ট স্টাইল সাব লেজার বিবরণী (STATEMENT OF ACCOUNT)' : 'STATEMENT OF ACCOUNT — SUB LEDGER'}</span>
+                                <span className="font-mono font-normal text-[0.8em] text-slate-200">
+                                  {new Date().toLocaleDateString('en-GB')} · {subLedgerData.currency}
                                 </span>
                               </div>
-                              <div className="grid grid-cols-4 divide-x divide-slate-300 text-[9.5px]">
+                              <div className="grid grid-cols-4 divide-x divide-slate-300 text-[0.85em]">
                                 <div className="px-2 py-1.5">
-                                  <span className="text-[8.5px] uppercase text-slate-500 font-bold block">{lang === 'bn' ? 'হিসাবধারী' : 'Account Holder'}</span>
+                                  <span className="text-[0.78em] uppercase text-slate-500 font-bold block">{lang === 'bn' ? 'হিসাবধারী' : 'Account Holder'}</span>
                                   <span className="font-bold text-slate-900 truncate block">{themePrefs?.userName?.trim() || (lang === 'bn' ? 'ব্যক্তিগত হিসাব' : 'Account Holder')}</span>
                                 </div>
                                 <div className="px-2 py-1.5">
-                                  <span className="text-[8.5px] uppercase text-slate-500 font-bold block">{lang === 'bn' ? 'অ্যাকাউন্ট / হেড' : 'Account Scope'}</span>
-                                  <span className="font-bold text-slate-900 truncate block">{statementScopeLabel}</span>
+                                  <span className="text-[0.78em] uppercase text-slate-500 font-bold block">{lang === 'bn' ? 'অ্যাকাউন্ট / হেড' : 'Account Scope'}</span>
+                                  <span className="font-bold text-slate-900 truncate block">{subLedgerData.accountBannerTitle}</span>
                                 </div>
                                 <div className="px-2 py-1.5">
-                                  <span className="text-[8.5px] uppercase text-slate-500 font-bold block">{lang === 'bn' ? 'সময়কাল' : 'Statement Period'}</span>
+                                  <span className="text-[0.78em] uppercase text-slate-500 font-bold block">{lang === 'bn' ? 'সময়কাল' : 'Statement Period'}</span>
                                   <span className="font-mono font-semibold text-slate-900 block">
-                                    {startDate && endDate ? `${startDate} — ${endDate}` : (lang === 'bn' ? 'সকল সময়' : 'All Time')}
+                                    {startDate ? startDate.replace(/-/g, '/') : 'All'} — {endDate ? endDate.replace(/-/g, '/') : 'Now'}
                                   </span>
                                 </div>
-                                <div className="px-2 py-1.5">
-                                  <span className="text-[8.5px] uppercase text-slate-500 font-bold block">{lang === 'bn' ? 'প্রোফাইল / প্রতিষ্ঠান' : 'Organization'}</span>
-                                  <span className="font-semibold text-slate-900 truncate block">{themePrefs?.profileTitle?.trim() || pageSettings.companyName}</span>
+                                <div className="px-2 py-1.5 text-right bg-slate-100/70">
+                                  <span className="text-[0.78em] uppercase text-slate-500 font-bold block">{lang === 'bn' ? 'সমাপ্তি ব্যালেন্স' : 'Closing Balance'}</span>
+                                  <span className="font-mono font-black text-slate-900 tabular-nums">
+                                    {formatSubLedgerNumber(subLedgerData.closingBalance, subLedgerData.currency, false)} {subLedgerData.currency}
+                                  </span>
                                 </div>
                               </div>
                             </div>
+                          )}
 
-                            {/* 4-Column Summary Strip */}
-                            <div className="grid grid-cols-4 gap-2 p-2.5 bg-slate-50 border border-slate-300 rounded-xs text-center text-xs">
-                              <div>
-                                <span className="text-[9.5px] text-slate-600 font-bold uppercase block">
-                                  {lang === 'bn' ? 'মোট লেনদেন' : 'Period Entries'}
-                                </span>
-                                <span className="font-mono font-bold text-sm text-slate-900 mt-0.5 block tabular-nums">
-                                  {filteredRows.length}
-                                </span>
-                              </div>
-                              <div>
-                                <span className="text-[9.5px] text-slate-600 font-bold uppercase block">
-                                  {lang === 'bn' ? 'মোট প্রাপ্তি (Credit +)' : 'Total Credits (+)'}
-                                </span>
-                                <span className="font-mono font-bold text-sm text-emerald-800 mt-0.5 block tabular-nums">
-                                  {totals.bdtIncome > 0 ? `+${totals.bdtIncome.toLocaleString('en-US')} ৳ ` : ''}
-                                  {totals.kwdIncome > 0 ? `+${totals.kwdIncome.toFixed(3)} KD` : ''}
-                                  {totals.bdtIncome === 0 && totals.kwdIncome === 0 ? '0.00' : ''}
-                                </span>
-                              </div>
-                              <div>
-                                <span className="text-[9.5px] text-slate-600 font-bold uppercase block">
-                                  {lang === 'bn' ? 'মোট খরচ (Debit -)' : 'Total Debits (-)'}
-                                </span>
-                                <span className="font-mono font-bold text-sm text-rose-800 mt-0.5 block tabular-nums">
-                                  {totals.bdtExpense > 0 ? `-${totals.bdtExpense.toLocaleString('en-US')} ৳ ` : ''}
-                                  {totals.kwdExpense > 0 ? `-${totals.kwdExpense.toFixed(3)} KD` : ''}
-                                  {totals.bdtExpense === 0 && totals.kwdExpense === 0 ? '0.00' : ''}
-                                </span>
-                              </div>
-                              <div>
-                                <span className="text-[9.5px] text-slate-600 font-bold uppercase block">
-                                  {lang === 'bn' ? 'সমাপ্তি ব্যালেন্স (Net)' : 'Net / Closing'}
-                                </span>
-                                <span className="font-mono font-bold text-sm text-slate-900 mt-0.5 block tabular-nums">
-                                  {totals.bdtNet !== 0 ? `${totals.bdtNet >= 0 ? '+' : ''}${totals.bdtNet.toLocaleString('en-US')} ৳ ` : ''}
-                                  {totals.kwdNet !== 0 ? `${totals.kwdNet >= 0 ? '+' : ''}${totals.kwdNet.toFixed(3)} KD` : ''}
-                                  {totals.bdtNet === 0 && totals.kwdNet === 0 ? '0.00' : ''}
-                                </span>
-                              </div>
-                            </div>
-                          </>
-                        )}
-
-                        {(pageStdRows.length > 0 || chunk.isLast) && (
-                          <div className="border border-slate-400 rounded-xs">
-                            <table className="w-full text-left border-collapse text-[10px]">
-                              <thead>
-                                <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold uppercase text-[9px]">
-                                  <th className="py-1.5 px-1.5 border-r border-slate-400 text-center w-9">SL</th>
-                                  <th className="py-1.5 px-1.5 border-r border-slate-400 text-center w-20">তারিখ</th>
-                                  <th className="py-1.5 px-2 border-r border-slate-400">অ্যাকাউন্ট / হেড</th>
-                                  <th className="py-1.5 px-2 border-r border-slate-400">খাত / বিবরণ</th>
-                                  <th className="py-1.5 px-1.5 border-r border-slate-400 text-center w-16">ধরণ</th>
-                                  <th className="py-1.5 px-2 border-r border-slate-400 text-right w-22">পরিমাণ</th>
-                                  <th className="py-1.5 px-2 border-r border-slate-400 text-right w-22">ব্যালেন্স</th>
-                                  <th className="py-1.5 px-1.5 text-center w-14">স্ট্যাটাস</th>
-                                </tr>
-                              </thead>
-                              <tbody className="divide-y divide-slate-300 text-slate-800 text-[9.5px]">
-                                {pageStdRows.map((row, idx) => {
-                                  const runBal = stdRunningBalMap.get(`${row.sourceType}-${row.id}`) ?? 0;
-                                  return (
-                                    <tr key={`prev-std-${pageIdx}-${row.id}-${idx}`} className="bg-white/85">
-                                      <td className="py-1 px-1.5 font-mono text-center border-r border-slate-200">{chunk.startIdx + idx + 1}</td>
-                                      <td className="py-1 px-1.5 font-mono text-center border-r border-slate-200 whitespace-nowrap">{row.date}</td>
-                                      <td className="py-1 px-2 font-semibold border-r border-slate-200">{lang === 'bn' ? row.sectionNameBn : row.sectionNameEn}</td>
-                                      <td className="py-1 px-2 border-r border-slate-200">{lang === 'bn' ? row.categoryNameBn : row.categoryNameEn}</td>
-                                      <td className="py-1 px-1.5 text-center uppercase text-[9px] border-r border-slate-200">{row.type}</td>
-                                      <td className="py-1 px-2 text-right font-mono font-bold tabular-nums border-r border-slate-200 whitespace-nowrap">
-                                        {row.currency === 'KWD' ? `${row.amount.toFixed(3)} KD` : `${row.amount.toLocaleString()} ৳`}
-                                      </td>
-                                      <td className="py-1 px-2 text-right font-mono font-bold tabular-nums border-r border-slate-200 whitespace-nowrap text-slate-900">
-                                        {row.currency === 'KWD' ? `${runBal.toFixed(3)} KD` : `${runBal.toLocaleString()} ৳`}
-                                      </td>
-                                      <td className="py-1 px-1.5 text-center">{row.status || '—'}</td>
-                                    </tr>
-                                  );
-                                })}
-                                {chunk.isLast && (
-                                  <tr className="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-400">
-                                    <td className="py-2 px-1.5 text-center border-r border-slate-300 font-mono"></td>
-                                    <td className="py-2 px-1.5 border-r border-slate-300"></td>
-                                    <td colSpan={2} className="py-2 px-2 border-r border-slate-300 font-black uppercase text-[10px]">
-                                      {lang === 'bn' ? 'সর্বমোট সমাপ্তি হিসাব (Total / Net Balance)' : 'Total / Net Balance'}
-                                    </td>
-                                    <td className="py-2 px-1.5 border-r border-slate-300 text-center font-bold text-[9.5px]">
-                                      {filteredRows.length} {lang === 'bn' ? 'টি এন্ট্রি' : 'entries'}
-                                    </td>
-                                    <td className="py-2 px-2 text-right font-mono font-bold tabular-nums text-[10px] border-r border-slate-300 text-slate-700 whitespace-nowrap">
-                                      In / Out Net
-                                    </td>
-                                    <td className="py-2 px-2 text-right font-mono font-black tabular-nums text-[10.5px] border-r border-slate-300 text-slate-900 whitespace-nowrap">
-                                      {totals.bdtNet !== 0 ? `${totals.bdtNet >= 0 ? '+' : ''}${totals.bdtNet.toLocaleString('en-US')} ৳ ` : ''}
-                                      {totals.kwdNet !== 0 ? `${totals.kwdNet >= 0 ? '+' : ''}${totals.kwdNet.toFixed(3)} KD` : ''}
-                                      {totals.bdtNet === 0 && totals.kwdNet === 0 ? '0.00' : ''}
-                                    </td>
-                                    <td className="py-2 px-1.5 text-center font-bold text-[9.5px] text-slate-600">
-                                      Verified
-                                    </td>
+                          {(pageSubRows.length > 0 || chunk.isFirst || chunk.isLast) && (
+                            <div className="border border-slate-400 rounded-xs w-full">
+                              <table className="w-full text-left border-collapse text-[1em] table-fixed">
+                                <colgroup>
+                                  <col style={{ width: dynamicColWidths.sl }} />
+                                  <col style={{ width: dynamicColWidths.date }} />
+                                  <col style={{ width: dynamicColWidths.account }} />
+                                  <col style={{ width: dynamicColWidths.debit }} />
+                                  <col style={{ width: dynamicColWidths.credit }} />
+                                  <col style={{ width: dynamicColWidths.balance }} />
+                                  <col style={{ width: dynamicColWidths.remarks }} />
+                                </colgroup>
+                                <thead>
+                                  <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[0.9em]">
+                                    <th rowSpan={2} style={{ width: dynamicColWidths.sl }} className={`${reportThPadClass} px-1 text-center border-r border-slate-400`}>#</th>
+                                    <th rowSpan={2} style={{ width: dynamicColWidths.date }} className={`${reportThPadClass} px-1 text-center border-r border-slate-400 whitespace-nowrap`}>Date</th>
+                                    <th rowSpan={2} style={{ width: dynamicColWidths.account }} className={`${reportThPadClass} px-2 border-r border-slate-400`}>Account</th>
+                                    <th colSpan={3} style={{ width: dynamicColWidths.baseColSpan }} className={`${reportThPadClass} px-1 text-center border-r border-slate-400 border-b border-slate-400 uppercase tracking-wider text-[0.85em]`}>
+                                      Base ({subLedgerData.currency})
+                                    </th>
+                                    <th rowSpan={2} style={{ width: dynamicColWidths.remarks }} className={`${reportThPadClass} px-2.5 text-left border-slate-400`}>Remarks</th>
                                   </tr>
-                                )}
-                              </tbody>
-                            </table>
-                          </div>
-                        )}
+                                  <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[0.85em]">
+                                    <th style={{ width: dynamicColWidths.debit }} className={`${reportThPadClass} px-1 text-right border-r border-slate-400`}>Debit</th>
+                                    <th style={{ width: dynamicColWidths.credit }} className={`${reportThPadClass} px-1 text-right border-r border-slate-400`}>Credit</th>
+                                    <th style={{ width: dynamicColWidths.balance }} className={`${reportThPadClass} px-1 text-right border-r border-slate-400`}>Balance</th>
+                                  </tr>
+                                </thead>
+                                <tbody className={`divide-y divide-slate-300 text-slate-900 text-[0.95em] ${pageSettings.isBold ? 'font-bold' : ''} ${pageSettings.isItalic ? 'italic' : ''}`}>
+                                  {chunk.isFirst && (
+                                    <>
+                                      <tr className="bg-[#D8EEF8] font-bold text-slate-900 border-b border-slate-300">
+                                        <td style={{ width: dynamicColWidths.sl }} className={`${reportCellPadClass} px-1 text-center border-r border-slate-300 font-mono`}>1</td>
+                                        <td colSpan={6} className={`${reportCellPadClass} px-2 text-center tracking-wide font-black text-[1.05em] text-slate-900 uppercase`}>
+                                          {subLedgerData.accountBannerTitle}
+                                        </td>
+                                      </tr>
+                                      <tr className="bg-white font-medium border-b border-slate-200">
+                                        <td style={{ width: dynamicColWidths.sl }} className={`${reportCellPadClass} px-1 text-center border-r border-slate-200 font-mono text-slate-600`}>2</td>
+                                        <td style={{ width: dynamicColWidths.date }} className={`${reportCellPadClass} px-1 border-r border-slate-200 text-center font-mono text-slate-400`}>—</td>
+                                        <td style={{ width: dynamicColWidths.account }} className={`${reportCellPadClass} px-2 border-r border-slate-200 font-bold italic text-slate-900 whitespace-nowrap`}>
+                                          Opening Balance
+                                        </td>
+                                        <td style={{ width: dynamicColWidths.debit }} className={`${reportCellPadClass} px-1 text-right border-r border-slate-200 font-mono font-bold text-slate-900 tabular-nums`}>
+                                          {formatSubLedgerNumber(subLedgerData.openingBal, subLedgerData.currency, false)}
+                                        </td>
+                                        <td style={{ width: dynamicColWidths.credit }} className={`${reportCellPadClass} px-1 text-right border-r border-slate-200 font-mono text-slate-400 tabular-nums`}>
+                                          {subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
+                                        </td>
+                                        <td style={{ width: dynamicColWidths.balance }} className={`${reportCellPadClass} px-1 text-right border-r border-slate-200 font-mono font-black text-slate-900 tabular-nums`}>
+                                          {formatSubLedgerNumber(subLedgerData.openingBal, subLedgerData.currency, false)}
+                                        </td>
+                                        <td style={{ width: dynamicColWidths.remarks }} className={`${reportCellPadClass} px-2.5 text-slate-400 italic`}>—</td>
+                                      </tr>
+                                    </>
+                                  )}
+                                  {pageSubRows.map((row) => (
+                                    <tr key={`prev-row-${pageIdx}-${row.id}`} className="border-b border-slate-200 bg-white/85">
+                                      <td style={{ width: dynamicColWidths.sl }} className={`${reportCellPadClass} px-1 text-center border-r border-slate-200 font-mono text-slate-600`}>
+                                        {row.sl}
+                                      </td>
+                                      <td style={{ width: dynamicColWidths.date }} className={`${reportCellPadClass} px-1 border-r border-slate-200 font-mono text-slate-700 whitespace-nowrap text-center text-[0.92em]`}>
+                                        {row.formattedDate}
+                                      </td>
+                                      <td style={{ width: dynamicColWidths.account }} className={`${reportCellPadClass} px-2 border-r border-slate-200 ${pageSettings.isBold ? 'font-black' : 'font-semibold'} text-slate-900 leading-tight break-words`}>
+                                        {row.account}
+                                      </td>
+                                      <td style={{ width: dynamicColWidths.debit }} className={`${reportCellPadClass} px-1 text-right border-r border-slate-200 font-mono tabular-nums font-bold text-slate-900`}>
+                                        {row.debit > 0
+                                          ? formatSubLedgerNumber(row.debit, subLedgerData.currency, false)
+                                          : subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
+                                      </td>
+                                      <td style={{ width: dynamicColWidths.credit }} className={`${reportCellPadClass} px-1 text-right border-r border-slate-200 font-mono tabular-nums font-bold text-rose-800`}>
+                                        {row.credit > 0
+                                          ? formatSubLedgerNumber(row.credit, subLedgerData.currency, true)
+                                          : subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
+                                      </td>
+                                      <td style={{ width: dynamicColWidths.balance }} className={`${reportCellPadClass} px-1 text-right border-r border-slate-200 font-mono font-black tabular-nums text-[1.03em] text-slate-900`}>
+                                        {formatSubLedgerNumber(row.balance, subLedgerData.currency, false)}
+                                      </td>
+                                      <td style={{ width: dynamicColWidths.remarks }} className={`${reportCellPadClass} px-2.5 text-slate-800 leading-snug break-words`}>
+                                        {row.remarks || <span className="text-slate-300 italic">—</span>}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                  {chunk.isLast && (
+                                    <tr className="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-400">
+                                      <td style={{ width: dynamicColWidths.sl }} className={`${reportCellPadClass} px-1 text-center border-r border-slate-300 font-mono`}></td>
+                                      <td style={{ width: dynamicColWidths.date }} className={`${reportCellPadClass} px-1 border-r border-slate-300`}></td>
+                                      <td style={{ width: dynamicColWidths.account }} className={`${reportCellPadClass} px-2 border-r border-slate-300 font-black uppercase`}>
+                                        {lang === 'bn' ? 'সর্বমোট সমাপ্তি হিসাব' : 'Total / Closing Balance'}
+                                      </td>
+                                      <td style={{ width: dynamicColWidths.debit }} className={`${reportCellPadClass} px-1 text-right border-r border-slate-300 font-mono font-bold text-emerald-900 tabular-nums text-[1.03em]`}>
+                                        {formatSubLedgerNumber(
+                                          subLedgerData.openingBal + subLedgerData.totalPeriodDebit,
+                                          subLedgerData.currency,
+                                          false
+                                        )}
+                                      </td>
+                                      <td style={{ width: dynamicColWidths.credit }} className={`${reportCellPadClass} px-1 text-right border-r border-slate-300 font-mono font-bold text-rose-900 tabular-nums text-[1.03em]`}>
+                                        {formatSubLedgerNumber(subLedgerData.totalPeriodCredit, subLedgerData.currency, true)}
+                                      </td>
+                                      <td style={{ width: dynamicColWidths.balance }} className={`${reportCellPadClass} px-1 text-right border-r border-slate-300 font-mono font-black text-slate-900 tabular-nums text-[1.08em]`}>
+                                        {formatSubLedgerNumber(subLedgerData.closingBalance, subLedgerData.currency, false)}
+                                      </td>
+                                      <td style={{ width: dynamicColWidths.remarks }} className={`${reportCellPadClass} px-2.5 border-r border-slate-300`}></td>
+                                    </tr>
+                                  )}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
 
-                        {chunk.isLast && (
-                          <div className="pt-14 pb-3 px-6 flex justify-between items-end text-xs text-slate-700">
-                            <div className="text-center">
-                              <div className="border-t-[1.5px] border-slate-500 w-56 pt-1.5 font-bold text-slate-800">হিসাব প্রস্তুতকারকের স্বাক্ষর</div>
-                              <p className="text-[10px] text-slate-500 mt-0.5 font-medium">
-                                {themePrefs?.userName?.trim() || 'Prepared By'}
-                              </p>
+                          {chunk.isLast && (
+                            <div className="pt-14 pb-3 px-6 flex justify-between items-end text-[0.95em] text-slate-700">
+                              <div className="text-center">
+                                <div className="border-t-[1.5px] border-slate-500 w-56 pt-1.5 font-bold text-slate-800">হিসাব প্রস্তুতকারকের স্বাক্ষর</div>
+                                <p className="text-[0.85em] text-slate-500 mt-0.5 font-medium">
+                                  {themePrefs?.userName?.trim() || 'Prepared By'}
+                                </p>
+                              </div>
+                              <div className="text-center">
+                                <div className="border-t-[1.5px] border-slate-500 w-56 pt-1.5 font-bold text-slate-800">অনুমোদনকারী / পরিচালক</div>
+                                <p className="text-[0.85em] text-slate-500 mt-0.5 font-medium">Authorized Signatory</p>
+                              </div>
                             </div>
-                            <div className="text-center">
-                              <div className="border-t-[1.5px] border-slate-500 w-56 pt-1.5 font-bold text-slate-800">অনুমোদনকারী / পরিচালক</div>
-                              <p className="text-[10px] text-slate-500 mt-0.5 font-medium">Authorized Signatory</p>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="space-y-2.5 w-full">
+                          {chunk.isFirst && (
+                            <>
+                              {/* Bank-Statement Style Account Holder & Period Header Box */}
+                              <div className="border border-slate-300 rounded-xs bg-slate-50/90 overflow-hidden">
+                                <div className="bg-[#1E536E] text-white px-2.5 py-1 flex items-center justify-between text-[0.85em] font-bold tracking-wider uppercase">
+                                  <span>{lang === 'bn' ? 'ব্যাংক-স্টেটমেন্ট স্টাইল হিসাব বিবরণী (STATEMENT OF ACCOUNT)' : 'STATEMENT OF ACCOUNT'}</span>
+                                  <span className="font-mono font-normal text-[0.8em] text-slate-200">
+                                    {new Date().toLocaleDateString('en-GB')}
+                                  </span>
+                                </div>
+                                <div className="grid grid-cols-4 divide-x divide-slate-300 text-[0.85em]">
+                                  <div className="px-2 py-1.5">
+                                    <span className="text-[0.78em] uppercase text-slate-500 font-bold block">{lang === 'bn' ? 'হিসাবধারী' : 'Account Holder'}</span>
+                                    <span className="font-bold text-slate-900 truncate block">{themePrefs?.userName?.trim() || (lang === 'bn' ? 'ব্যক্তিগত হিসাব' : 'Account Holder')}</span>
+                                  </div>
+                                  <div className="px-2 py-1.5">
+                                    <span className="text-[0.78em] uppercase text-slate-500 font-bold block">{lang === 'bn' ? 'অ্যাকাউন্ট / হেড' : 'Account Scope'}</span>
+                                    <span className="font-bold text-slate-900 truncate block">{statementScopeLabel}</span>
+                                  </div>
+                                  <div className="px-2 py-1.5">
+                                    <span className="text-[0.78em] uppercase text-slate-500 font-bold block">{lang === 'bn' ? 'সময়কাল' : 'Statement Period'}</span>
+                                    <span className="font-mono font-semibold text-slate-900 block">
+                                      {startDate && endDate ? `${startDate} — ${endDate}` : (lang === 'bn' ? 'সকল সময়' : 'All Time')}
+                                    </span>
+                                  </div>
+                                  <div className="px-2 py-1.5">
+                                    <span className="text-[0.78em] uppercase text-slate-500 font-bold block">{lang === 'bn' ? 'প্রোফাইল / প্রতিষ্ঠান' : 'Organization'}</span>
+                                    <span className="font-semibold text-slate-900 truncate block">{themePrefs?.profileTitle?.trim() || pageSettings.companyName}</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* 4-Column Summary Strip */}
+                              <div className="grid grid-cols-4 gap-2 p-2.5 bg-slate-50 border border-slate-300 rounded-xs text-center text-[0.95em]">
+                                <div>
+                                  <span className="text-[0.82em] text-slate-600 font-bold uppercase block">
+                                    {lang === 'bn' ? 'মোট লেনদেন' : 'Period Entries'}
+                                  </span>
+                                  <span className="font-mono font-bold text-[1.15em] text-slate-900 mt-0.5 block tabular-nums">
+                                    {filteredRows.length}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-[0.82em] text-slate-600 font-bold uppercase block">
+                                    {lang === 'bn' ? 'মোট প্রাপ্তি (Credit +)' : 'Total Credits (+)'}
+                                  </span>
+                                  <span className="font-mono font-bold text-[1.15em] text-emerald-800 mt-0.5 block tabular-nums">
+                                    {totals.bdtIncome > 0 ? `+${totals.bdtIncome.toLocaleString('en-US')} ৳ ` : ''}
+                                    {totals.kwdIncome > 0 ? `+${totals.kwdIncome.toFixed(3)} KD` : ''}
+                                    {totals.bdtIncome === 0 && totals.kwdIncome === 0 ? '0.00' : ''}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-[0.82em] text-slate-600 font-bold uppercase block">
+                                    {lang === 'bn' ? 'মোট খরচ (Debit -)' : 'Total Debits (-)'}
+                                  </span>
+                                  <span className="font-mono font-bold text-[1.15em] text-rose-800 mt-0.5 block tabular-nums">
+                                    {totals.bdtExpense > 0 ? `-${totals.bdtExpense.toLocaleString('en-US')} ৳ ` : ''}
+                                    {totals.kwdExpense > 0 ? `-${totals.kwdExpense.toFixed(3)} KD` : ''}
+                                    {totals.bdtExpense === 0 && totals.kwdExpense === 0 ? '0.00' : ''}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-[0.82em] text-slate-600 font-bold uppercase block">
+                                    {lang === 'bn' ? 'সমাপ্তি ব্যালেন্স (Net)' : 'Net / Closing'}
+                                  </span>
+                                  <span className="font-mono font-bold text-[1.15em] text-slate-900 mt-0.5 block tabular-nums">
+                                    {totals.bdtNet !== 0 ? `${totals.bdtNet >= 0 ? '+' : ''}${totals.bdtNet.toLocaleString('en-US')} ৳ ` : ''}
+                                    {totals.kwdNet !== 0 ? `${totals.kwdNet >= 0 ? '+' : ''}${totals.kwdNet.toFixed(3)} KD` : ''}
+                                    {totals.bdtNet === 0 && totals.kwdNet === 0 ? '0.00' : ''}
+                                  </span>
+                                </div>
+                              </div>
+                            </>
+                          )}
+
+                          {(pageStdRows.length > 0 || chunk.isLast) && (
+                            <div className="border border-slate-400 rounded-xs w-full">
+                              <table className="w-full text-left border-collapse text-[1em] table-fixed">
+                                <colgroup>
+                                  <col style={{ width: dynamicStdColWidths.sl }} />
+                                  <col style={{ width: dynamicStdColWidths.date }} />
+                                  <col style={{ width: dynamicStdColWidths.account }} />
+                                  <col style={{ width: dynamicStdColWidths.details }} />
+                                  <col style={{ width: dynamicStdColWidths.type }} />
+                                  <col style={{ width: dynamicStdColWidths.amount }} />
+                                  <col style={{ width: dynamicStdColWidths.balance }} />
+                                  <col style={{ width: dynamicStdColWidths.status }} />
+                                </colgroup>
+                                <thead>
+                                  <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold uppercase text-[0.88em]">
+                                    <th style={{ width: dynamicStdColWidths.sl }} className={`${reportThPadClass} px-1.5 border-r border-slate-400 text-center`}>SL</th>
+                                    <th style={{ width: dynamicStdColWidths.date }} className={`${reportThPadClass} px-1.5 border-r border-slate-400 text-center`}>তারিখ</th>
+                                    <th style={{ width: dynamicStdColWidths.account }} className={`${reportThPadClass} px-2 border-r border-slate-400`}>অ্যাকাউন্ট / হেড</th>
+                                    <th style={{ width: dynamicStdColWidths.details }} className={`${reportThPadClass} px-2 border-r border-slate-400`}>খাত / বিবরণ</th>
+                                    <th style={{ width: dynamicStdColWidths.type }} className={`${reportThPadClass} px-1.5 border-r border-slate-400 text-center`}>ধরণ</th>
+                                    <th style={{ width: dynamicStdColWidths.amount }} className={`${reportThPadClass} px-2 border-r border-slate-400 text-right`}>পরিমাণ</th>
+                                    <th style={{ width: dynamicStdColWidths.balance }} className={`${reportThPadClass} px-2 border-r border-slate-400 text-right`}>ব্যালেন্স</th>
+                                    <th style={{ width: dynamicStdColWidths.status }} className={`${reportThPadClass} px-1.5 text-center`}>স্ট্যাটাস</th>
+                                  </tr>
+                                </thead>
+                                <tbody className={`divide-y divide-slate-300 text-slate-800 text-[0.95em] ${pageSettings.isBold ? 'font-bold' : ''} ${pageSettings.isItalic ? 'italic' : ''}`}>
+                                  {pageStdRows.map((row, idx) => {
+                                    const runBal = stdRunningBalMap.get(`${row.sourceType}-${row.id}`) ?? 0;
+                                    return (
+                                      <tr key={`prev-std-${pageIdx}-${row.id}-${idx}`} className="bg-white/85">
+                                        <td className={`${reportCellPadClass} px-1.5 font-mono text-center border-r border-slate-200`}>{chunk.startIdx + idx + 1}</td>
+                                        <td className={`${reportCellPadClass} px-1.5 font-mono text-center border-r border-slate-200 whitespace-nowrap text-[0.92em]`}>{row.date}</td>
+                                        <td className={`${reportCellPadClass} px-2 ${pageSettings.isBold ? 'font-black' : 'font-semibold'} border-r border-slate-200 break-words`}>
+                                          {lang === 'bn' ? row.sectionNameBn : row.sectionNameEn}
+                                          {row.bankName && <span className="block text-[0.82em] text-slate-500 font-normal">{row.bankName}</span>}
+                                        </td>
+                                        <td className={`${reportCellPadClass} px-2 border-r border-slate-200 break-words`}>
+                                          <span className={pageSettings.isBold ? 'font-black' : 'font-bold'}>{lang === 'bn' ? row.categoryNameBn : row.categoryNameEn}</span>
+                                          {row.borrowerName && <span className="block text-[0.88em] text-indigo-800">গ্রহীতা: {row.borrowerName}</span>}
+                                          {row.note && <span className="block text-[0.88em] text-slate-500 italic">{row.note}</span>}
+                                        </td>
+                                        <td className={`${reportCellPadClass} px-1.5 text-center uppercase text-[0.85em] border-r border-slate-200`}>{row.type}</td>
+                                        <td className={`${reportCellPadClass} px-2 text-right font-mono font-bold tabular-nums border-r border-slate-200 whitespace-nowrap`}>
+                                          {row.currency === 'KWD' ? `${row.amount.toFixed(3)} KD` : `${row.amount.toLocaleString()} ৳`}
+                                        </td>
+                                        <td className={`${reportCellPadClass} px-2 text-right font-mono font-bold tabular-nums border-r border-slate-200 whitespace-nowrap text-slate-900`}>
+                                          {row.currency === 'KWD' ? `${runBal.toFixed(3)} KD` : `${runBal.toLocaleString()} ৳`}
+                                        </td>
+                                        <td className={`${reportCellPadClass} px-1.5 text-center`}>{row.status || '—'}</td>
+                                      </tr>
+                                    );
+                                  })}
+                                  {chunk.isLast && (
+                                    <tr className="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-400">
+                                      <td className={`${reportCellPadClass} px-1.5 text-center border-r border-slate-300 font-mono`}></td>
+                                      <td className={`${reportCellPadClass} px-1.5 border-r border-slate-300`}></td>
+                                      <td colSpan={2} className={`${reportCellPadClass} px-2 border-r border-slate-300 font-black uppercase`}>
+                                        {lang === 'bn' ? 'সর্বমোট সমাপ্তি হিসাব (Total / Net Balance)' : 'Total / Net Balance'}
+                                      </td>
+                                      <td className={`${reportCellPadClass} px-1.5 border-r border-slate-300 text-center font-bold text-[0.9em]`}>
+                                        {filteredRows.length} {lang === 'bn' ? 'টি এন্ট্রি' : 'entries'}
+                                      </td>
+                                      <td className={`${reportCellPadClass} px-2 text-right font-mono font-bold tabular-nums border-r border-slate-300 text-slate-700 whitespace-nowrap`}>
+                                        In / Out Net
+                                      </td>
+                                      <td className={`${reportCellPadClass} px-2 text-right font-mono font-black tabular-nums text-[1.05em] border-r border-slate-300 text-slate-900 whitespace-nowrap`}>
+                                        {totals.bdtNet !== 0 ? `${totals.bdtNet >= 0 ? '+' : ''}${totals.bdtNet.toLocaleString('en-US')} ৳ ` : ''}
+                                        {totals.kwdNet !== 0 ? `${totals.kwdNet >= 0 ? '+' : ''}${totals.kwdNet.toFixed(3)} KD` : ''}
+                                        {totals.bdtNet === 0 && totals.kwdNet === 0 ? '0.00' : ''}
+                                      </td>
+                                      <td className={`${reportCellPadClass} px-1.5 text-center font-bold text-[0.9em] text-slate-600`}>
+                                        Verified
+                                      </td>
+                                    </tr>
+                                  )}
+                                </tbody>
+                              </table>
                             </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                          )}
+
+                          {chunk.isLast && (
+                            <div className="pt-14 pb-3 px-6 flex justify-between items-end text-[0.95em] text-slate-700">
+                              <div className="text-center">
+                                <div className="border-t-[1.5px] border-slate-500 w-56 pt-1.5 font-bold text-slate-800">হিসাব প্রস্তুতকারকের স্বাক্ষর</div>
+                                <p className="text-[0.85em] text-slate-500 mt-0.5 font-medium">
+                                  {themePrefs?.userName?.trim() || 'Prepared By'}
+                                </p>
+                              </div>
+                              <div className="text-center">
+                                <div className="border-t-[1.5px] border-slate-500 w-56 pt-1.5 font-bold text-slate-800">অনুমোদনকারী / পরিচালক</div>
+                                <p className="text-[0.85em] text-slate-500 mt-0.5 font-medium">Authorized Signatory</p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Bottom: Official Footer pinned to the VERY bottom of each A4 page */}
@@ -2516,6 +2659,7 @@ export const ReportsView: React.FC = () => {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 xl:grid-cols-9 gap-2">
             {HEAD_SCOPE_LIST.map((acc) => {
               const isActive = accountFilter === acc.id;
+              const hasCustomLayout = savedCustomHeads.includes(acc.id);
               const Icon = acc.icon;
               return (
                 <button
@@ -2528,7 +2672,7 @@ export const ReportsView: React.FC = () => {
                       : 'bg-slate-50/90 dark:bg-slate-800/60 hover:bg-white dark:hover:bg-slate-800 border-slate-200/90 dark:border-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600 hover:-translate-y-0.5 hover:shadow-2xs text-slate-700 dark:text-slate-200'
                   }`}
                 >
-                  {/* Top Bar: Icon + Count Badge */}
+                  {/* Top Bar: Icon + Custom Layout Dot + Count Badge */}
                   <div className="flex items-center justify-between w-full mb-1">
                     <div
                       className={`w-6 h-6 rounded-lg flex items-center justify-center transition-transform group-hover:scale-105 ${
@@ -2539,15 +2683,33 @@ export const ReportsView: React.FC = () => {
                     >
                       <Icon className="w-3.5 h-3.5" />
                     </div>
-                    <span
-                      className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-md tabular-nums ${
-                        isActive
-                          ? 'bg-white/25 text-white border border-white/30'
-                          : 'bg-slate-200/80 dark:bg-slate-700 text-slate-700 dark:text-slate-200'
-                      }`}
-                    >
-                      {acc.count}
-                    </span>
+                    <div className="flex items-center gap-1">
+                      {hasCustomLayout && (
+                        <span
+                          className={`inline-flex items-center justify-center w-4 h-4 rounded-md ${
+                            isActive
+                              ? 'bg-emerald-400/25 text-emerald-200 border border-emerald-300/40'
+                              : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
+                          }`}
+                          title={
+                            lang === 'bn'
+                              ? 'এই হেডের জন্য আলাদা পেইজ সেটিংস সেভ করা আছে'
+                              : 'Custom page settings saved for this head'
+                          }
+                        >
+                          <SlidersHorizontal className="w-2.5 h-2.5" />
+                        </span>
+                      )}
+                      <span
+                        className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-md tabular-nums ${
+                          isActive
+                            ? 'bg-white/25 text-white border border-white/30'
+                            : 'bg-slate-200/80 dark:bg-slate-700 text-slate-700 dark:text-slate-200'
+                        }`}
+                      >
+                        {acc.count}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Account Name Typography */}
@@ -3550,8 +3712,8 @@ export const ReportsView: React.FC = () => {
             </div>
 
             <table
-              className={`w-full text-left border-collapse border border-slate-300 dark:border-slate-700 table-fixed ${subLedgerFontFamilyClass}`}
-              style={{ fontSize: `${pageSettings.fontSizePt}pt` }}
+              className="w-full text-left border-collapse border border-slate-300 dark:border-slate-700 table-fixed"
+              style={{ fontSize: `${pageSettings.fontSizePt}pt`, fontFamily: reportFontFamilyCss }}
             >
               <colgroup>
                 <col style={{ width: dynamicColWidths.sl }} />
@@ -3573,47 +3735,47 @@ export const ReportsView: React.FC = () => {
                   <th style={{ width: dynamicColWidths.balance, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
                   <th style={{ width: dynamicColWidths.remarks, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
                 </tr>
-                <tr className="bg-[#2B6B88] dark:bg-slate-800 text-white border-b border-slate-400 dark:border-slate-700 font-bold text-[11px]">
+                <tr className="bg-[#2B6B88] dark:bg-slate-800 text-white border-b border-slate-400 dark:border-slate-700 font-bold text-[0.9em]">
                   <th rowSpan={2} style={{ width: dynamicColWidths.sl }} className="py-2 px-1 text-center border-r border-slate-400 dark:border-slate-700">#</th>
                   <th rowSpan={2} style={{ width: dynamicColWidths.date }} className="py-2 px-1.5 text-center border-r border-slate-400 dark:border-slate-700 whitespace-nowrap min-w-[80px]">Date</th>
                   <th rowSpan={2} style={{ width: dynamicColWidths.account }} className="py-2 px-2 border-r border-slate-400 dark:border-slate-700">Account</th>
-                  <th colSpan={3} style={{ width: dynamicColWidths.baseColSpan }} className="py-1 px-1 text-center border-r border-slate-400 dark:border-slate-700 border-b border-slate-400 dark:border-slate-700 uppercase tracking-wider text-[10px]">
+                  <th colSpan={3} style={{ width: dynamicColWidths.baseColSpan }} className="py-1 px-1 text-center border-r border-slate-400 dark:border-slate-700 border-b border-slate-400 dark:border-slate-700 uppercase tracking-wider text-[0.85em]">
                     Base ({subLedgerData.currency})
                   </th>
                   <th rowSpan={2} style={{ width: dynamicColWidths.remarks }} className="py-2 px-3 text-left">Remarks</th>
                 </tr>
-                <tr className="bg-[#2B6B88] dark:bg-slate-800 text-white border-b border-slate-400 dark:border-slate-700 font-bold text-[10px]">
+                <tr className="bg-[#2B6B88] dark:bg-slate-800 text-white border-b border-slate-400 dark:border-slate-700 font-bold text-[0.85em]">
                   <th style={{ width: dynamicColWidths.debit }} className="py-1 px-1 text-right border-r border-slate-400 dark:border-slate-700">Debit</th>
                   <th style={{ width: dynamicColWidths.credit }} className="py-1 px-1 text-right border-r border-slate-400 dark:border-slate-700">Credit</th>
                   <th style={{ width: dynamicColWidths.balance }} className="py-1 px-1 text-right border-r border-slate-400 dark:border-slate-700">Balance</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-slate-800 dark:text-slate-200">
+              <tbody className={`divide-y divide-slate-200 dark:divide-slate-800 text-slate-800 dark:text-slate-200 ${pageSettings.isBold ? 'font-bold' : ''} ${pageSettings.isItalic ? 'italic' : ''}`}>
                 {/* Row 1: Account Banner Row (SL: 1) */}
                 <tr className="bg-[#D8EEF8] dark:bg-cyan-950/50 font-bold text-slate-900 dark:text-cyan-100 border-b border-slate-300 dark:border-slate-700">
-                  <td style={{ width: dynamicColWidths.sl }} className={`px-1 text-center border-r border-slate-300 dark:border-slate-700 font-mono text-xs ${subLedgerRowPaddingClass}`}>1</td>
-                  <td colSpan={6} className={`px-3 text-center tracking-wide font-black text-xs md:text-sm text-slate-900 dark:text-cyan-100 uppercase ${subLedgerRowPaddingClass}`}>
+                  <td style={{ width: dynamicColWidths.sl }} className={`px-1 text-center border-r border-slate-300 dark:border-slate-700 font-mono text-[0.95em] ${reportCellPadClass}`}>1</td>
+                  <td colSpan={6} className={`px-3 text-center tracking-wide font-black text-[1.05em] text-slate-900 dark:text-cyan-100 uppercase ${reportCellPadClass}`}>
                     {subLedgerData.accountBannerTitle}
                   </td>
                 </tr>
 
                 {/* Row 2: Opening Balance Row (SL: 2) */}
                 <tr className="bg-white dark:bg-slate-900 hover:bg-slate-50/80 dark:hover:bg-slate-800/60 font-medium border-b border-slate-200 dark:border-slate-800">
-                  <td style={{ width: dynamicColWidths.sl }} className={`px-1 text-center border-r border-slate-200 dark:border-slate-800 font-mono text-slate-500 dark:text-slate-400 text-xs ${subLedgerRowPaddingClass}`}>2</td>
-                  <td style={{ width: dynamicColWidths.date }} className={`px-2 border-r border-slate-200 dark:border-slate-800 text-center font-mono text-slate-400 dark:text-slate-500 overflow-hidden min-w-[80px] ${subLedgerRowPaddingClass}`}>—</td>
-                  <td style={{ width: dynamicColWidths.account }} className={`px-2 border-r border-slate-200 dark:border-slate-800 italic text-slate-900 dark:text-white text-xs whitespace-nowrap ${pageSettings.isBold ? 'font-black' : 'font-bold'} ${pageSettings.isItalic ? 'italic' : ''} ${subLedgerRowPaddingClass}`}>
+                  <td style={{ width: dynamicColWidths.sl }} className={`px-1 text-center border-r border-slate-200 dark:border-slate-800 font-mono text-slate-500 dark:text-slate-400 text-[0.95em] ${reportCellPadClass}`}>2</td>
+                  <td style={{ width: dynamicColWidths.date }} className={`px-2 border-r border-slate-200 dark:border-slate-800 text-center font-mono text-slate-400 dark:text-slate-500 overflow-hidden min-w-[80px] ${reportCellPadClass}`}>—</td>
+                  <td style={{ width: dynamicColWidths.account }} className={`px-2 border-r border-slate-200 dark:border-slate-800 italic text-slate-900 dark:text-white text-[0.95em] whitespace-nowrap ${pageSettings.isBold ? 'font-black' : 'font-bold'} ${reportCellPadClass}`}>
                     Opening Balance
                   </td>
-                  <td style={{ width: dynamicColWidths.debit }} className={`px-1.5 text-right border-r border-slate-200 dark:border-slate-800 font-mono font-bold text-slate-900 dark:text-white tabular-nums text-xs md:text-sm ${subLedgerRowPaddingClass}`}>
+                  <td style={{ width: dynamicColWidths.debit }} className={`px-1.5 text-right border-r border-slate-200 dark:border-slate-800 font-mono font-bold text-slate-900 dark:text-white tabular-nums text-[1em] ${reportCellPadClass}`}>
                     {formatSubLedgerNumber(subLedgerData.openingBal, subLedgerData.currency, false)}
                   </td>
-                  <td style={{ width: dynamicColWidths.credit }} className={`px-1.5 text-right border-r border-slate-200 dark:border-slate-800 font-mono text-slate-400 dark:text-slate-500 tabular-nums text-xs md:text-sm font-semibold ${subLedgerRowPaddingClass}`}>
+                  <td style={{ width: dynamicColWidths.credit }} className={`px-1.5 text-right border-r border-slate-200 dark:border-slate-800 font-mono text-slate-400 dark:text-slate-500 tabular-nums text-[1em] font-semibold ${reportCellPadClass}`}>
                     {subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
                   </td>
-                  <td style={{ width: dynamicColWidths.balance }} className={`px-1.5 text-right border-r border-slate-200 dark:border-slate-800 font-mono font-black text-slate-900 dark:text-white tabular-nums text-xs md:text-sm ${subLedgerRowPaddingClass}`}>
+                  <td style={{ width: dynamicColWidths.balance }} className={`px-1.5 text-right border-r border-slate-200 dark:border-slate-800 font-mono font-black text-slate-900 dark:text-white tabular-nums text-[1.05em] ${reportCellPadClass}`}>
                     {formatSubLedgerNumber(subLedgerData.openingBal, subLedgerData.currency, false)}
                   </td>
-                  <td style={{ width: dynamicColWidths.remarks }} className={`px-3 text-slate-400 dark:text-slate-500 italic text-xs ${subLedgerRowPaddingClass}`}>—</td>
+                  <td style={{ width: dynamicColWidths.remarks }} className={`px-3 text-slate-400 dark:text-slate-500 italic text-[0.95em] ${reportCellPadClass}`}>—</td>
                 </tr>
 
                 {/* Rows 3+: Dynamic In-Period Transactions */}
@@ -3637,29 +3799,29 @@ export const ReportsView: React.FC = () => {
                       }}
                       className="hover:bg-cyan-50/40 dark:hover:bg-slate-800/70 transition-colors cursor-pointer border-b border-slate-100 dark:border-slate-800"
                     >
-                      <td style={{ width: dynamicColWidths.sl }} className={`px-1 text-center border-r border-slate-200 dark:border-slate-800 font-mono text-slate-600 dark:text-slate-400 text-xs ${subLedgerRowPaddingClass}`}>
+                      <td style={{ width: dynamicColWidths.sl }} className={`px-1 text-center border-r border-slate-200 dark:border-slate-800 font-mono text-slate-600 dark:text-slate-400 text-[0.95em] ${reportCellPadClass}`}>
                         {row.sl}
                       </td>
-                      <td style={{ width: dynamicColWidths.date }} className={`px-2 border-r border-slate-200 dark:border-slate-800 font-mono text-slate-700 dark:text-slate-300 whitespace-nowrap text-center text-xs overflow-hidden min-w-[85px] ${subLedgerRowPaddingClass}`}>
+                      <td style={{ width: dynamicColWidths.date }} className={`px-2 border-r border-slate-200 dark:border-slate-800 font-mono text-slate-700 dark:text-slate-300 whitespace-nowrap text-center text-[0.92em] overflow-hidden min-w-[85px] ${reportCellPadClass}`}>
                         {row.formattedDate}
                       </td>
-                      <td style={{ width: dynamicColWidths.account }} className={`px-2 border-r border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 text-xs leading-snug break-words ${pageSettings.isBold ? 'font-black' : 'font-bold'} ${pageSettings.isItalic ? 'italic' : ''} ${subLedgerRowPaddingClass}`}>
+                      <td style={{ width: dynamicColWidths.account }} className={`px-2 border-r border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 text-[0.95em] leading-snug break-words ${pageSettings.isBold ? 'font-black' : 'font-semibold'} ${reportCellPadClass}`}>
                         {row.account}
                       </td>
-                      <td style={{ width: dynamicColWidths.debit }} className={`px-1.5 text-right border-r border-slate-200 dark:border-slate-800 font-mono tabular-nums text-xs md:text-sm ${pageSettings.isBold ? 'font-black' : 'font-bold'} text-slate-900 dark:text-emerald-300 ${subLedgerRowPaddingClass}`}>
+                      <td style={{ width: dynamicColWidths.debit }} className={`px-1.5 text-right border-r border-slate-200 dark:border-slate-800 font-mono tabular-nums text-[1em] ${pageSettings.isBold ? 'font-black' : 'font-bold'} text-slate-900 dark:text-emerald-300 ${reportCellPadClass}`}>
                         {row.debit > 0
                           ? formatSubLedgerNumber(row.debit, subLedgerData.currency, false)
                           : subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
                       </td>
-                      <td style={{ width: dynamicColWidths.credit }} className={`px-1.5 text-right border-r border-slate-200 dark:border-slate-800 font-mono tabular-nums text-xs md:text-sm ${pageSettings.isBold ? 'font-black' : 'font-bold'} text-rose-700 dark:text-rose-400 ${subLedgerRowPaddingClass}`}>
+                      <td style={{ width: dynamicColWidths.credit }} className={`px-1.5 text-right border-r border-slate-200 dark:border-slate-800 font-mono tabular-nums text-[1em] ${pageSettings.isBold ? 'font-black' : 'font-bold'} text-rose-700 dark:text-rose-400 ${reportCellPadClass}`}>
                         {row.credit > 0
                           ? formatSubLedgerNumber(row.credit, subLedgerData.currency, true)
                           : subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
                       </td>
-                      <td style={{ width: dynamicColWidths.balance }} className={`px-1.5 text-right border-r border-slate-200 dark:border-slate-800 font-mono font-black tabular-nums text-xs md:text-sm text-slate-900 dark:text-white ${subLedgerRowPaddingClass}`}>
+                      <td style={{ width: dynamicColWidths.balance }} className={`px-1.5 text-right border-r border-slate-200 dark:border-slate-800 font-mono font-black tabular-nums text-[1.03em] text-slate-900 dark:text-white ${reportCellPadClass}`}>
                         {formatSubLedgerNumber(row.balance, subLedgerData.currency, false)}
                       </td>
-                      <td style={{ width: dynamicColWidths.remarks }} className={`px-3 text-slate-700 dark:text-slate-300 text-xs leading-snug break-words ${pageSettings.isItalic ? 'italic' : ''} ${subLedgerRowPaddingClass}`} title={row.remarks}>
+                      <td style={{ width: dynamicColWidths.remarks }} className={`px-3 text-slate-700 dark:text-slate-300 text-[0.95em] leading-snug break-words ${reportCellPadClass}`} title={row.remarks}>
                         {row.remarks || <span className="text-slate-300 dark:text-slate-600 italic">—</span>}
                       </td>
                     </tr>
@@ -4076,12 +4238,7 @@ export const ReportsView: React.FC = () => {
         style={{
           width: `${printGeometry.printableWidthMm}mm`,
           fontSize: `${pageSettings.fontSizePt}pt`,
-          fontFamily:
-            pageSettings.fontFamily === 'mono'
-              ? '"Courier New", Courier, monospace'
-              : pageSettings.fontFamily === 'serif'
-              ? 'Georgia, Cambria, "Times New Roman", serif'
-              : 'Inter, system-ui, -apple-system, sans-serif',
+          fontFamily: reportFontFamilyCss,
         }}
       >
         {pageSettings.showLetterhead && (
@@ -4107,38 +4264,44 @@ export const ReportsView: React.FC = () => {
           </div>
         )}
 
-        <div style={{ zoom: pageSettings.scale / 100 }}>
+        <div
+          style={{
+            zoom: pageSettings.scale / 100,
+            fontSize: `${pageSettings.fontSizePt}pt`,
+            fontFamily: reportFontFamilyCss,
+          }}
+        >
           {isSubLedgerEligible && subLedgerData ? (
-            <div className="space-y-2 font-sans w-full">
+            <div className="space-y-2 w-full">
               <div data-pm="summary" className="border border-slate-300 rounded-xs bg-slate-50/90 overflow-hidden">
-                <div className="bg-[#1E536E] text-white px-2.5 py-1 flex items-center justify-between text-[9.5px] font-bold tracking-wider uppercase">
+                <div className="bg-[#1E536E] text-white px-2.5 py-1 flex items-center justify-between text-[0.85em] font-bold tracking-wider uppercase">
                   <span>STATEMENT OF ACCOUNT — SUB LEDGER</span>
-                  <span className="font-mono font-normal text-[9px]">{subLedgerData.currency}</span>
+                  <span className="font-mono font-normal text-[0.8em]">{subLedgerData.currency}</span>
                 </div>
-                <div className="grid grid-cols-4 divide-x divide-slate-300 text-[9.5px]">
+                <div className="grid grid-cols-4 divide-x divide-slate-300 text-[0.85em]">
                   <div className="px-2 py-1.5">
-                    <span className="text-[8.5px] uppercase text-slate-500 font-bold block">Account Holder</span>
+                    <span className="text-[0.78em] uppercase text-slate-500 font-bold block">Account Holder</span>
                     <span className="font-bold text-slate-900 truncate block">{themePrefs?.userName?.trim() || 'Account Holder'}</span>
                   </div>
                   <div className="px-2 py-1.5">
-                    <span className="text-[8.5px] uppercase text-slate-500 font-bold block">Account Scope</span>
+                    <span className="text-[0.78em] uppercase text-slate-500 font-bold block">Account Scope</span>
                     <span className="font-bold text-slate-900 truncate block">{subLedgerData.accountBannerTitle}</span>
                   </div>
                   <div className="px-2 py-1.5">
-                    <span className="text-[8.5px] uppercase text-slate-500 font-bold block">Statement Period</span>
+                    <span className="text-[0.78em] uppercase text-slate-500 font-bold block">Statement Period</span>
                     <span className="font-mono font-semibold text-slate-900 block">
                       {startDate ? startDate.replace(/-/g, '/') : 'All'} — {endDate ? endDate.replace(/-/g, '/') : 'Now'}
                     </span>
                   </div>
                   <div className="px-2 py-1.5 text-right bg-slate-100/70">
-                    <span className="text-[8.5px] uppercase text-slate-500 font-bold block">Closing Balance</span>
+                    <span className="text-[0.78em] uppercase text-slate-500 font-bold block">Closing Balance</span>
                     <span className="font-mono font-black text-slate-900">0.000</span>
                   </div>
                 </div>
               </div>
 
               <div className="border border-slate-400 rounded-xs w-full">
-                <table className="w-full text-left border-collapse text-[10px] table-fixed">
+                <table className="w-full text-left border-collapse text-[1em] table-fixed">
                   <colgroup>
                     <col style={{ width: dynamicColWidths.sl }} />
                     <col style={{ width: dynamicColWidths.date }} />
@@ -4149,186 +4312,196 @@ export const ReportsView: React.FC = () => {
                     <col style={{ width: dynamicColWidths.remarks }} />
                   </colgroup>
                   <thead data-pm="thead">
-                    <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[9.5px]">
-                      <th rowSpan={2} style={{ width: dynamicColWidths.sl }} className="py-1 px-1 text-center border-r border-slate-400">#</th>
-                      <th rowSpan={2} style={{ width: dynamicColWidths.date }} className="py-1 px-1 text-center border-r border-slate-400 whitespace-nowrap">Date</th>
-                      <th rowSpan={2} style={{ width: dynamicColWidths.account }} className="py-1 px-2 border-r border-slate-400">Account</th>
-                      <th colSpan={3} style={{ width: dynamicColWidths.baseColSpan }} className="py-1 px-1 text-center border-r border-slate-400 border-b border-slate-400 uppercase tracking-wider text-[9px]">
+                    <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[0.9em]">
+                      <th rowSpan={2} style={{ width: dynamicColWidths.sl }} className={`${reportThPadClass} px-1 text-center border-r border-slate-400`}>#</th>
+                      <th rowSpan={2} style={{ width: dynamicColWidths.date }} className={`${reportThPadClass} px-1 text-center border-r border-slate-400 whitespace-nowrap`}>Date</th>
+                      <th rowSpan={2} style={{ width: dynamicColWidths.account }} className={`${reportThPadClass} px-2 border-r border-slate-400`}>Account</th>
+                      <th colSpan={3} style={{ width: dynamicColWidths.baseColSpan }} className={`${reportThPadClass} px-1 text-center border-r border-slate-400 border-b border-slate-400 uppercase tracking-wider text-[0.85em]`}>
                         Base ({subLedgerData.currency})
                       </th>
-                      <th rowSpan={2} style={{ width: dynamicColWidths.remarks }} className="py-1 px-2.5 text-left border-slate-400">Remarks</th>
+                      <th rowSpan={2} style={{ width: dynamicColWidths.remarks }} className={`${reportThPadClass} px-2.5 text-left border-slate-400`}>Remarks</th>
                     </tr>
-                    <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[9px]">
-                      <th style={{ width: dynamicColWidths.debit }} className="py-1 px-1 text-right border-r border-slate-400">Debit</th>
-                      <th style={{ width: dynamicColWidths.credit }} className="py-1 px-1 text-right border-r border-slate-400">Credit</th>
-                      <th style={{ width: dynamicColWidths.balance }} className="py-1 px-1 text-right border-r border-slate-400">Balance</th>
+                    <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[0.85em]">
+                      <th style={{ width: dynamicColWidths.debit }} className={`${reportThPadClass} px-1 text-right border-r border-slate-400`}>Debit</th>
+                      <th style={{ width: dynamicColWidths.credit }} className={`${reportThPadClass} px-1 text-right border-r border-slate-400`}>Credit</th>
+                      <th style={{ width: dynamicColWidths.balance }} className={`${reportThPadClass} px-1 text-right border-r border-slate-400`}>Balance</th>
                     </tr>
                   </thead>
-                  <tbody data-pm="opening">
+                  <tbody data-pm="opening" className={`text-[0.95em] ${pageSettings.isBold ? 'font-bold' : ''} ${pageSettings.isItalic ? 'italic' : ''}`}>
                     <tr className="bg-[#D8EEF8] font-bold text-slate-900 border-b border-slate-300">
-                      <td style={{ width: dynamicColWidths.sl }} className="py-1 px-1 text-center border-r border-slate-300 font-mono text-[10px]">1</td>
-                      <td colSpan={6} className="py-1 px-2 text-center tracking-wide font-black text-xs text-slate-900 uppercase">
+                      <td style={{ width: dynamicColWidths.sl }} className={`${reportCellPadClass} px-1 text-center border-r border-slate-300 font-mono`}>1</td>
+                      <td colSpan={6} className={`${reportCellPadClass} px-2 text-center tracking-wide font-black text-[1.05em] text-slate-900 uppercase`}>
                         {subLedgerData.accountBannerTitle}
                       </td>
                     </tr>
                     <tr className="bg-white font-medium border-b border-slate-200">
-                      <td style={{ width: dynamicColWidths.sl }} className="py-1 px-1 text-center border-r border-slate-200 font-mono text-slate-600">2</td>
-                      <td style={{ width: dynamicColWidths.date }} className="py-1 px-1 border-r border-slate-200 text-center font-mono text-slate-400">—</td>
-                      <td style={{ width: dynamicColWidths.account }} className="py-1 px-2 border-r border-slate-200 font-bold italic text-slate-900 whitespace-nowrap">
+                      <td style={{ width: dynamicColWidths.sl }} className={`${reportCellPadClass} px-1 text-center border-r border-slate-200 font-mono text-slate-600`}>2</td>
+                      <td style={{ width: dynamicColWidths.date }} className={`${reportCellPadClass} px-1 border-r border-slate-200 text-center font-mono text-slate-400`}>—</td>
+                      <td style={{ width: dynamicColWidths.account }} className={`${reportCellPadClass} px-2 border-r border-slate-200 font-bold italic text-slate-900 whitespace-nowrap`}>
                         Opening Balance
                       </td>
-                      <td style={{ width: dynamicColWidths.debit }} className="py-1 px-1 text-right border-r border-slate-200 font-mono font-bold text-slate-900 tabular-nums text-[10.5px]">
+                      <td style={{ width: dynamicColWidths.debit }} className={`${reportCellPadClass} px-1 text-right border-r border-slate-200 font-mono font-bold text-slate-900 tabular-nums`}>
                         {formatSubLedgerNumber(subLedgerData.openingBal, subLedgerData.currency, false)}
                       </td>
-                      <td style={{ width: dynamicColWidths.credit }} className="py-1 px-1 text-right border-r border-slate-200 font-mono text-slate-400 tabular-nums text-[10.5px]">
+                      <td style={{ width: dynamicColWidths.credit }} className={`${reportCellPadClass} px-1 text-right border-r border-slate-200 font-mono text-slate-400 tabular-nums`}>
                         {subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
                       </td>
-                      <td style={{ width: dynamicColWidths.balance }} className="py-1 px-1 text-right border-r border-slate-200 font-mono font-black text-slate-900 tabular-nums text-[11px]">
+                      <td style={{ width: dynamicColWidths.balance }} className={`${reportCellPadClass} px-1 text-right border-r border-slate-200 font-mono font-black text-slate-900 tabular-nums`}>
                         {formatSubLedgerNumber(subLedgerData.openingBal, subLedgerData.currency, false)}
                       </td>
-                      <td style={{ width: dynamicColWidths.remarks }} className="py-1 px-2.5 text-slate-400 italic text-[9.5px]">—</td>
+                      <td style={{ width: dynamicColWidths.remarks }} className={`${reportCellPadClass} px-2.5 text-slate-400 italic`}>—</td>
                     </tr>
                   </tbody>
-                  <tbody>
+                  <tbody className={`text-[0.95em] ${pageSettings.isBold ? 'font-bold' : ''} ${pageSettings.isItalic ? 'italic' : ''}`}>
                     {subLedgerData.rows.map((row) => (
                       <tr key={`m-sub-${row.id}`} data-pm="row" className="border-b border-slate-200">
-                        <td style={{ width: dynamicColWidths.sl }} className="py-1 px-1 text-center border-r border-slate-200 font-mono text-slate-600 text-[10px]">{row.sl}</td>
-                        <td style={{ width: dynamicColWidths.date }} className="py-1 px-1.5 border-r border-slate-200 font-mono text-slate-700 whitespace-nowrap text-center text-[9.5px] overflow-hidden min-w-[80px]">{row.formattedDate}</td>
-                        <td style={{ width: dynamicColWidths.account }} className={`py-1 px-2 border-r border-slate-200 text-slate-900 text-[10px] leading-tight break-words ${pageSettings.isBold ? 'font-black' : 'font-bold'} ${pageSettings.isItalic ? 'italic' : ''}`}>{row.account}</td>
-                        <td style={{ width: dynamicColWidths.debit }} className="py-1 px-1 text-right border-r border-slate-200 font-mono tabular-nums text-[10.5px]">0.000</td>
-                        <td style={{ width: dynamicColWidths.credit }} className="py-1 px-1 text-right border-r border-slate-200 font-mono tabular-nums text-[10.5px]">0.000</td>
-                        <td style={{ width: dynamicColWidths.balance }} className="py-1 px-1 text-right border-r border-slate-200 font-mono font-black tabular-nums text-[11px]">0.000</td>
-                        <td style={{ width: dynamicColWidths.remarks }} className={`py-1 px-2.5 text-slate-800 text-[10px] leading-snug break-words ${pageSettings.isItalic ? 'italic' : ''}`}>{row.remarks || '—'}</td>
+                        <td style={{ width: dynamicColWidths.sl }} className={`${reportCellPadClass} px-1 text-center border-r border-slate-200 font-mono text-slate-600`}>{row.sl}</td>
+                        <td style={{ width: dynamicColWidths.date }} className={`${reportCellPadClass} px-1 border-r border-slate-200 font-mono text-slate-700 whitespace-nowrap text-center text-[0.92em]`}>{row.formattedDate}</td>
+                        <td style={{ width: dynamicColWidths.account }} className={`${reportCellPadClass} px-2 border-r border-slate-200 text-slate-900 leading-tight break-words ${pageSettings.isBold ? 'font-black' : 'font-semibold'}`}>{row.account}</td>
+                        <td style={{ width: dynamicColWidths.debit }} className={`${reportCellPadClass} px-1 text-right border-r border-slate-200 font-mono tabular-nums`}>0.000</td>
+                        <td style={{ width: dynamicColWidths.credit }} className={`${reportCellPadClass} px-1 text-right border-r border-slate-200 font-mono tabular-nums`}>0.000</td>
+                        <td style={{ width: dynamicColWidths.balance }} className={`${reportCellPadClass} px-1 text-right border-r border-slate-200 font-mono font-black tabular-nums text-[1.03em]`}>0.000</td>
+                        <td style={{ width: dynamicColWidths.remarks }} className={`${reportCellPadClass} px-2.5 text-slate-800 leading-snug break-words`}>{row.remarks || '—'}</td>
                       </tr>
                     ))}
                     <tr data-pm="total" className="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-400">
-                      <td className="py-1.5 px-1"></td>
-                      <td className="py-1.5 px-1"></td>
-                      <td className="py-1.5 px-2 font-black uppercase text-[10px]">Total / Closing Balance</td>
-                      <td className="py-1.5 px-1">0.000</td>
-                      <td className="py-1.5 px-1">0.000</td>
-                      <td className="py-1.5 px-1">0.000</td>
-                      <td className="py-1.5 px-2.5"></td>
+                      <td className={`${reportCellPadClass} px-1`}></td>
+                      <td className={`${reportCellPadClass} px-1`}></td>
+                      <td className={`${reportCellPadClass} px-2 font-black uppercase`}>Total / Closing Balance</td>
+                      <td className={`${reportCellPadClass} px-1`}>0.000</td>
+                      <td className={`${reportCellPadClass} px-1`}>0.000</td>
+                      <td className={`${reportCellPadClass} px-1`}>0.000</td>
+                      <td className={`${reportCellPadClass} px-2.5`}></td>
                     </tr>
                   </tbody>
                 </table>
               </div>
 
-              <div data-pm="signatures" className="pt-14 pb-3 px-6 flex justify-between items-end text-xs text-slate-700">
+              <div data-pm="signatures" className="pt-14 pb-3 px-6 flex justify-between items-end text-[0.95em] text-slate-700">
                 <div className="text-center">
                   <div className="border-t-[1.5px] border-slate-500 w-56 pt-1.5 font-bold">হিসাব প্রস্তুতকারকের স্বাক্ষর</div>
-                  <p className="text-[10px] mt-0.5">{themePrefs?.userName?.trim() || 'Prepared By'}</p>
+                  <p className="text-[0.85em] mt-0.5">{themePrefs?.userName?.trim() || 'Prepared By'}</p>
                 </div>
                 <div className="text-center">
                   <div className="border-t-[1.5px] border-slate-500 w-56 pt-1.5 font-bold">অনুমোদনকারী / পরিচালক</div>
-                  <p className="text-[10px] mt-0.5">Authorized Signatory</p>
+                  <p className="text-[0.85em] mt-0.5">Authorized Signatory</p>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="space-y-2.5 font-sans w-full">
+            <div className="space-y-2.5 w-full">
               <div data-pm="summary" className="space-y-2">
                 <div className="border border-slate-300 rounded-xs bg-slate-50/90 overflow-hidden">
-                  <div className="bg-[#1E536E] text-white px-2.5 py-1 flex items-center justify-between text-[9.5px] font-bold tracking-wider uppercase">
+                  <div className="bg-[#1E536E] text-white px-2.5 py-1 flex items-center justify-between text-[0.85em] font-bold tracking-wider uppercase">
                     <span>STATEMENT OF ACCOUNT</span>
-                    <span className="font-mono font-normal text-[9px]">{new Date().toLocaleDateString('en-GB')}</span>
+                    <span className="font-mono font-normal text-[0.8em]">{new Date().toLocaleDateString('en-GB')}</span>
                   </div>
-                  <div className="grid grid-cols-4 divide-x divide-slate-300 text-[9.5px]">
+                  <div className="grid grid-cols-4 divide-x divide-slate-300 text-[0.85em]">
                     <div className="px-2 py-1.5">
-                      <span className="text-[8.5px] uppercase text-slate-500 font-bold block">Account Holder</span>
+                      <span className="text-[0.78em] uppercase text-slate-500 font-bold block">Account Holder</span>
                       <span className="font-bold text-slate-900 truncate block">{themePrefs?.userName?.trim() || 'Account Holder'}</span>
                     </div>
                     <div className="px-2 py-1.5">
-                      <span className="text-[8.5px] uppercase text-slate-500 font-bold block">Account Scope</span>
+                      <span className="text-[0.78em] uppercase text-slate-500 font-bold block">Account Scope</span>
                       <span className="font-bold text-slate-900 truncate block">{statementScopeLabel}</span>
                     </div>
                     <div className="px-2 py-1.5">
-                      <span className="text-[8.5px] uppercase text-slate-500 font-bold block">Statement Period</span>
+                      <span className="text-[0.78em] uppercase text-slate-500 font-bold block">Statement Period</span>
                       <span className="font-mono font-semibold text-slate-900 block">
                         {startDate && endDate ? `${startDate} — ${endDate}` : 'All Time'}
                       </span>
                     </div>
                     <div className="px-2 py-1.5">
-                      <span className="text-[8.5px] uppercase text-slate-500 font-bold block">Organization</span>
+                      <span className="text-[0.78em] uppercase text-slate-500 font-bold block">Organization</span>
                       <span className="font-semibold text-slate-900 truncate block">{themePrefs?.profileTitle?.trim() || pageSettings.companyName}</span>
                     </div>
                   </div>
                 </div>
-                <div className="grid grid-cols-4 gap-2 p-2.5 bg-slate-50 border border-slate-300 rounded-xs text-center text-xs">
+                <div className="grid grid-cols-4 gap-2 p-2.5 bg-slate-50 border border-slate-300 rounded-xs text-center text-[0.95em]">
                   <div>
-                    <span className="text-[9.5px] font-bold uppercase block">Period Entries</span>
-                    <span className="font-mono font-bold text-sm mt-0.5 block">0</span>
+                    <span className="text-[0.82em] font-bold uppercase block">Period Entries</span>
+                    <span className="font-mono font-bold text-[1.15em] mt-0.5 block">0</span>
                   </div>
                   <div>
-                    <span className="text-[9.5px] font-bold uppercase block">Total Credits (+)</span>
-                    <span className="font-mono font-bold text-sm mt-0.5 block">0.00</span>
+                    <span className="text-[0.82em] font-bold uppercase block">Total Credits (+)</span>
+                    <span className="font-mono font-bold text-[1.15em] mt-0.5 block">0.00</span>
                   </div>
                   <div>
-                    <span className="text-[9.5px] font-bold uppercase block">Total Debits (-)</span>
-                    <span className="font-mono font-bold text-sm mt-0.5 block">0.00</span>
+                    <span className="text-[0.82em] font-bold uppercase block">Total Debits (-)</span>
+                    <span className="font-mono font-bold text-[1.15em] mt-0.5 block">0.00</span>
                   </div>
                   <div>
-                    <span className="text-[9.5px] font-bold uppercase block">Net Balance</span>
-                    <span className="font-mono font-bold text-sm mt-0.5 block">0.00</span>
+                    <span className="text-[0.82em] font-bold uppercase block">Net Balance</span>
+                    <span className="font-mono font-bold text-[1.15em] mt-0.5 block">0.00</span>
                   </div>
                 </div>
               </div>
 
-              <div className="border border-slate-400 rounded-xs">
-                <table className="w-full text-left border-collapse text-[11px]">
+              <div className="border border-slate-400 rounded-xs w-full">
+                <table className="w-full text-left border-collapse text-[1em] table-fixed">
+                  <colgroup>
+                    <col style={{ width: dynamicStdColWidths.sl }} />
+                    <col style={{ width: dynamicStdColWidths.date }} />
+                    <col style={{ width: dynamicStdColWidths.account }} />
+                    <col style={{ width: dynamicStdColWidths.details }} />
+                    <col style={{ width: dynamicStdColWidths.type }} />
+                    <col style={{ width: dynamicStdColWidths.amount }} />
+                    <col style={{ width: dynamicStdColWidths.balance }} />
+                    <col style={{ width: dynamicStdColWidths.status }} />
+                  </colgroup>
                   <thead data-pm="thead">
-                    <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold uppercase tracking-wider text-[10px]">
-                      <th className="py-2 px-2 border-r border-slate-400 text-center w-9">SL</th>
-                      <th className="py-2 px-2 border-r border-slate-400 whitespace-nowrap text-center w-22">তারিখ</th>
-                      <th className="py-2 px-2 border-r border-slate-400 min-w-36">অ্যাকাউন্ট / হেড</th>
-                      <th className="py-2 px-2 border-r border-slate-400 min-w-44">খাত / বিবরণ</th>
-                      <th className="py-2 px-2 border-r border-slate-400 text-center whitespace-nowrap w-18">ধরণ</th>
-                      <th className="py-2 px-2 border-r border-slate-400 text-right whitespace-nowrap w-24">পরিমাণ</th>
-                      <th className="py-2 px-2 border-r border-slate-400 text-right whitespace-nowrap w-24">ব্যালেন্স</th>
-                      <th className="py-2 px-2 text-center whitespace-nowrap w-16">স্ট্যাটাস</th>
+                    <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold uppercase tracking-wider text-[0.88em]">
+                      <th style={{ width: dynamicStdColWidths.sl }} className={`${reportThPadClass} px-1.5 border-r border-slate-400 text-center`}>SL</th>
+                      <th style={{ width: dynamicStdColWidths.date }} className={`${reportThPadClass} px-1.5 border-r border-slate-400 whitespace-nowrap text-center`}>তারিখ</th>
+                      <th style={{ width: dynamicStdColWidths.account }} className={`${reportThPadClass} px-2 border-r border-slate-400`}>অ্যাকাউন্ট / হেড</th>
+                      <th style={{ width: dynamicStdColWidths.details }} className={`${reportThPadClass} px-2 border-r border-slate-400`}>খাত / বিবরণ</th>
+                      <th style={{ width: dynamicStdColWidths.type }} className={`${reportThPadClass} px-1.5 border-r border-slate-400 text-center whitespace-nowrap`}>ধরণ</th>
+                      <th style={{ width: dynamicStdColWidths.amount }} className={`${reportThPadClass} px-2 border-r border-slate-400 text-right whitespace-nowrap`}>পরিমাণ</th>
+                      <th style={{ width: dynamicStdColWidths.balance }} className={`${reportThPadClass} px-2 border-r border-slate-400 text-right whitespace-nowrap`}>ব্যালেন্স</th>
+                      <th style={{ width: dynamicStdColWidths.status }} className={`${reportThPadClass} px-1.5 text-center whitespace-nowrap`}>স্ট্যাটাস</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-300 text-slate-800 text-[10.5px]">
+                  <tbody className={`divide-y divide-slate-300 text-slate-800 text-[0.95em] ${pageSettings.isBold ? 'font-bold' : ''} ${pageSettings.isItalic ? 'italic' : ''}`}>
                     {filteredRows.map((row, idx) => (
                       <tr key={`m-std-${row.id}-${idx}`} data-pm="row">
-                        <td className="py-1.5 px-2 font-mono text-center w-9">{idx + 1}</td>
-                        <td className="py-1.5 px-2 font-mono whitespace-nowrap text-center w-22">{row.date}</td>
-                        <td className="py-1.5 px-2 font-semibold min-w-36">
+                        <td className={`${reportCellPadClass} px-1.5 font-mono text-center`}>{idx + 1}</td>
+                        <td className={`${reportCellPadClass} px-1.5 font-mono whitespace-nowrap text-center text-[0.92em]`}>{row.date}</td>
+                        <td className={`${reportCellPadClass} px-2 font-semibold break-words`}>
                           {lang === 'bn' ? row.sectionNameBn : row.sectionNameEn}
-                          {row.bankName && <span className="block text-[9px]">{row.bankName}</span>}
+                          {row.bankName && <span className="block text-[0.82em]">{row.bankName}</span>}
                         </td>
-                        <td className="py-1.5 px-2 min-w-44">
+                        <td className={`${reportCellPadClass} px-2 break-words`}>
                           <span className="font-bold">{lang === 'bn' ? row.categoryNameBn : row.categoryNameEn}</span>
-                          {row.borrowerName && <span className="block text-[10px]">গ্রহীতা: {row.borrowerName}</span>}
-                          {row.note && <span className="block text-[10px] italic">{row.note}</span>}
+                          {row.borrowerName && <span className="block text-[0.88em]">গ্রহীতা: {row.borrowerName}</span>}
+                          {row.note && <span className="block text-[0.88em] italic">{row.note}</span>}
                         </td>
-                        <td className="py-1.5 px-2 text-center whitespace-nowrap w-18">ধরণ</td>
-                        <td className="py-1.5 px-2 text-right font-mono whitespace-nowrap w-24">0.00</td>
-                        <td className="py-1.5 px-2 text-right font-mono whitespace-nowrap w-24">0.00</td>
-                        <td className="py-1.5 px-2 text-center whitespace-nowrap w-16">Paid</td>
+                        <td className={`${reportCellPadClass} px-1.5 text-center whitespace-nowrap text-[0.85em]`}>ধরণ</td>
+                        <td className={`${reportCellPadClass} px-2 text-right font-mono whitespace-nowrap`}>0.00</td>
+                        <td className={`${reportCellPadClass} px-2 text-right font-mono whitespace-nowrap`}>0.00</td>
+                        <td className={`${reportCellPadClass} px-1.5 text-center whitespace-nowrap`}>Paid</td>
                       </tr>
                     ))}
                     <tr data-pm="total" className="bg-slate-100 font-bold border-t-2 border-slate-400">
-                      <td className="py-2 px-2"></td>
-                      <td className="py-2 px-2"></td>
-                      <td colSpan={2} className="py-2 px-2 font-black uppercase text-[11px]">Total / Net Balance</td>
-                      <td className="py-2 px-2 text-center text-[10px]">0 entries</td>
-                      <td className="py-2 px-2 text-right font-mono text-[11px]">In / Out</td>
-                      <td className="py-2 px-2 text-right font-mono text-[12px]">0.00</td>
-                      <td className="py-2 px-2 text-center text-[10px]">Verified</td>
+                      <td className={`${reportCellPadClass} px-1.5`}></td>
+                      <td className={`${reportCellPadClass} px-1.5`}></td>
+                      <td colSpan={2} className={`${reportCellPadClass} px-2 font-black uppercase`}>Total / Net Balance</td>
+                      <td className={`${reportCellPadClass} px-1.5 text-center text-[0.9em]`}>0 entries</td>
+                      <td className={`${reportCellPadClass} px-2 text-right font-mono`}>In / Out</td>
+                      <td className={`${reportCellPadClass} px-2 text-right font-mono`}>0.00</td>
+                      <td className={`${reportCellPadClass} px-1.5 text-center text-[0.9em]`}>Verified</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
 
-              <div data-pm="signatures" className="pt-14 pb-3 px-6 flex justify-between items-end text-xs text-slate-700">
+              <div data-pm="signatures" className="pt-14 pb-3 px-6 flex justify-between items-end text-[0.95em] text-slate-700">
                 <div className="text-center">
                   <div className="border-t-[1.5px] border-slate-500 w-56 pt-1.5 font-bold">হিসাব প্রস্তুতকারকের স্বাক্ষর</div>
-                  <p className="text-[10px] mt-0.5">{themePrefs?.userName?.trim() || 'Prepared By'}</p>
+                  <p className="text-[0.85em] mt-0.5">{themePrefs?.userName?.trim() || 'Prepared By'}</p>
                 </div>
                 <div className="text-center">
                   <div className="border-t-[1.5px] border-slate-500 w-56 pt-1.5 font-bold">অনুমোদনকারী / পরিচালক</div>
-                  <p className="text-[10px] mt-0.5">Authorized Signatory</p>
+                  <p className="text-[0.85em] mt-0.5">Authorized Signatory</p>
                 </div>
               </div>
             </div>
@@ -4362,6 +4535,7 @@ export const ReportsView: React.FC = () => {
               style={{
                 width: '100%',
                 height: `${printGeometry.sheetHeightMm}mm`,
+                fontFamily: reportFontFamilyCss,
               }}
             >
               {/* Page-scoped Security Watermark Background behind full letterhead sheet */}
@@ -4439,37 +4613,44 @@ export const ReportsView: React.FC = () => {
                   )
                 )}
 
-                <div className="print-report-content w-full" style={{ zoom: pageSettings.scale / 100 }}>
+                <div
+                  className="print-report-content w-full"
+                  style={{
+                    zoom: pageSettings.scale / 100,
+                    fontSize: `${pageSettings.fontSizePt}pt`,
+                    fontFamily: reportFontFamilyCss,
+                  }}
+                >
                   {isSubLedgerEligible && subLedgerData ? (
                     /* ========================================================================= */
                     /* SUB LEDGER PRINT DOCUMENT                                                 */
                     /* ========================================================================= */
-                    <div className="space-y-2 font-sans w-full">
+                    <div className="space-y-2 w-full">
                       {chunk.isFirst && (
                         <div className="border border-slate-300 rounded-xs bg-slate-50/90 overflow-hidden">
-                          <div className="bg-[#1E536E] text-white px-2.5 py-1 flex items-center justify-between text-[9.5px] font-bold tracking-wider uppercase">
+                          <div className="bg-[#1E536E] text-white px-2.5 py-1 flex items-center justify-between text-[0.85em] font-bold tracking-wider uppercase">
                             <span>{lang === 'bn' ? 'ব্যাংক-স্টেটমেন্ট স্টাইল সাব লেজার বিবরণী (STATEMENT OF ACCOUNT)' : 'STATEMENT OF ACCOUNT — SUB LEDGER'}</span>
-                            <span className="font-mono font-normal text-[9px] text-slate-200">
+                            <span className="font-mono font-normal text-[0.8em] text-slate-200">
                               {new Date().toLocaleDateString('en-GB')} · {subLedgerData.currency}
                             </span>
                           </div>
-                          <div className="grid grid-cols-4 divide-x divide-slate-300 text-[9.5px]">
+                          <div className="grid grid-cols-4 divide-x divide-slate-300 text-[0.85em]">
                             <div className="px-2 py-1.5">
-                              <span className="text-[8.5px] uppercase text-slate-500 font-bold block">{lang === 'bn' ? 'হিসাবধারী' : 'Account Holder'}</span>
+                              <span className="text-[0.78em] uppercase text-slate-500 font-bold block">{lang === 'bn' ? 'হিসাবধারী' : 'Account Holder'}</span>
                               <span className="font-bold text-slate-900 truncate block">{themePrefs?.userName?.trim() || (lang === 'bn' ? 'ব্যক্তিগত হিসাব' : 'Account Holder')}</span>
                             </div>
                             <div className="px-2 py-1.5">
-                              <span className="text-[8.5px] uppercase text-slate-500 font-bold block">{lang === 'bn' ? 'অ্যাকাউন্ট / হেড' : 'Account Scope'}</span>
+                              <span className="text-[0.78em] uppercase text-slate-500 font-bold block">{lang === 'bn' ? 'অ্যাকাউন্ট / হেড' : 'Account Scope'}</span>
                               <span className="font-bold text-slate-900 truncate block">{subLedgerData.accountBannerTitle}</span>
                             </div>
                             <div className="px-2 py-1.5">
-                              <span className="text-[8.5px] uppercase text-slate-500 font-bold block">{lang === 'bn' ? 'সময়কাল' : 'Statement Period'}</span>
+                              <span className="text-[0.78em] uppercase text-slate-500 font-bold block">{lang === 'bn' ? 'সময়কাল' : 'Statement Period'}</span>
                               <span className="font-mono font-semibold text-slate-900 block">
                                 {startDate ? startDate.replace(/-/g, '/') : 'All'} — {endDate ? endDate.replace(/-/g, '/') : 'Now'}
                               </span>
                             </div>
                             <div className="px-2 py-1.5 text-right bg-slate-100/70">
-                              <span className="text-[8.5px] uppercase text-slate-500 font-bold block">{lang === 'bn' ? 'সমাপ্তি ব্যালেন্স' : 'Closing Balance'}</span>
+                              <span className="text-[0.78em] uppercase text-slate-500 font-bold block">{lang === 'bn' ? 'সমাপ্তি ব্যালেন্স' : 'Closing Balance'}</span>
                               <span className="font-mono font-black text-slate-900 tabular-nums">
                                 {formatSubLedgerNumber(subLedgerData.closingBalance, subLedgerData.currency, false)} {subLedgerData.currency}
                               </span>
@@ -4480,7 +4661,7 @@ export const ReportsView: React.FC = () => {
 
                       {(pageSubRows.length > 0 || chunk.isFirst || chunk.isLast) && (
                         <div className="overflow-visible border border-slate-400 rounded-xs w-full">
-                          <table className="w-full text-left border-collapse text-[10px] table-fixed">
+                          <table className="w-full text-left border-collapse text-[1em] table-fixed">
                             <colgroup>
                               <col style={{ width: dynamicColWidths.sl }} />
                               <col style={{ width: dynamicColWidths.date }} />
@@ -4500,75 +4681,75 @@ export const ReportsView: React.FC = () => {
                                 <th style={{ width: dynamicColWidths.balance, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
                                 <th style={{ width: dynamicColWidths.remarks, height: 0, padding: 0, margin: 0, border: 'none', visibility: 'hidden' }} />
                               </tr>
-                              <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[9.5px]">
-                                <th rowSpan={2} style={{ width: dynamicColWidths.sl }} className="py-1 px-1 text-center border-r border-slate-400">#</th>
-                                <th rowSpan={2} style={{ width: dynamicColWidths.date }} className="py-1 px-1 text-center border-r border-slate-400 whitespace-nowrap">Date</th>
-                                <th rowSpan={2} style={{ width: dynamicColWidths.account }} className="py-1 px-2 border-r border-slate-400">Account</th>
-                                <th colSpan={3} style={{ width: dynamicColWidths.baseColSpan }} className="py-1 px-1 text-center border-r border-slate-400 border-b border-slate-400 uppercase tracking-wider text-[9px]">
+                              <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[0.9em]">
+                                <th rowSpan={2} style={{ width: dynamicColWidths.sl }} className={`${reportThPadClass} px-1 text-center border-r border-slate-400`}>#</th>
+                                <th rowSpan={2} style={{ width: dynamicColWidths.date }} className={`${reportThPadClass} px-1 text-center border-r border-slate-400 whitespace-nowrap`}>Date</th>
+                                <th rowSpan={2} style={{ width: dynamicColWidths.account }} className={`${reportThPadClass} px-2 border-r border-slate-400`}>Account</th>
+                                <th colSpan={3} style={{ width: dynamicColWidths.baseColSpan }} className={`${reportThPadClass} px-1 text-center border-r border-slate-400 border-b border-slate-400 uppercase tracking-wider text-[0.85em]`}>
                                   Base ({subLedgerData.currency})
                                 </th>
-                                <th rowSpan={2} style={{ width: dynamicColWidths.remarks }} className="py-1 px-2.5 text-left border-slate-400">Remarks</th>
+                                <th rowSpan={2} style={{ width: dynamicColWidths.remarks }} className={`${reportThPadClass} px-2.5 text-left border-slate-400`}>Remarks</th>
                               </tr>
-                              <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[9px]">
-                                <th style={{ width: dynamicColWidths.debit }} className="py-1 px-1 text-right border-r border-slate-400">Debit</th>
-                                <th style={{ width: dynamicColWidths.credit }} className="py-1 px-1 text-right border-r border-slate-400">Credit</th>
-                                <th style={{ width: dynamicColWidths.balance }} className="py-1 px-1 text-right border-r border-slate-400">Balance</th>
+                              <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold text-[0.85em]">
+                                <th style={{ width: dynamicColWidths.debit }} className={`${reportThPadClass} px-1 text-right border-r border-slate-400`}>Debit</th>
+                                <th style={{ width: dynamicColWidths.credit }} className={`${reportThPadClass} px-1 text-right border-r border-slate-400`}>Credit</th>
+                                <th style={{ width: dynamicColWidths.balance }} className={`${reportThPadClass} px-1 text-right border-r border-slate-400`}>Balance</th>
                               </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-300 text-slate-900 text-[10px]">
+                            <tbody className={`divide-y divide-slate-300 text-slate-900 text-[0.95em] ${pageSettings.isBold ? 'font-bold' : ''} ${pageSettings.isItalic ? 'italic' : ''}`}>
                               {chunk.isFirst && (
                                 <>
                                   <tr className="bg-[#D8EEF8] font-bold text-slate-900 border-b border-slate-300 break-inside-avoid">
-                                    <td style={{ width: dynamicColWidths.sl }} className="py-1 px-1 text-center border-r border-slate-300 font-mono text-[10px]">1</td>
-                                    <td colSpan={6} className="py-1 px-2 text-center tracking-wide font-black text-xs text-slate-900 uppercase">
+                                    <td style={{ width: dynamicColWidths.sl }} className={`${reportCellPadClass} px-1 text-center border-r border-slate-300 font-mono`}>1</td>
+                                    <td colSpan={6} className={`${reportCellPadClass} px-2 text-center tracking-wide font-black text-[1.05em] text-slate-900 uppercase`}>
                                       {subLedgerData.accountBannerTitle}
                                     </td>
                                   </tr>
                                   <tr className="bg-white font-medium border-b border-slate-200 break-inside-avoid">
-                                    <td style={{ width: dynamicColWidths.sl }} className="py-1 px-1 text-center border-r border-slate-200 font-mono text-slate-600">2</td>
-                                    <td style={{ width: dynamicColWidths.date }} className="py-1 px-1 border-r border-slate-200 text-center font-mono text-slate-400">—</td>
-                                    <td style={{ width: dynamicColWidths.account }} className="py-1 px-2 border-r border-slate-200 font-bold italic text-slate-900 whitespace-nowrap">
+                                    <td style={{ width: dynamicColWidths.sl }} className={`${reportCellPadClass} px-1 text-center border-r border-slate-200 font-mono text-slate-600`}>2</td>
+                                    <td style={{ width: dynamicColWidths.date }} className={`${reportCellPadClass} px-1 border-r border-slate-200 text-center font-mono text-slate-400`}>—</td>
+                                    <td style={{ width: dynamicColWidths.account }} className={`${reportCellPadClass} px-2 border-r border-slate-200 font-bold italic text-slate-900 whitespace-nowrap`}>
                                       Opening Balance
                                     </td>
-                                    <td style={{ width: dynamicColWidths.debit }} className="py-1 px-1 text-right border-r border-slate-200 font-mono font-bold text-slate-900 tabular-nums text-[10.5px]">
+                                    <td style={{ width: dynamicColWidths.debit }} className={`${reportCellPadClass} px-1 text-right border-r border-slate-200 font-mono font-bold text-slate-900 tabular-nums`}>
                                       {formatSubLedgerNumber(subLedgerData.openingBal, subLedgerData.currency, false)}
                                     </td>
-                                    <td style={{ width: dynamicColWidths.credit }} className="py-1 px-1 text-right border-r border-slate-200 font-mono text-slate-400 tabular-nums text-[10.5px]">
+                                    <td style={{ width: dynamicColWidths.credit }} className={`${reportCellPadClass} px-1 text-right border-r border-slate-200 font-mono text-slate-400 tabular-nums`}>
                                       {subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
                                     </td>
-                                    <td style={{ width: dynamicColWidths.balance }} className="py-1 px-1 text-right border-r border-slate-200 font-mono font-black text-slate-900 tabular-nums text-[11px]">
+                                    <td style={{ width: dynamicColWidths.balance }} className={`${reportCellPadClass} px-1 text-right border-r border-slate-200 font-mono font-black text-slate-900 tabular-nums`}>
                                       {formatSubLedgerNumber(subLedgerData.openingBal, subLedgerData.currency, false)}
                                     </td>
-                                    <td style={{ width: dynamicColWidths.remarks }} className="py-1 px-2.5 text-slate-400 italic text-[9.5px]">—</td>
+                                    <td style={{ width: dynamicColWidths.remarks }} className={`${reportCellPadClass} px-2.5 text-slate-400 italic`}>—</td>
                                   </tr>
                                 </>
                               )}
 
                               {pageSubRows.map((row) => (
                                 <tr key={`print-sub-${pageIdx}-${row.id}`} className="border-b border-slate-200 break-inside-avoid bg-white">
-                                  <td style={{ width: dynamicColWidths.sl }} className="py-1 px-1 text-center border-r border-slate-200 font-mono text-slate-600 text-[10px]">
+                                  <td style={{ width: dynamicColWidths.sl }} className={`${reportCellPadClass} px-1 text-center border-r border-slate-200 font-mono text-slate-600`}>
                                     {row.sl}
                                   </td>
-                                  <td style={{ width: dynamicColWidths.date }} className="py-1 px-1.5 border-r border-slate-200 font-mono text-slate-700 whitespace-nowrap text-center text-[9.5px] overflow-hidden min-w-[80px]">
+                                  <td style={{ width: dynamicColWidths.date }} className={`${reportCellPadClass} px-1 border-r border-slate-200 font-mono text-slate-700 whitespace-nowrap text-center text-[0.92em]`}>
                                     {row.formattedDate}
                                   </td>
-                                  <td style={{ width: dynamicColWidths.account }} className={`py-1 px-2 border-r border-slate-200 text-slate-900 text-[10px] leading-tight break-words ${pageSettings.isBold ? 'font-black' : 'font-bold'} ${pageSettings.isItalic ? 'italic' : ''}`}>
+                                  <td style={{ width: dynamicColWidths.account }} className={`${reportCellPadClass} px-2 border-r border-slate-200 text-slate-900 leading-tight break-words ${pageSettings.isBold ? 'font-black' : 'font-semibold'}`}>
                                     {row.account}
                                   </td>
-                                  <td style={{ width: dynamicColWidths.debit }} className={`py-1 px-1 text-right border-r border-slate-200 font-mono tabular-nums text-[10.5px] ${pageSettings.isBold ? 'font-black' : 'font-bold'} text-slate-900`}>
+                                  <td style={{ width: dynamicColWidths.debit }} className={`${reportCellPadClass} px-1 text-right border-r border-slate-200 font-mono tabular-nums font-bold text-slate-900`}>
                                     {row.debit > 0
                                       ? formatSubLedgerNumber(row.debit, subLedgerData.currency, false)
                                       : subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
                                   </td>
-                                  <td style={{ width: dynamicColWidths.credit }} className={`py-1 px-1 text-right border-r border-slate-200 font-mono tabular-nums text-[10.5px] ${pageSettings.isBold ? 'font-black' : 'font-bold'} text-rose-800`}>
+                                  <td style={{ width: dynamicColWidths.credit }} className={`${reportCellPadClass} px-1 text-right border-r border-slate-200 font-mono tabular-nums font-bold text-rose-800`}>
                                     {row.credit > 0
                                       ? formatSubLedgerNumber(row.credit, subLedgerData.currency, true)
                                       : subLedgerData.currency === 'KWD' ? '0.000' : '0.00'}
                                   </td>
-                                  <td style={{ width: dynamicColWidths.balance }} className="py-1 px-1 text-right border-r border-slate-200 font-mono font-black tabular-nums text-[11px] text-slate-900">
+                                  <td style={{ width: dynamicColWidths.balance }} className={`${reportCellPadClass} px-1 text-right border-r border-slate-200 font-mono font-black tabular-nums text-[1.03em] text-slate-900`}>
                                     {formatSubLedgerNumber(row.balance, subLedgerData.currency, false)}
                                   </td>
-                                  <td style={{ width: dynamicColWidths.remarks }} className={`py-1 px-2.5 text-slate-800 text-[10px] leading-snug break-words ${pageSettings.isItalic ? 'italic' : ''}`}>
+                                  <td style={{ width: dynamicColWidths.remarks }} className={`${reportCellPadClass} px-2.5 text-slate-800 leading-snug break-words`}>
                                     {row.remarks || <span className="text-slate-300 italic">—</span>}
                                   </td>
                                 </tr>
@@ -4576,25 +4757,25 @@ export const ReportsView: React.FC = () => {
 
                               {chunk.isLast && (
                                 <tr className="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-400 break-inside-avoid">
-                                  <td style={{ width: dynamicColWidths.sl }} className="py-1.5 px-1 text-center border-r border-slate-300 font-mono"></td>
-                                  <td style={{ width: dynamicColWidths.date }} className="py-1.5 px-1 border-r border-slate-300"></td>
-                                  <td style={{ width: dynamicColWidths.account }} className="py-1.5 px-2 border-r border-slate-300 font-black uppercase text-[10px]">
+                                  <td style={{ width: dynamicColWidths.sl }} className={`${reportCellPadClass} px-1 text-center border-r border-slate-300 font-mono`}></td>
+                                  <td style={{ width: dynamicColWidths.date }} className={`${reportCellPadClass} px-1 border-r border-slate-300`}></td>
+                                  <td style={{ width: dynamicColWidths.account }} className={`${reportCellPadClass} px-2 border-r border-slate-300 font-black uppercase`}>
                                     {lang === 'bn' ? 'সর্বমোট সমাপ্তি হিসাব (Total / Closing)' : 'Total / Closing Balance'}
                                   </td>
-                                  <td style={{ width: dynamicColWidths.debit }} className="py-1.5 px-1 text-right border-r border-slate-300 font-mono font-bold text-emerald-900 tabular-nums text-[11px]">
+                                  <td style={{ width: dynamicColWidths.debit }} className={`${reportCellPadClass} px-1 text-right border-r border-slate-300 font-mono font-bold text-emerald-900 tabular-nums text-[1.03em]`}>
                                     {formatSubLedgerNumber(
                                       subLedgerData.openingBal + subLedgerData.totalPeriodDebit,
                                       subLedgerData.currency,
                                       false
                                     )}
                                   </td>
-                                  <td style={{ width: dynamicColWidths.credit }} className="py-1.5 px-1 text-right border-r border-slate-300 font-mono font-bold text-rose-900 tabular-nums text-[11px]">
+                                  <td style={{ width: dynamicColWidths.credit }} className={`${reportCellPadClass} px-1 text-right border-r border-slate-300 font-mono font-bold text-rose-900 tabular-nums text-[1.03em]`}>
                                     {formatSubLedgerNumber(subLedgerData.totalPeriodCredit, subLedgerData.currency, true)}
                                   </td>
-                                  <td style={{ width: dynamicColWidths.balance }} className="py-1.5 px-1 text-right border-r border-slate-300 font-mono font-black text-slate-900 tabular-nums text-[11.5px]">
+                                  <td style={{ width: dynamicColWidths.balance }} className={`${reportCellPadClass} px-1 text-right border-r border-slate-300 font-mono font-black text-slate-900 tabular-nums text-[1.08em]`}>
                                     {formatSubLedgerNumber(subLedgerData.closingBalance, subLedgerData.currency, false)}
                                   </td>
-                                  <td style={{ width: dynamicColWidths.remarks }} className="py-1.5 px-2.5 border-r border-slate-300"></td>
+                                  <td style={{ width: dynamicColWidths.remarks }} className={`${reportCellPadClass} px-2.5 border-r border-slate-300`}></td>
                                 </tr>
                               )}
                             </tbody>
@@ -4603,16 +4784,16 @@ export const ReportsView: React.FC = () => {
                       )}
 
                       {chunk.isLast && (
-                        <div className="pt-14 pb-3 px-6 flex justify-between items-end text-xs text-slate-700 break-inside-avoid print-signature-block">
+                        <div className="pt-14 pb-3 px-6 flex justify-between items-end text-[0.95em] text-slate-700 break-inside-avoid print-signature-block">
                           <div className="text-center">
                             <div className="border-t-[1.5px] border-slate-500 w-56 pt-1.5 font-bold text-slate-800">হিসাব প্রস্তুতকারকের স্বাক্ষর</div>
-                            <p className="text-[10px] text-slate-500 mt-0.5 font-medium">
+                            <p className="text-[0.85em] text-slate-500 mt-0.5 font-medium">
                               {themePrefs?.userName?.trim() || 'Prepared By'}
                             </p>
                           </div>
                           <div className="text-center">
                             <div className="border-t-[1.5px] border-slate-500 w-56 pt-1.5 font-bold text-slate-800">অনুমোদনকারী / পরিচালক</div>
-                            <p className="text-[10px] text-slate-500 mt-0.5 font-medium">Authorized Signatory</p>
+                            <p className="text-[0.85em] text-slate-500 mt-0.5 font-medium">Authorized Signatory</p>
                           </div>
                         </div>
                       )}
@@ -4621,54 +4802,54 @@ export const ReportsView: React.FC = () => {
                     /* ========================================================================= */
                     /* STANDARD FINANCIAL REPORT                                                 */
                     /* ========================================================================= */
-                    <div className="space-y-2.5 font-sans w-full">
+                    <div className="space-y-2.5 w-full">
                       {chunk.isFirst && (
                         <>
                           {/* Bank-Statement Style Account Holder & Period Header Box */}
                           <div className="border border-slate-300 rounded-xs bg-slate-50/90 overflow-hidden">
-                            <div className="bg-[#1E536E] text-white px-2.5 py-1 flex items-center justify-between text-[9.5px] font-bold tracking-wider uppercase">
+                            <div className="bg-[#1E536E] text-white px-2.5 py-1 flex items-center justify-between text-[0.85em] font-bold tracking-wider uppercase">
                               <span>{lang === 'bn' ? 'ব্যাংক-স্টেটমেন্ট স্টাইল হিসাব বিবরণী (STATEMENT OF ACCOUNT)' : 'STATEMENT OF ACCOUNT'}</span>
-                              <span className="font-mono font-normal text-[9px] text-slate-200">
+                              <span className="font-mono font-normal text-[0.8em] text-slate-200">
                                 {new Date().toLocaleDateString('en-GB')}
                               </span>
                             </div>
-                            <div className="grid grid-cols-4 divide-x divide-slate-300 text-[9.5px]">
+                            <div className="grid grid-cols-4 divide-x divide-slate-300 text-[0.85em]">
                               <div className="px-2 py-1.5">
-                                <span className="text-[8.5px] uppercase text-slate-500 font-bold block">{lang === 'bn' ? 'হিসাবধারী' : 'Account Holder'}</span>
+                                <span className="text-[0.78em] uppercase text-slate-500 font-bold block">{lang === 'bn' ? 'হিসাবধারী' : 'Account Holder'}</span>
                                 <span className="font-bold text-slate-900 truncate block">{themePrefs?.userName?.trim() || (lang === 'bn' ? 'ব্যক্তিগত হিসাব' : 'Account Holder')}</span>
                               </div>
                               <div className="px-2 py-1.5">
-                                <span className="text-[8.5px] uppercase text-slate-500 font-bold block">{lang === 'bn' ? 'অ্যাকাউন্ট / হেড' : 'Account Scope'}</span>
+                                <span className="text-[0.78em] uppercase text-slate-500 font-bold block">{lang === 'bn' ? 'অ্যাকাউন্ট / হেড' : 'Account Scope'}</span>
                                 <span className="font-bold text-slate-900 truncate block">{statementScopeLabel}</span>
                               </div>
                               <div className="px-2 py-1.5">
-                                <span className="text-[8.5px] uppercase text-slate-500 font-bold block">{lang === 'bn' ? 'সময়কাল' : 'Statement Period'}</span>
+                                <span className="text-[0.78em] uppercase text-slate-500 font-bold block">{lang === 'bn' ? 'সময়কাল' : 'Statement Period'}</span>
                                 <span className="font-mono font-semibold text-slate-900 block">
                                   {startDate && endDate ? `${startDate} — ${endDate}` : (lang === 'bn' ? 'সকল সময়' : 'All Time')}
                                 </span>
                               </div>
                               <div className="px-2 py-1.5">
-                                <span className="text-[8.5px] uppercase text-slate-500 font-bold block">{lang === 'bn' ? 'প্রোফাইল / প্রতিষ্ঠান' : 'Organization'}</span>
+                                <span className="text-[0.78em] uppercase text-slate-500 font-bold block">{lang === 'bn' ? 'প্রোফাইল / প্রতিষ্ঠান' : 'Organization'}</span>
                                 <span className="font-semibold text-slate-900 truncate block">{themePrefs?.profileTitle?.trim() || pageSettings.companyName}</span>
                               </div>
                             </div>
                           </div>
 
                           {/* 4-Column Bank Statement Summary Strip */}
-                          <div className="grid grid-cols-4 gap-2 p-2.5 bg-slate-50 border border-slate-300 rounded-xs text-center text-xs">
+                          <div className="grid grid-cols-4 gap-2 p-2.5 bg-slate-50 border border-slate-300 rounded-xs text-center text-[0.95em]">
                             <div>
-                              <span className="text-[9.5px] text-slate-600 font-bold uppercase block">
+                              <span className="text-[0.82em] text-slate-600 font-bold uppercase block">
                                 {lang === 'bn' ? 'মোট লেনদেন' : 'Period Entries'}
                               </span>
-                              <span className="font-mono font-bold text-sm text-slate-900 mt-0.5 block tabular-nums">
+                              <span className="font-mono font-bold text-[1.15em] text-slate-900 mt-0.5 block tabular-nums">
                                 {filteredRows.length}
                               </span>
                             </div>
                             <div>
-                              <span className="text-[9.5px] text-slate-600 font-bold uppercase block">
+                              <span className="text-[0.82em] text-slate-600 font-bold uppercase block">
                                 {lang === 'bn' ? 'মোট প্রাপ্তি (Credit +)' : 'Total Credits (+)'}
                               </span>
-                              <span className="font-mono font-bold text-sm text-emerald-800 mt-0.5 block tabular-nums">
+                              <span className="font-mono font-bold text-[1.15em] text-emerald-800 mt-0.5 block tabular-nums">
                                 {totals.bdtIncome > 0 ? `+${totals.bdtIncome.toLocaleString('en-US')} ৳ ` : ''}
                                 {totals.kwdIncome > 0 ? `+${totals.kwdIncome.toFixed(3)} KD` : ''}
                                 {totals.bdtIncome === 0 && totals.kwdIncome === 0 ? '0.00' : ''}
@@ -4676,10 +4857,10 @@ export const ReportsView: React.FC = () => {
                             </div>
 
                             <div>
-                              <span className="text-[9.5px] text-slate-600 font-bold uppercase block">
+                              <span className="text-[0.82em] text-slate-600 font-bold uppercase block">
                                 {lang === 'bn' ? 'মোট খরচ (Debit -)' : 'Total Debits (-)'}
                               </span>
-                              <span className="font-mono font-bold text-sm text-rose-800 mt-0.5 block tabular-nums">
+                              <span className="font-mono font-bold text-[1.15em] text-rose-800 mt-0.5 block tabular-nums">
                                 {totals.bdtExpense > 0 ? `-${totals.bdtExpense.toLocaleString('en-US')} ৳ ` : ''}
                                 {totals.kwdExpense > 0 ? `-${totals.kwdExpense.toFixed(3)} KD` : ''}
                                 {totals.bdtExpense === 0 && totals.kwdExpense === 0 ? '0.00' : ''}
@@ -4687,10 +4868,10 @@ export const ReportsView: React.FC = () => {
                             </div>
 
                             <div>
-                              <span className="text-[9.5px] text-slate-600 font-bold uppercase block">
+                              <span className="text-[0.82em] text-slate-600 font-bold uppercase block">
                                 {lang === 'bn' ? 'সমাপ্তি ব্যালেন্স (Net)' : 'Net / Closing Balance'}
                               </span>
-                              <span className="font-mono font-bold text-sm text-slate-900 mt-0.5 block tabular-nums">
+                              <span className="font-mono font-bold text-[1.15em] text-slate-900 mt-0.5 block tabular-nums">
                                 {totals.bdtNet !== 0 ? `${totals.bdtNet >= 0 ? '+' : ''}${totals.bdtNet.toLocaleString('en-US')} ৳ ` : ''}
                                 {totals.kwdNet !== 0 ? `${totals.kwdNet >= 0 ? '+' : ''}${totals.kwdNet.toFixed(3)} KD` : ''}
                                 {totals.bdtNet === 0 && totals.kwdNet === 0 ? '0.00' : ''}
@@ -4701,47 +4882,57 @@ export const ReportsView: React.FC = () => {
                       )}
 
                       {(pageStdRows.length > 0 || chunk.isLast) && (
-                        <div className="overflow-visible border border-slate-400 rounded-xs">
-                          <table className="w-full text-left border-collapse text-[11px]">
+                        <div className="overflow-visible border border-slate-400 rounded-xs w-full">
+                          <table className="w-full text-left border-collapse text-[1em] table-fixed">
+                            <colgroup>
+                              <col style={{ width: dynamicStdColWidths.sl }} />
+                              <col style={{ width: dynamicStdColWidths.date }} />
+                              <col style={{ width: dynamicStdColWidths.account }} />
+                              <col style={{ width: dynamicStdColWidths.details }} />
+                              <col style={{ width: dynamicStdColWidths.type }} />
+                              <col style={{ width: dynamicStdColWidths.amount }} />
+                              <col style={{ width: dynamicStdColWidths.balance }} />
+                              <col style={{ width: dynamicStdColWidths.status }} />
+                            </colgroup>
                             <thead>
-                              <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold uppercase tracking-wider text-[10px]">
-                                <th className="py-2 px-2 border-r border-slate-400 text-center w-9">SL</th>
-                                <th className="py-2 px-2 border-r border-slate-400 whitespace-nowrap text-center w-22">তারিখ</th>
-                                <th className="py-2 px-2 border-r border-slate-400 min-w-36">অ্যাকাউন্ট / হেড</th>
-                                <th className="py-2 px-2 border-r border-slate-400 min-w-44">খাত / বিবরণ</th>
-                                <th className="py-2 px-2 border-r border-slate-400 text-center whitespace-nowrap w-18">ধরণ</th>
-                                <th className="py-2 px-2 border-r border-slate-400 text-right whitespace-nowrap w-24">পরিমাণ</th>
-                                <th className="py-2 px-2 border-r border-slate-400 text-right whitespace-nowrap w-24">ব্যালেন্স</th>
-                                <th className="py-2 px-2 text-center whitespace-nowrap w-16">স্ট্যাটাস</th>
+                              <tr className="bg-[#2B6B88] text-white border-b border-slate-400 font-bold uppercase tracking-wider text-[0.88em]">
+                                <th style={{ width: dynamicStdColWidths.sl }} className={`${reportThPadClass} px-1.5 border-r border-slate-400 text-center`}>SL</th>
+                                <th style={{ width: dynamicStdColWidths.date }} className={`${reportThPadClass} px-1.5 border-r border-slate-400 whitespace-nowrap text-center`}>তারিখ</th>
+                                <th style={{ width: dynamicStdColWidths.account }} className={`${reportThPadClass} px-2 border-r border-slate-400`}>অ্যাকাউন্ট / হেড</th>
+                                <th style={{ width: dynamicStdColWidths.details }} className={`${reportThPadClass} px-2 border-r border-slate-400`}>খাত / বিবরণ</th>
+                                <th style={{ width: dynamicStdColWidths.type }} className={`${reportThPadClass} px-1.5 border-r border-slate-400 text-center whitespace-nowrap`}>ধরণ</th>
+                                <th style={{ width: dynamicStdColWidths.amount }} className={`${reportThPadClass} px-2 border-r border-slate-400 text-right whitespace-nowrap`}>পরিমাণ</th>
+                                <th style={{ width: dynamicStdColWidths.balance }} className={`${reportThPadClass} px-2 border-r border-slate-400 text-right whitespace-nowrap`}>ব্যালেন্স</th>
+                                <th style={{ width: dynamicStdColWidths.status }} className={`${reportThPadClass} px-1.5 text-center whitespace-nowrap`}>স্ট্যাটাস</th>
                               </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-300 text-slate-800 text-[10.5px]">
+                            <tbody className={`divide-y divide-slate-300 text-slate-800 text-[0.95em] ${pageSettings.isBold ? 'font-bold' : ''} ${pageSettings.isItalic ? 'italic' : ''}`}>
                               {pageStdRows.map((row, idx) => {
                                 const runBal = stdRunningBalMap.get(`${row.sourceType}-${row.id}`) ?? 0;
                                 return (
                                   <tr key={`print-row-${pageIdx}-${row.id}-${idx}`} className="break-inside-avoid bg-white">
-                                    <td className="py-1.5 px-2 font-mono text-slate-500 border-r border-slate-200 text-center">{chunk.startIdx + idx + 1}</td>
-                                    <td className="py-1.5 px-2 font-mono text-slate-700 border-r border-slate-200 whitespace-nowrap text-center">{row.date}</td>
-                                    <td className="py-1.5 px-2 font-semibold text-slate-900 border-r border-slate-200">
+                                    <td className={`${reportCellPadClass} px-1.5 font-mono text-slate-500 border-r border-slate-200 text-center`}>{chunk.startIdx + idx + 1}</td>
+                                    <td className={`${reportCellPadClass} px-1.5 font-mono text-slate-700 border-r border-slate-200 whitespace-nowrap text-center text-[0.92em]`}>{row.date}</td>
+                                    <td className={`${reportCellPadClass} px-2 ${pageSettings.isBold ? 'font-black' : 'font-semibold'} text-slate-900 border-r border-slate-200 break-words`}>
                                       {lang === 'bn' ? row.sectionNameBn : row.sectionNameEn}
-                                      {row.bankName && <span className="block text-[9px] text-slate-500 font-normal">{row.bankName}</span>}
+                                      {row.bankName && <span className="block text-[0.82em] text-slate-500 font-normal">{row.bankName}</span>}
                                     </td>
-                                    <td className="py-1.5 px-2 border-r border-slate-200">
-                                      <span className="font-bold text-slate-900">{lang === 'bn' ? row.categoryNameBn : row.categoryNameEn}</span>
-                                      {row.borrowerName && <span className="block text-[10px] text-indigo-800">গ্রহীতা: {row.borrowerName}</span>}
-                                      {row.note && <span className="block text-[10px] text-slate-500 italic">{row.note}</span>}
+                                    <td className={`${reportCellPadClass} px-2 border-r border-slate-200 break-words`}>
+                                      <span className={`${pageSettings.isBold ? 'font-black' : 'font-bold'} text-slate-900`}>{lang === 'bn' ? row.categoryNameBn : row.categoryNameEn}</span>
+                                      {row.borrowerName && <span className="block text-[0.88em] text-indigo-800">গ্রহীতা: {row.borrowerName}</span>}
+                                      {row.note && <span className="block text-[0.88em] text-slate-500 italic">{row.note}</span>}
                                     </td>
-                                    <td className="py-1.5 px-2 border-r border-slate-200 font-bold uppercase text-[10px] text-center whitespace-nowrap">
+                                    <td className={`${reportCellPadClass} px-1.5 border-r border-slate-200 font-bold uppercase text-[0.85em] text-center whitespace-nowrap`}>
                                       {row.type === 'income' ? 'আয় / জমা' : row.type === 'expense' ? 'ব্যয় / খরচ' : row.type === 'loan' ? 'দিনার লোন' : 'ট্রান্সফার'}
                                     </td>
-                                    <td className="py-1.5 px-2 text-right font-mono font-bold tabular-nums text-slate-900 border-r border-slate-200 whitespace-nowrap text-[11.5px]">
+                                    <td className={`${reportCellPadClass} px-2 text-right font-mono font-bold tabular-nums text-slate-900 border-r border-slate-200 whitespace-nowrap text-[1.03em]`}>
                                       {row.type === 'income' ? '+' : row.type === 'expense' ? '-' : ''}
                                       {row.currency === 'KWD' ? `${row.amount.toFixed(3)} KD` : `${row.amount.toLocaleString('en-US')} ৳`}
                                     </td>
-                                    <td className="py-1.5 px-2 text-right font-mono font-bold tabular-nums text-slate-900 border-r border-slate-200 whitespace-nowrap text-[11.5px]">
+                                    <td className={`${reportCellPadClass} px-2 text-right font-mono font-bold tabular-nums text-slate-900 border-r border-slate-200 whitespace-nowrap text-[1.03em]`}>
                                       {row.currency === 'KWD' ? `${runBal.toFixed(3)} KD` : `${runBal.toLocaleString('en-US')} ৳`}
                                     </td>
-                                    <td className="py-1.5 px-2 text-center font-bold text-[10px] whitespace-nowrap">
+                                    <td className={`${reportCellPadClass} px-1.5 text-center font-bold text-[0.88em] whitespace-nowrap`}>
                                       {row.status ? (
                                         <span className={row.status === 'paid' ? 'text-emerald-700' : 'text-amber-700'}>
                                           {row.status === 'paid' ? 'Paid' : 'Unpaid'}
@@ -4756,23 +4947,23 @@ export const ReportsView: React.FC = () => {
 
                               {chunk.isLast && (
                                 <tr className="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-400 break-inside-avoid">
-                                  <td className="py-2 px-2 text-center border-r border-slate-300 font-mono"></td>
-                                  <td className="py-2 px-2 border-r border-slate-300"></td>
-                                  <td colSpan={2} className="py-2 px-2 border-r border-slate-300 font-black uppercase text-[11px]">
+                                  <td className={`${reportCellPadClass} px-1.5 text-center border-r border-slate-300 font-mono`}></td>
+                                  <td className={`${reportCellPadClass} px-1.5 border-r border-slate-300`}></td>
+                                  <td colSpan={2} className={`${reportCellPadClass} px-2 border-r border-slate-300 font-black uppercase`}>
                                     {lang === 'bn' ? 'সর্বমোট সমাপ্তি হিসাব (Total / Net Balance)' : 'Total / Net Balance'}
                                   </td>
-                                  <td className="py-2 px-2 border-r border-slate-300 text-center font-bold text-[10px]">
+                                  <td className={`${reportCellPadClass} px-1.5 border-r border-slate-300 text-center font-bold text-[0.9em]`}>
                                     {filteredRows.length} {lang === 'bn' ? 'টি এন্ট্রি' : 'entries'}
                                   </td>
-                                  <td className="py-2 px-2 text-right font-mono font-bold tabular-nums text-[10.5px] border-r border-slate-300 text-slate-700 whitespace-nowrap">
+                                  <td className={`${reportCellPadClass} px-2 text-right font-mono font-bold tabular-nums border-r border-slate-300 text-slate-700 whitespace-nowrap`}>
                                     In / Out Net
                                   </td>
-                                  <td className="py-2 px-2 text-right font-mono font-black tabular-nums text-[12px] border-r border-slate-300 text-slate-900 whitespace-nowrap">
+                                  <td className={`${reportCellPadClass} px-2 text-right font-mono font-black tabular-nums text-[1.05em] border-r border-slate-300 text-slate-900 whitespace-nowrap`}>
                                     {totals.bdtNet !== 0 ? `${totals.bdtNet >= 0 ? '+' : ''}${totals.bdtNet.toLocaleString('en-US')} ৳ ` : ''}
                                     {totals.kwdNet !== 0 ? `${totals.kwdNet >= 0 ? '+' : ''}${totals.kwdNet.toFixed(3)} KD` : ''}
                                     {totals.bdtNet === 0 && totals.kwdNet === 0 ? '0.00' : ''}
                                   </td>
-                                  <td className="py-2 px-2 text-center font-bold text-[10px] text-slate-600">
+                                  <td className={`${reportCellPadClass} px-1.5 text-center font-bold text-[0.9em] text-slate-600`}>
                                     Verified
                                   </td>
                                 </tr>
@@ -4783,16 +4974,16 @@ export const ReportsView: React.FC = () => {
                       )}
 
                       {chunk.isLast && (
-                        <div className="pt-14 pb-3 px-6 flex justify-between items-end text-xs text-slate-700 break-inside-avoid print-signature-block">
+                        <div className="pt-14 pb-3 px-6 flex justify-between items-end text-[0.95em] text-slate-700 break-inside-avoid print-signature-block">
                           <div className="text-center">
                             <div className="border-t-[1.5px] border-slate-500 w-56 pt-1.5 font-bold text-slate-800">হিসাব প্রস্তুতকারকের স্বাক্ষর</div>
-                            <p className="text-[10px] text-slate-500 mt-0.5 font-medium">
+                            <p className="text-[0.85em] text-slate-500 mt-0.5 font-medium">
                               {themePrefs?.userName?.trim() || 'Prepared By'}
                             </p>
                           </div>
                           <div className="text-center">
                             <div className="border-t-[1.5px] border-slate-500 w-56 pt-1.5 font-bold text-slate-800">অনুমোদনকারী / পরিচালক</div>
-                            <p className="text-[10px] text-slate-500 mt-0.5 font-medium">Authorized Signatory</p>
+                            <p className="text-[0.85em] text-slate-500 mt-0.5 font-medium">Authorized Signatory</p>
                           </div>
                         </div>
                       )}

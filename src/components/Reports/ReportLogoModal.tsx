@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   X,
   Upload,
@@ -283,6 +283,17 @@ export const ReportLogoModal: React.FC<ReportLogoModalProps> = ({
   const [uploadError, setUploadError] = useState<string>('');
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedType(currentSettings.logoType || 'default');
+      setCustomLogoUrl(currentSettings.customLogoUrl || '');
+      setCompanyName(currentSettings.companyName || 'Hisab Kitab');
+      setCompanyTagline(currentSettings.companyTagline || 'Personal & Work Finance');
+      setCompanyBadge(currentSettings.companyBadge || 'PRO');
+      setUploadError('');
+    }
+  }, [isOpen, currentSettings]);
 
   if (!isOpen) return null;
 

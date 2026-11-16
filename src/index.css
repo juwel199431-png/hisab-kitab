@@ -142,7 +142,6 @@ html.dark select.bg-slate-50:not([class*="dark:bg-"]) option {
   body {
     background-color: #ffffff !important;
     color: #0f172a !important;
-    font-size: 11pt !important;
   }
 
   .no-print, [data-no-print="true"] {
