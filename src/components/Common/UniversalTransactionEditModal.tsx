@@ -60,6 +60,8 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
   const [bankId, setBankId] = useState('');
   const [fromBankId, setFromBankId] = useState('');
   const [toBankId, setToBankId] = useState('');
+  const [targetSavingsId, setTargetSavingsId] = useState('');
+  const [targetLoanId, setTargetLoanId] = useState('');
   const [voucherNo, setVoucherNo] = useState('');
   const [note, setNote] = useState('');
   const [paymentStatus, setPaymentStatus] = useState<'paid' | 'unpaid'>('unpaid');
@@ -98,6 +100,8 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
       setBankId(txItem.bankId || txItem.fromBankId || '');
       setFromBankId(txItem.fromBankId || '');
       setToBankId(txItem.toBankId || '');
+      setTargetSavingsId(txItem.targetSavingsId || '');
+      setTargetLoanId(txItem.targetLoanId || '');
       setVoucherNo(txItem.voucherNo || '');
       setNote(txItem.note || '');
       setPaymentStatus(txItem.paymentStatus || 'unpaid');
@@ -158,6 +162,24 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
     if (target.sourceType === 'transaction') {
       if (!txItem) return;
 
+      if (txItem.section === 'bd-bank' && txItem.type === 'transfer') {
+        const resolvedFromBank = fromBankId || bankId || txItem.fromBankId;
+        if (!resolvedFromBank) {
+          setError(lang === 'bn' ? 'প্রেরক ব্যাংক অ্যাকাউন্ট নির্বাচন করুন' : 'Select sender bank account');
+          return;
+        }
+        if (txItem.transferTargetType === 'bank') {
+          if (!toBankId) {
+            setError(lang === 'bn' ? 'প্রাপক ব্যাংক অ্যাকাউন্ট নির্বাচন করুন' : 'Select destination bank account');
+            return;
+          }
+          if (resolvedFromBank === toBankId) {
+            setError(lang === 'bn' ? 'প্রেরক ও প্রাপক ব্যাংক একই হতে পারবে না' : 'Source and destination banks must be different');
+            return;
+          }
+        }
+      }
+
       let catBn = customCategory.trim();
       let catEn = customCategory.trim();
       const matchedCat = data.categories.find((c) => c.id === categoryId);
@@ -173,9 +195,21 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
         categoryId: categoryId || undefined,
         categoryNameBn: catBn || txItem.categoryNameBn,
         categoryNameEn: catEn || txItem.categoryNameEn,
-        bankId: txItem.section === 'bd-bank' ? (bankId || undefined) : txItem.bankId,
+        bankId: txItem.section === 'bd-bank' && txItem.type !== 'transfer' ? (bankId || undefined) : txItem.bankId,
         fromBankId: txItem.type === 'transfer' ? (fromBankId || bankId || txItem.fromBankId) : undefined,
-        toBankId: txItem.type === 'transfer' ? (toBankId || txItem.toBankId) : undefined,
+        toBankId:
+          txItem.type === 'transfer' && txItem.transferTargetType === 'bank'
+            ? (toBankId || txItem.toBankId)
+            : txItem.toBankId,
+        targetSavingsId:
+          txItem.type === 'transfer' &&
+          (!txItem.transferTargetType || txItem.transferTargetType === 'dps' || txItem.transferTargetType === 'insurance')
+            ? (targetSavingsId || txItem.targetSavingsId)
+            : txItem.targetSavingsId,
+        targetLoanId:
+          txItem.type === 'transfer' && txItem.transferTargetType === 'loan'
+            ? (targetLoanId || txItem.targetLoanId)
+            : txItem.targetLoanId,
         voucherNo: voucherNo.trim() || undefined,
         note: note.trim() || undefined,
         paymentStatus: txItem.section === 'emdad-expense' ? paymentStatus : txItem.paymentStatus,
@@ -397,8 +431,8 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
                 </div>
               )}
 
-              {/* Bank selector for BD Bank */}
-              {txItem.section === 'bd-bank' && (
+              {/* Bank selector for BD Bank (Income / Expense vs Transfer) */}
+              {txItem.section === 'bd-bank' && txItem.type !== 'transfer' && (
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
                     {lang === 'bn' ? 'ব্যাংক অ্যাকাউন্ট' : 'Bank Account'}
@@ -418,13 +452,100 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
                 </div>
               )}
 
+              {txItem.section === 'bd-bank' && txItem.type === 'transfer' && (
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
+                      {lang === 'bn' ? 'প্রেরক ব্যাংক (From Bank)' : 'From Bank Account'}
+                    </label>
+                    <select
+                      value={fromBankId}
+                      onChange={(e) => setFromBankId(e.target.value)}
+                      className="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+                    >
+                      <option value="">{lang === 'bn' ? '-- ব্যাংক নির্বাচন করুন --' : '-- Select Bank --'}</option>
+                      {data.banks.map((b) => (
+                        <option key={b.id} value={b.id}>
+                          {b.name} ({b.accountNumber})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {txItem.transferTargetType === 'bank' && (
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
+                        {lang === 'bn' ? 'প্রাপক ব্যাংক (To Bank)' : 'To Bank Account'}
+                      </label>
+                      <select
+                        value={toBankId}
+                        onChange={(e) => setToBankId(e.target.value)}
+                        className="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+                      >
+                        <option value="">{lang === 'bn' ? '-- ব্যাংক নির্বাচন করুন --' : '-- Select Bank --'}</option>
+                        {data.banks.map((b) => (
+                          <option key={b.id} value={b.id} disabled={b.id === fromBankId}>
+                            {b.name} ({b.accountNumber}) {b.id === fromBankId ? (lang === 'bn' ? '(প্রেরক)' : '(Sender)') : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {(!txItem.transferTargetType || txItem.transferTargetType === 'dps' || txItem.transferTargetType === 'insurance') &&
+                    data.savingsAccounts.length > 0 && (
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
+                        {lang === 'bn' ? 'ডিপিএস / ইন্সুরেন্স হিসাব' : 'Target DPS / Insurance Account'}
+                      </label>
+                      <select
+                        value={targetSavingsId}
+                        onChange={(e) => setTargetSavingsId(e.target.value)}
+                        className="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+                      >
+                        <option value="">{lang === 'bn' ? '-- সঞ্চয় হিসাব --' : '-- Select Savings --'}</option>
+                        {data.savingsAccounts.map((s) => (
+                          <option key={s.id} value={s.id}>
+                            {s.name} ({s.accountNumber})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {txItem.transferTargetType === 'loan' && data.loans.length > 0 && (
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
+                        {lang === 'bn' ? 'সংশ্লিষ্ট ব্যাংক লোন' : 'Target Bank Loan'}
+                      </label>
+                      <select
+                        value={targetLoanId}
+                        onChange={(e) => setTargetLoanId(e.target.value)}
+                        className="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+                      >
+                        <option value="">{lang === 'bn' ? '-- লোন নির্বাচন করুন --' : '-- Select Loan --'}</option>
+                        {data.loans.map((l) => (
+                          <option key={l.id} value={l.id}>
+                            {l.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Transfer Target Notice */}
               {txItem.type === 'transfer' && (
-                <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900">
+                <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/70 rounded-xl text-xs text-amber-900 dark:text-amber-200">
                   <div className="flex items-center gap-1.5 font-bold mb-1">
-                    <ArrowRightLeft className="w-3.5 h-3.5 text-amber-600" />
+                    <ArrowRightLeft className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                     <span>
-                      {txItem.transferTargetType === 'loan'
+                      {txItem.transferTargetType === 'bank'
+                        ? lang === 'bn'
+                          ? 'ব্যাংক টু ব্যাংক ফান্ড ট্রান্সফার'
+                          : 'Bank-to-Bank Fund Transfer'
+                        : txItem.transferTargetType === 'loan'
                         ? lang === 'bn'
                           ? 'ব্যাংক লোন কিস্তি পরিশোধ ট্রান্সফার'
                           : 'Loan Installment Repayment Transfer'
@@ -433,10 +554,10 @@ export const UniversalTransactionEditModal: React.FC<UniversalTransactionEditMod
                         : 'Savings / DPS Transfer'}
                     </span>
                   </div>
-                  <p className="text-[11px] text-amber-800">
+                  <p className="text-[11px] text-amber-800 dark:text-amber-300/90">
                     {lang === 'bn'
-                      ? 'পরিমাণ পরিবর্তন করলে সরাসরি ব্যাংক ব্যালেন্স এবং সংশ্লিষ্ট লোন/সঞ্চয় ব্যালেন্স সমন্বয় হবে।'
-                      : 'Updating the amount will sync both the bank balance and corresponding loan/savings balance.'}
+                      ? 'পরিমাণ বা ব্যাংক পরিবর্তন করলে সরাসরি উভয় অ্যাকাউন্টের ব্যালেন্স সমন্বয় হবে।'
+                      : 'Updating the amount or accounts will automatically sync all corresponding balances.'}
                   </p>
                 </div>
               )}

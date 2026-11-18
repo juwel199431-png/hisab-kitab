@@ -17,10 +17,11 @@ import {
   X,
   CreditCard,
   Printer,
+  AlertTriangle,
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import { exportToCSV } from '../../utils/storage';
-import { BankAccount } from '../../types/finance';
+import { BankAccount, Transaction } from '../../types/finance';
 import { UniversalTransactionEditModal } from '../Common/UniversalTransactionEditModal';
 
 export const BangladeshBankingView: React.FC = () => {
@@ -54,9 +55,12 @@ export const BangladeshBankingView: React.FC = () => {
   const [transferDate, setTransferDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [transferVoucher, setTransferVoucher] = useState('');
   const [transferNote, setTransferNote] = useState('');
+  const [transferError, setTransferError] = useState<string | null>(null);
+  const [confirmLowBalanceTransfer, setConfirmLowBalanceTransfer] = useState(false);
 
-  // Transaction edit modal state
+  // Transaction edit & delete modal state
   const [editingTxId, setEditingTxId] = useState<string | null>(null);
+  const [deletingTx, setDeletingTx] = useState<Transaction | null>(null);
 
   // Bank edit state
   const [editingBankId, setEditingBankId] = useState<string | null>(null);
@@ -175,41 +179,15 @@ export const BangladeshBankingView: React.FC = () => {
   };
 
   const handleOpenTransfer = () => {
-    if (data.banks.length < 2) {
-      alert(lang === 'bn' ? 'ফান্ড ট্রান্সফারের জন্য কমপক্ষে ২টি ব্যাংক অ্যাকাউন্ট থাকতে হবে।' : 'At least 2 bank accounts required for transfer.');
-      return;
-    }
+    setTransferError(null);
+    setConfirmLowBalanceTransfer(false);
     setTransferFromBankId(data.banks[0]?.id || '');
     setTransferToBankId(data.banks[1]?.id || data.banks[0]?.id || '');
     setTransferVoucher(getNextVoucherNo());
     setIsTransferModalOpen(true);
   };
 
-  const handleTransferSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const parsed = parseFloat(transferAmount);
-    if (isNaN(parsed) || parsed <= 0) {
-      alert(lang === 'bn' ? 'সঠিক টাকার পরিমাণ দিন' : 'Enter valid amount');
-      return;
-    }
-    if (!transferFromBankId || !transferToBankId) {
-      alert(lang === 'bn' ? 'উৎস ও গন্তব্য ব্যাংক সিলেক্ট করুন' : 'Select both source and destination banks');
-      return;
-    }
-    if (transferFromBankId === transferToBankId) {
-      alert(lang === 'bn' ? 'একই ব্যাংকে ট্রান্সফার করা যাবে না, ভিন্ন ব্যাংক নির্বাচন করুন' : 'Source and destination banks must be different');
-      return;
-    }
-    const fromBal = getBankBalance(transferFromBankId);
-    if (fromBal < parsed) {
-      const cont = confirm(
-        lang === 'bn'
-          ? `সতর্কতা: প্রেরক ব্যাংকে বর্তমান ব্যালেন্স ৳${fromBal.toLocaleString('bn-BD')}, যা ট্রান্সফার পরিমাণ ৳${parsed.toLocaleString('bn-BD')} এর চেয়ে কম। চালিয়ে যেতে চান?`
-          : `Warning: Sender bank balance is ৳${fromBal.toLocaleString()}, which is less than transfer amount. Proceed?`
-      );
-      if (!cont) return;
-    }
-
+  const executeTransfer = (parsed: number) => {
     transferBankFunds({
       fromBankId: transferFromBankId,
       toBankId: transferToBankId,
@@ -223,6 +201,46 @@ export const BangladeshBankingView: React.FC = () => {
     setTransferAmount('');
     setTransferVoucher('');
     setTransferNote('');
+    setTransferError(null);
+    setConfirmLowBalanceTransfer(false);
+  };
+
+  const handleTransferSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setTransferError(null);
+
+    if (data.banks.length < 2) {
+      setTransferError(
+        lang === 'bn'
+          ? 'ফান্ড ট্রান্সফারের জন্য কমপক্ষে ২টি ব্যাংক অ্যাকাউন্ট থাকতে হবে।'
+          : 'At least 2 bank accounts required for transfer.'
+      );
+      return;
+    }
+
+    const parsed = parseFloat(transferAmount);
+    if (isNaN(parsed) || parsed <= 0) {
+      setTransferError(lang === 'bn' ? 'সঠিক টাকার পরিমাণ দিন' : 'Enter valid amount');
+      return;
+    }
+    if (!transferFromBankId || !transferToBankId) {
+      setTransferError(lang === 'bn' ? 'উৎস ও গন্তব্য ব্যাংক সিলেক্ট করুন' : 'Select both source and destination banks');
+      return;
+    }
+    if (transferFromBankId === transferToBankId) {
+      setTransferError(
+        lang === 'bn' ? 'একই ব্যাংকে ট্রান্সফার করা যাবে না, ভিন্ন ব্যাংক নির্বাচন করুন' : 'Source and destination banks must be different'
+      );
+      return;
+    }
+
+    const fromBal = getBankBalance(transferFromBankId);
+    if (fromBal < parsed && !confirmLowBalanceTransfer) {
+      setConfirmLowBalanceTransfer(true);
+      return;
+    }
+
+    executeTransfer(parsed);
   };
 
   // CSV Export
@@ -723,14 +741,16 @@ export const BangladeshBankingView: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-slate-100/70 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 font-bold">
-                <th className="py-2.5 px-3.5 whitespace-nowrap">{lang === 'bn' ? 'তারিখ' : 'Date'}</th>
-                <th className="py-2.5 px-3.5 whitespace-nowrap">{lang === 'bn' ? 'ধরণ' : 'Type'}</th>
-                <th className="py-2.5 px-3.5 whitespace-nowrap">{lang === 'bn' ? 'ব্যাংক হিসাব' : 'Bank'}</th>
-                <th className="py-2.5 px-3.5 whitespace-nowrap">{lang === 'bn' ? 'খাত / ক্যাটাগরি' : 'Category'}</th>
-                <th className="py-2.5 px-3.5 whitespace-nowrap">{lang === 'bn' ? 'নোট / বিবরণ' : 'Note'}</th>
-                <th className="py-2.5 px-3.5 text-right whitespace-nowrap">{lang === 'bn' ? 'পরিমাণ (BDT)' : 'Amount (BDT)'}</th>
-                <th className="py-2.5 px-3.5 text-center whitespace-nowrap w-16">{lang === 'bn' ? 'অ্যাকশন' : 'Action'}</th>
+              <tr className="bg-slate-100/90 dark:bg-slate-800/95 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 font-bold">
+                <th className="py-2.5 px-2.5 xl:px-3 whitespace-nowrap">{lang === 'bn' ? 'তারিখ' : 'Date'}</th>
+                <th className="py-2.5 px-2.5 xl:px-3 whitespace-nowrap">{lang === 'bn' ? 'ধরণ' : 'Type'}</th>
+                <th className="py-2.5 px-2.5 xl:px-3 whitespace-nowrap">{lang === 'bn' ? 'ব্যাংক হিসাব' : 'Bank'}</th>
+                <th className="py-2.5 px-2.5 xl:px-3 whitespace-nowrap">{lang === 'bn' ? 'খাত / ক্যাটাগরি' : 'Category'}</th>
+                <th className="py-2.5 px-2.5 xl:px-3 whitespace-nowrap">{lang === 'bn' ? 'নোট / বিবরণ' : 'Note'}</th>
+                <th className="py-2.5 px-2.5 xl:px-3 text-right whitespace-nowrap">{lang === 'bn' ? 'পরিমাণ (BDT)' : 'Amount (BDT)'}</th>
+                <th className="py-2.5 px-2.5 xl:px-3 text-center whitespace-nowrap sticky right-0 z-10 bg-slate-100 dark:bg-slate-800 border-l border-slate-200/80 dark:border-slate-700/80 shadow-[-4px_0_8px_-4px_rgba(15,23,42,0.08)] no-print">
+                  {lang === 'bn' ? 'অ্যাকশন' : 'Action'}
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-800 dark:text-slate-200">
@@ -759,39 +779,39 @@ export const BangladeshBankingView: React.FC = () => {
                   }
 
                   return (
-                    <tr key={tx.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
-                      <td className="py-2.5 px-3.5 whitespace-nowrap font-medium text-slate-600 dark:text-slate-400 font-mono tabular-nums">
+                    <tr key={tx.id} className="group hover:bg-slate-50/90 dark:hover:bg-slate-800/50 transition-colors">
+                      <td className="py-2.5 px-2.5 xl:px-3 whitespace-nowrap font-medium text-slate-600 dark:text-slate-400 font-mono tabular-nums">
                         {formatDate(tx.date, lang)}
                       </td>
-                      <td className="py-2.5 px-3.5 whitespace-nowrap">
+                      <td className="py-2.5 px-2.5 xl:px-3 whitespace-nowrap">
                         {tx.type === 'income' && (
                           <span className="text-emerald-700 dark:text-emerald-400 font-semibold flex items-center gap-1">
-                            <TrendingUp className="w-3 h-3" />
+                            <TrendingUp className="w-3 h-3 shrink-0" />
                             <span>{lang === 'bn' ? 'জমা' : 'Income'}</span>
                           </span>
                         )}
                         {tx.type === 'expense' && (
                           <span className="text-rose-700 dark:text-rose-400 font-semibold flex items-center gap-1">
-                            <TrendingDown className="w-3 h-3" />
+                            <TrendingDown className="w-3 h-3 shrink-0" />
                             <span>{lang === 'bn' ? 'খরচ' : 'Expense'}</span>
                           </span>
                         )}
                         {tx.type === 'transfer' && (
                           <span className="text-blue-700 dark:text-blue-400 font-semibold flex items-center gap-1">
-                            <ArrowRightLeft className="w-3 h-3" />
+                            <ArrowRightLeft className="w-3 h-3 shrink-0" />
                             <span>{lang === 'bn' ? 'ট্রান্সফার' : 'Transfer'}</span>
                           </span>
                         )}
                       </td>
-                      <td className="py-2.5 px-3.5 text-slate-700 dark:text-slate-300 font-medium max-w-xs truncate" title={bankDisplay}>
+                      <td className="py-2.5 px-2.5 xl:px-3 text-slate-700 dark:text-slate-300 font-medium max-w-[165px] xl:max-w-[205px] truncate" title={bankDisplay}>
                         {bankDisplay}
                       </td>
-                      <td className="py-2.5 px-3.5 whitespace-nowrap font-medium text-slate-900 dark:text-white">
+                      <td className="py-2.5 px-2.5 xl:px-3 font-medium text-slate-900 dark:text-white max-w-[140px] xl:max-w-[175px] truncate" title={lang === 'bn' ? tx.categoryNameBn || tx.categoryNameEn || '-' : tx.categoryNameEn || tx.categoryNameBn || '-'}>
                         {lang === 'bn'
                           ? tx.categoryNameBn || tx.categoryNameEn || '-'
                           : tx.categoryNameEn || tx.categoryNameBn || '-'}
                       </td>
-                      <td className="py-2.5 px-3.5 text-slate-600 dark:text-slate-400 max-w-xs">
+                      <td className="py-2.5 px-2.5 xl:px-3 text-slate-600 dark:text-slate-400 max-w-[175px] xl:max-w-[230px]">
                         <div className="truncate" title={tx.note || ''}>
                           {tx.note || '-'}
                         </div>
@@ -801,7 +821,7 @@ export const BangladeshBankingView: React.FC = () => {
                           </span>
                         )}
                       </td>
-                      <td className="py-2.5 px-3.5 text-right font-mono tabular-nums font-bold whitespace-nowrap">
+                      <td className="py-2.5 px-2.5 xl:px-3 text-right font-mono tabular-nums font-bold whitespace-nowrap">
                         <span
                           className={
                             tx.type === 'income'
@@ -815,26 +835,27 @@ export const BangladeshBankingView: React.FC = () => {
                           {formatCurrency(tx.amount, 'BDT', lang)}
                         </span>
                       </td>
-                      <td className="py-2.5 px-3.5 text-center whitespace-nowrap">
-                        <div className="flex items-center justify-center gap-1.5">
+                      <td className="py-2.5 px-2.5 xl:px-3 text-center whitespace-nowrap sticky right-0 z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800/90 border-l border-slate-100 dark:border-slate-800 shadow-[-4px_0_8px_-4px_rgba(15,23,42,0.06)] transition-colors no-print">
+                        <div className="inline-flex items-center justify-center gap-1.5">
                           <button
                             type="button"
                             onClick={() => setEditingTxId(tx.id)}
-                            className="p-1 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 rounded transition-colors cursor-pointer"
-                            title={lang === 'bn' ? 'সংশোধন / এডিট করুন' : 'Edit'}
+                            className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/70 border border-indigo-200/80 dark:border-indigo-800/70 rounded-md transition-colors cursor-pointer"
+                            title={lang === 'bn' ? 'লেনদেন এডিট / সংশোধন করুন' : 'Edit Transaction'}
+                            aria-label={lang === 'bn' ? 'এডিট' : 'Edit'}
                           >
-                            <Edit2 className="w-3.5 h-3.5" />
+                            <Edit2 className="w-3 h-3 shrink-0" />
+                            <span className="hidden xl:inline">{lang === 'bn' ? 'এডিট' : 'Edit'}</span>
                           </button>
                           <button
-                            onClick={() => {
-                              if (confirm(lang === 'bn' ? 'এই এন্ট্রিটি মুছে ফেলতে চান?' : 'Delete this entry?')) {
-                                deleteTransaction(tx.id);
-                              }
-                            }}
-                            className="p-1 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/60 rounded transition-colors cursor-pointer"
-                            title={lang === 'bn' ? 'মুছে ফেলুন' : 'Delete'}
+                            type="button"
+                            onClick={() => setDeletingTx(tx)}
+                            className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-semibold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 dark:hover:bg-rose-900/70 border border-rose-200/80 dark:border-rose-800/70 rounded-md transition-colors cursor-pointer"
+                            title={lang === 'bn' ? 'লেনদেন মুছে ফেলুন' : 'Delete Transaction'}
+                            aria-label={lang === 'bn' ? 'ডিলিট' : 'Delete'}
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <Trash2 className="w-3 h-3 shrink-0" />
+                            <span className="hidden xl:inline">{lang === 'bn' ? 'মুছুন' : 'Delete'}</span>
                           </button>
                         </div>
                       </td>
@@ -874,6 +895,40 @@ export const BangladeshBankingView: React.FC = () => {
             </div>
 
             <form onSubmit={handleTransferSubmit} className="p-5 space-y-3.5 text-xs">
+              {transferError && (
+                <div className="p-2.5 rounded-lg bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-200 font-medium">
+                  {transferError}
+                </div>
+              )}
+
+              {confirmLowBalanceTransfer && (
+                <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 space-y-2">
+                  <p className="font-bold flex items-center gap-1.5">
+                    <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                    <span>
+                      {lang === 'bn'
+                        ? `সতর্কতা: প্রেরক ব্যাংকে বর্তমান ব্যালেন্স ৳${getBankBalance(transferFromBankId).toLocaleString('bn-BD')}, যা ট্রান্সফার পরিমাণের চেয়ে কম।`
+                        : `Warning: Sender bank balance (${formatCurrency(getBankBalance(transferFromBankId), 'BDT', lang)}) is less than transfer amount.`}
+                    </span>
+                  </p>
+                  <div className="flex items-center justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setConfirmLowBalanceTransfer(false)}
+                      className="px-2.5 py-1 rounded-md bg-white dark:bg-slate-800 border border-amber-300 dark:border-amber-700 text-slate-700 dark:text-slate-200 font-semibold cursor-pointer"
+                    >
+                      {lang === 'bn' ? 'ফিরে যান' : 'Back'}
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-3 py-1 rounded-md bg-amber-600 hover:bg-amber-700 text-white font-bold cursor-pointer"
+                    >
+                      {lang === 'bn' ? 'তবুও ট্রান্সফার করুন' : 'Proceed Anyway'}
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* From Bank */}
               <div>
                 <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
@@ -881,7 +936,10 @@ export const BangladeshBankingView: React.FC = () => {
                 </label>
                 <select
                   value={transferFromBankId}
-                  onChange={(e) => setTransferFromBankId(e.target.value)}
+                  onChange={(e) => {
+                    setTransferFromBankId(e.target.value);
+                    setConfirmLowBalanceTransfer(false);
+                  }}
                   className="w-full px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 rounded-lg font-medium"
                   required
                 >
@@ -923,7 +981,10 @@ export const BangladeshBankingView: React.FC = () => {
                     step="1"
                     placeholder="0"
                     value={transferAmount}
-                    onChange={(e) => setTransferAmount(e.target.value)}
+                    onChange={(e) => {
+                      setTransferAmount(e.target.value);
+                      setConfirmLowBalanceTransfer(false);
+                    }}
                     required
                     className="w-full px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 rounded-lg font-mono font-bold"
                   />
@@ -993,6 +1054,102 @@ export const BangladeshBankingView: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: In-App Delete Transaction Confirmation */}
+      {deletingTx && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/65 backdrop-blur-xs no-print">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-rose-50/80 dark:bg-rose-950/50">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-rose-600 text-white flex items-center justify-center shrink-0">
+                  <Trash2 className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                    {lang === 'bn' ? 'লেনদেন মুছে ফেলার নিশ্চিতকরণ' : 'Delete Transaction'}
+                  </h3>
+                  <p className="text-[11px] text-rose-700 dark:text-rose-300 font-medium">
+                    {lang === 'bn' ? 'এই লেনদেনটি স্থায়ীভাবে মুছে যাবে' : 'This action cannot be undone'}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDeletingTx(null)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-3.5 text-xs">
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500 dark:text-slate-400 font-medium">
+                    {lang === 'bn' ? 'তারিখ:' : 'Date:'}
+                  </span>
+                  <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
+                    {formatDate(deletingTx.date, lang)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500 dark:text-slate-400 font-medium">
+                    {lang === 'bn' ? 'ক্যাটাগরি / বিবরণ:' : 'Category / Note:'}
+                  </span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200 text-right truncate max-w-[220px]">
+                    {lang === 'bn'
+                      ? deletingTx.categoryNameBn || deletingTx.note || '-'
+                      : deletingTx.categoryNameEn || deletingTx.note || '-'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500 dark:text-slate-400 font-medium">
+                    {lang === 'bn' ? 'পরিমাণ:' : 'Amount:'}
+                  </span>
+                  <span
+                    className={`font-mono font-black text-sm ${
+                      deletingTx.type === 'income'
+                        ? 'text-emerald-600 dark:text-emerald-400'
+                        : deletingTx.type === 'expense'
+                        ? 'text-rose-600 dark:text-rose-400'
+                        : 'text-blue-600 dark:text-blue-400'
+                    }`}
+                  >
+                    {formatCurrency(deletingTx.amount, 'BDT', lang)}
+                  </span>
+                </div>
+              </div>
+
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                {lang === 'bn'
+                  ? 'মুছে ফেললে সংশ্লিষ্ট ব্যাংক অ্যাকাউন্ট (এবং ট্রান্সফার হলে প্রাপক ব্যাংক / ডিপিএস / লোন) এর ব্যালেন্স স্বয়ংক্রিয়ভাবে সমন্বয় হয়ে যাবে।'
+                  : 'Deleting this entry will automatically recalculate affected bank, savings, or loan balances.'}
+              </p>
+
+              <div className="pt-2 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setDeletingTx(null)}
+                  className="px-4 py-2 font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg cursor-pointer transition-colors"
+                >
+                  {lang === 'bn' ? 'বাতিল করুন' : 'Cancel'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    deleteTransaction(deletingTx.id);
+                    setDeletingTx(null);
+                  }}
+                  className="px-4 py-2 font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-lg shadow-2xs cursor-pointer flex items-center gap-1.5 transition-colors"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>{lang === 'bn' ? 'হ্যাঁ, মুছে ফেলুন' : 'Yes, Delete'}</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
